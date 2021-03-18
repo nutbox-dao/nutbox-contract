@@ -30,6 +30,9 @@ contract StakingTemplate is Ownable {
     }
 
     struct Pool {
+        // Pool id
+        uint8 pid;
+
         // stakingInfo used to save every user's staking information, 
         // including how many they deposited and its external chain account 
         // ( we support crosschain asset staking). With every staking event 
@@ -106,6 +109,7 @@ contract StakingTemplate is Ownable {
         require(numberOfPools < MAX_POOLS, 'Can not add pool');
         require(pair.hasDeployed(), 'Contract has not been deployed');
 
+        openedPools[numberOfPools].pid = numberOfPools;
         openedPools[numberOfPools].hasActived = true;
         openedPools[numberOfPools].stakingPair = pair;
         openedPools[numberOfPools].shareAcc = 0;
@@ -128,9 +132,9 @@ contract StakingTemplate is Ownable {
         return ratios;
     }
 
-    function getSinglePoolRatio(uint8 index) public view returns (uint8) {
-        require(index < MAX_POOLS, 'Invalid ratio query index');
-        return openedPools[index].poolRatio;
+    function getSinglePoolRatio(uint8 pid) public view returns (uint8) {
+        require(pid < MAX_POOLS, 'Invalid pid');
+        return openedPools[pid].poolRatio;
     }
 
     function getCurrentDistributionEra() public view returns (Distribution memory) {
