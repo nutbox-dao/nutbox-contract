@@ -81,8 +81,8 @@ contract StakingTemplate is Ownable {
     Pool[MAX_POOLS] openedPools;
     Distribution[MAX_DISTRIBUTIONS] distributionEras;
 
-    event Deposit(string externalAccountId, address user, uint256 amount);
-    event Withdraw(string externalAccountId, address user, uint256 amount);
+    event Deposit(uint8 pid, string externalAccountId, address user, uint256 amount);
+    event Withdraw(uint8 pid, string externalAccountId, address user, uint256 amount);
     event NewDistributionEra(uint256 amount, uint256 startHeight, uint256 stopHeight);
 
     modifier onlyAdmin() {
@@ -108,6 +108,7 @@ contract StakingTemplate is Ownable {
     function addPool(NutboxERC20 pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
         require(numberOfPools < MAX_POOLS, 'Can not add pool');
         require(pair.hasDeployed(), 'Contract has not been deployed');
+        require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
         openedPools[numberOfPools].pid = numberOfPools;
         openedPools[numberOfPools].hasActived = true;
