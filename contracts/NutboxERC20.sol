@@ -109,6 +109,19 @@ contract NutboxERC20 is Context, IERC20 {
     }
 
     /**
+     * @dev See {IERC20-transfer}.
+     *
+     * Requirements:
+     *
+     * - `recipient` cannot be the zero address.
+     * - the caller must have a balance of at least `amount`.
+     */
+    function mint(address recipient, uint256 amount) public override returns (bool) {
+        _mint(recipient, amount);
+        return true;
+    }
+
+    /**
      * @dev See {IERC20-allowance}.
      */
     function allowance(address owner, address spender) public view override returns (uint256) {

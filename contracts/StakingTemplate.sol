@@ -19,14 +19,16 @@ contract StakingTemplate is Ownable {
     using SafeMath for uint256;
 
     struct UserStakingInfo {
-        // External accountId, e.g. a Polkadot acccount or a Steem account
-        string externalAccountId;
+        // First time when user staking, we need set options like userDebt to zero
+        bool hasDeposited;
         // User staked amount
         uint256 amount;
         // Rewards that can be withdraw
         uint256 availableRewards;
         // User's debt that should be removed when calculating their final rewards.
         uint256 userDebt;
+        // External accountId, e.g. a Polkadot acccount or a Steem account
+        string externalAccount;
     }
 
     struct Pool {
@@ -39,6 +41,9 @@ contract StakingTemplate is Ownable {
         // happened including deposit and withdraw asset this field should be updated. 
         // It also be used to calculate the reward user can get.
         mapping (address => UserStakingInfo) stakingInfo;
+
+        // We add stakingList here to let us iterate stakingInfo sometimes
+        address[] stakingList;
 
         // When pool was added, we treat it actived.
         bool hasActived;
@@ -80,9 +85,12 @@ contract StakingTemplate is Ownable {
     uint8 numberOfDistributionEras;
     Pool[MAX_POOLS] openedPools;
     Distribution[MAX_DISTRIBUTIONS] distributionEras;
+    uint256 lastRewardBlock;
+    NutboxERC20 rewardToken;
 
-    event Deposit(uint8 pid, string externalAccountId, address user, uint256 amount);
-    event Withdraw(uint8 pid, string externalAccountId, address user, uint256 amount);
+    event Deposit(uint8 pid, string externalAccount, address nutboxAccount, uint256 amount);
+    event Withdraw(uint8 pid, string externalAccount, address nutboxAccount, uint256 amount);
+    event WithdrawRewards(address nutboxAccount, uint256 amount);
     event NewDistributionEra(uint256 amount, uint256 startHeight, uint256 stopHeight);
 
     modifier onlyAdmin() {
@@ -98,10 +106,14 @@ contract StakingTemplate is Ownable {
      * Notice:
      * Here we use Struct as function parameter, which supported in ABI-Encode-V2
      */
-    constructor (address _admin, Distribution[] memory _distributionEras) {
+    constructor (address _admin, NutboxERC20 _rewardToken, Distribution[] memory _distributionEras) {
+        require(_rewardToken.hasDeployed(), 'Contract has not been deployed');
+
         admin = _admin;
         numberOfPools = 0;
         numberOfDistributionEras = 0;
+        lastRewardBlock = 0;
+        rewardToken = _rewardToken;
         _applyDistributionEras(_distributionEras);
     }
 
@@ -142,6 +154,176 @@ contract StakingTemplate is Ownable {
         for(uint8 i = 0; i < numberOfDistributionEras; i++) {
             if (block.number >= distributionEras[i].startHeight && block.number <= distributionEras[i].stopHeight) {
                 return distributionEras[i];
+            }
+        }
+    }
+
+    function deposit(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public {
+        // check pid
+        require(numberOfPools > pid, 'Pool does not exist');
+        // check amount
+        if (amount == 0) return;
+
+        // we set lastRewardBlock as current block number, then our game starts!
+        if (lastRewardBlock == 0) {
+            lastRewardBlock = block.number;
+        }
+
+        // Add to staking list if account hasn't deposited before
+        if(!openedPools[pid].stakingInfo[nutboxAccount].hasDeposited) {
+            openedPools[pid].stakingInfo[nutboxAccount].hasDeposited = true;
+            openedPools[pid].stakingInfo[nutboxAccount].availableRewards = 0;
+            openedPools[pid].stakingInfo[nutboxAccount].externalAccount = externalAccount;
+            openedPools[pid].stakingInfo[nutboxAccount].amount = 0;
+            openedPools[pid].stakingInfo[nutboxAccount].userDebt = 0;
+            openedPools[pid].stakingList.push(nutboxAccount);
+        }
+
+        _updatePools();
+
+        if (openedPools[pid].stakingInfo[nutboxAccount].amount > 0) {
+            uint256 pending = openedPools[pid].stakingInfo[nutboxAccount].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[nutboxAccount].userDebt);
+            if(pending > 0) {
+                openedPools[pid].stakingInfo[nutboxAccount].availableRewards = openedPools[pid].stakingInfo[nutboxAccount].availableRewards.add(pending);
+            }
+        }
+
+        openedPools[pid].stakingInfo[nutboxAccount].amount = openedPools[pid].stakingInfo[nutboxAccount].amount.add(amount);
+        openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.add(amount);
+
+        openedPools[pid].stakingInfo[nutboxAccount].userDebt = openedPools[pid].stakingInfo[nutboxAccount].amount.mul(openedPools[pid].shareAcc).div(1e12);
+
+        emit Deposit(pid, externalAccount, nutboxAccount, amount);
+    }
+
+    function withdraw(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public {
+        // check pid
+        require(numberOfPools > pid, 'Pool does not exist');
+        // check withdraw amount
+        if (amount == 0) return;
+        // check deposited amount
+        if (openedPools[pid].stakingInfo[nutboxAccount].amount == 0) return;
+
+        _updatePools();
+
+        uint256 pending = openedPools[pid].stakingInfo[nutboxAccount].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[nutboxAccount].userDebt);
+        if(pending > 0) {
+            openedPools[pid].stakingInfo[nutboxAccount].availableRewards = openedPools[pid].stakingInfo[nutboxAccount].availableRewards.add(pending);
+        }
+
+        uint256 withdrawAmount;
+        if (amount >= openedPools[pid].stakingInfo[nutboxAccount].amount)
+            withdrawAmount = openedPools[pid].stakingInfo[nutboxAccount].amount;
+        else
+            withdrawAmount = amount;
+
+        openedPools[pid].stakingInfo[nutboxAccount].amount = openedPools[pid].stakingInfo[nutboxAccount].amount.sub(withdrawAmount);
+        openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.sub(withdrawAmount);
+
+        openedPools[pid].stakingInfo[nutboxAccount].userDebt = openedPools[pid].stakingInfo[nutboxAccount].amount.mul(openedPools[pid].shareAcc).div(1e12);
+
+        emit Withdraw(pid, externalAccount, nutboxAccount, withdrawAmount);
+    }
+
+    function update(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public
+    {
+        // check pid
+        require(numberOfPools > pid, 'Pool does not exist');
+        // check withdraw amount
+        if (amount == 0) return;
+
+        uint256 prevAmount = openedPools[pid].stakingInfo[nutboxAccount].amount;
+
+        if (prevAmount < amount) { // deposit
+            deposit(pid, externalAccount, nutboxAccount, amount.sub(prevAmount));
+        } else {   // withdraw
+            withdraw(pid, externalAccount, nutboxAccount, prevAmount.sub(amount));
+        }
+    }
+
+    /**
+     * @dev This function would withdraw all rewards that exist in all pools which available for user
+     */
+    function withdrawRewards() public {
+
+        // game has not started
+        if (lastRewardBlock == 0) return;
+
+        // There are new blocks created after last updating, so update pools before withdraw
+        if(block.number > lastRewardBlock) {
+            _updatePools();
+        }
+
+        uint256 totalAvailableRewards = 0;
+        for (uint8 pid = 0; pid < numberOfPools; pid++) {
+            uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
+            if(pending > 0) {
+                openedPools[pid].stakingInfo[msg.sender].availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
+            }
+            // add all pools available rewards
+            totalAvailableRewards.add(openedPools[pid].stakingInfo[msg.sender].availableRewards);
+        }
+
+        // transfer rewards to user
+        rewardToken.transfer(msg.sender, totalAvailableRewards);
+
+        // after tranfer successfully, update staking info
+        for (uint8 pid = 0; pid < numberOfPools; pid++) {
+            openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
+            openedPools[pid].stakingInfo[msg.sender].availableRewards = 0;
+        }
+
+        emit WithdrawRewards(msg.sender, totalAvailableRewards);
+    }
+
+    function _updatePools() private {
+        uint256 rewardsReadyToMinted = 0;
+        uint256 currentBlock = block.number;
+
+        // game has not started
+        if (lastRewardBlock == 0) return;
+
+        // make sure one block can only be calculated one time.
+        // think about this situation that more than one deposit/withdraw/withdrowPeanuts transactions 
+        // were exist in the same block, delegator.amout should be updated after _updateRewardInfo being 
+        // invoked and it's award peanuts should be calculated next time
+        if (currentBlock <= lastRewardBlock) return;
+
+        // calculate reward peanuts under current blocks
+        rewardsReadyToMinted = _calculateReward(lastRewardBlock + 1, currentBlock);
+
+        // save all rewards to contract temporary
+        rewardToken.mint(address(this), rewardsReadyToMinted);
+
+        // update shareAcc of all pools
+        for (uint8 pid; pid < numberOfPools; pid++) {
+            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(100);
+            openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
+        }
+
+        lastRewardBlock = block.number;
+    }
+
+    function _calculateReward(uint256 from, uint256 to) internal returns (uint256) {
+        uint256 rewardedBlock = lastRewardBlock;
+        uint256 rewards = 0;
+        for (uint8 i = 0; i < distributionEras.length; i++) {
+            if (distributionEras[i].hasPassed == true) {
+                require(from > distributionEras[i].stopHeight, 'Distribution era already passed');
+                continue;
+            }
+
+            if (to <= distributionEras[i].stopHeight) {
+                if(to == distributionEras[i].stopHeight) {
+                    distributionEras[i].hasPassed = true;
+                }
+                rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
+                rewardedBlock = to;
+                return rewards;
+            } else {
+                distributionEras[i].hasPassed = true;
+                rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
+                rewardedBlock = distributionEras[i].stopHeight;
             }
         }
     }
