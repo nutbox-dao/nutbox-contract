@@ -280,6 +280,40 @@ contract StakingTemplate is Ownable {
         emit WithdrawRewards(msg.sender, totalAvailableRewards);
     }
 
+    function getPoolPendingRewards(uint8 pid) public view returns(uint256) {
+        uint256 currentBlock = block.number;
+        // game has not started
+        if (lastRewardBlock == 0) return 0;
+
+        // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
+        // the right amount that delegator can award
+        if (currentBlock > lastRewardBlock) {
+            uint256 _shareAcc = openedPools[pid].shareAcc;
+            uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock);
+            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).div(openedPools[pid].totalStakedAmount));
+            uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
+            return openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
+        } else {
+            return openedPools[pid].stakingInfo[msg.sender].availableRewards;
+        }
+    }
+
+    function getPendingRewards() public view returns(uint256) {
+        uint256 rewards = 0;
+        for (uint8 pid = 0; pid < numberOfPools; pid++) {
+            rewards.add(getPoolPendingRewards(pid));
+        }
+        return rewards;
+    }
+
+    function getPoolStakedAmount(uint8 pid) public view returns(uint256) {
+        return openedPools[pid].stakingInfo[msg.sender].amount;
+    }
+
+    function getPoolTotalStakedAmount(uint8 pid) public view returns(uint256) {
+        return openedPools[pid].totalStakedAmount;
+    }
+
     function _updatePools() private {
         uint256 rewardsReadyToMinted = 0;
         uint256 currentBlock = block.number;
@@ -288,12 +322,12 @@ contract StakingTemplate is Ownable {
         if (lastRewardBlock == 0) return;
 
         // make sure one block can only be calculated one time.
-        // think about this situation that more than one deposit/withdraw/withdrowPeanuts transactions 
+        // think about this situation that more than one deposit/withdraw/withdrowRewards transactions 
         // were exist in the same block, delegator.amout should be updated after _updateRewardInfo being 
-        // invoked and it's award peanuts should be calculated next time
+        // invoked and it's award Rewards should be calculated next time
         if (currentBlock <= lastRewardBlock) return;
 
-        // calculate reward peanuts under current blocks
+        // calculate reward Rewards under current blocks
         rewardsReadyToMinted = _calculateReward(lastRewardBlock + 1, currentBlock);
 
         // save all rewards to contract temporary
@@ -306,9 +340,15 @@ contract StakingTemplate is Ownable {
         }
 
         lastRewardBlock = block.number;
+
+        for (uint8 era = 0; era < distributionEras.length; era++) {
+            if (distributionEras[era].hasPassed == false && lastRewardBlock >= distributionEras[era].stopHeight) {
+                distributionEras[era].hasPassed = true;
+            }
+        }
     }
 
-    function _calculateReward(uint256 from, uint256 to) internal returns (uint256) {
+    function _calculateReward(uint256 from, uint256 to) internal view returns (uint256) {
         uint256 rewardedBlock = lastRewardBlock;
         uint256 rewards = 0;
         for (uint8 i = 0; i < distributionEras.length; i++) {
@@ -318,14 +358,10 @@ contract StakingTemplate is Ownable {
             }
 
             if (to <= distributionEras[i].stopHeight) {
-                if(to == distributionEras[i].stopHeight) {
-                    distributionEras[i].hasPassed = true;
-                }
                 rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
                 rewardedBlock = to;
                 return rewards;
             } else {
-                distributionEras[i].hasPassed = true;
                 rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
                 rewardedBlock = distributionEras[i].stopHeight;
             }
