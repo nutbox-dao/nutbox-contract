@@ -186,6 +186,8 @@ contract StakingTemplate is Ownable {
             if(pending > 0) {
                 openedPools[pid].stakingInfo[nutboxAccount].availableRewards = openedPools[pid].stakingInfo[nutboxAccount].availableRewards.add(pending);
             }
+
+            openedPools[pid].stakingPair.transferFrom(msg.sender, address(this), amount);
         }
 
         openedPools[pid].stakingInfo[nutboxAccount].amount = openedPools[pid].stakingInfo[nutboxAccount].amount.add(amount);
@@ -216,6 +218,8 @@ contract StakingTemplate is Ownable {
             withdrawAmount = openedPools[pid].stakingInfo[nutboxAccount].amount;
         else
             withdrawAmount = amount;
+
+        openedPools[pid].stakingPair.transfer(msg.sender, amount);
 
         openedPools[pid].stakingInfo[nutboxAccount].amount = openedPools[pid].stakingInfo[nutboxAccount].amount.sub(withdrawAmount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.sub(withdrawAmount);
