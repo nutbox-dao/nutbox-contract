@@ -77,8 +77,14 @@ contract StakingTemplate is Ownable {
         uint256 stopHeight;
     }
 
+    struct EndowedAccount {
+        address account;
+        uint256 amount;
+    }
+
     uint8 constant MAX_POOLS = 10;
     uint8 constant MAX_DISTRIBUTIONS = 6;
+    uint8 constant MAX_ENDOWEDACCOUNTS = 10;
 
     address admin;
     uint8 numberOfPools;
@@ -106,7 +112,12 @@ contract StakingTemplate is Ownable {
      * Notice:
      * Here we use Struct as function parameter, which supported in ABI-Encode-V2
      */
-    constructor (address _admin, NutboxERC20 _rewardToken, Distribution[] memory _distributionEras) {
+    constructor (
+        address _admin,
+        NutboxERC20 _rewardToken,
+        Distribution[] memory _distributionEras,
+        EndowedAccount[] memory _endowedAccounts
+    ) {
         require(_rewardToken.hasDeployed(), 'Contract has not been deployed');
 
         admin = _admin;
@@ -115,6 +126,7 @@ contract StakingTemplate is Ownable {
         lastRewardBlock = 0;
         rewardToken = _rewardToken;
         _applyDistributionEras(_distributionEras);
+        _applyEndowedAccountsMining(_endowedAccounts);
     }
 
     function addPool(NutboxERC20 pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
@@ -419,6 +431,17 @@ contract StakingTemplate is Ownable {
         for(uint8 i = 0; i < _distributionEras.length; i++) {
             distributionEras[i] = _distributionEras[i];
             numberOfDistributionEras++;
+        }
+    }
+
+    function _applyEndowedAccountsMining(EndowedAccount[] memory _endowedAccounts) private {
+        require(_endowedAccounts.length <= MAX_ENDOWEDACCOUNTS, 'Too many endowed accounts');
+
+        // mint reward token to them
+        for(uint8 i = 0; i < _endowedAccounts.length; i++) {
+            if (_endowedAccounts[i].account != address(0)) {
+                rewardToken.mint(_endowedAccounts[i].account, _endowedAccounts[i].amount);
+            }
         }
     }
 }
