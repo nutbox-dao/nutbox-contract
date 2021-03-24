@@ -25,7 +25,7 @@ contract StakingFactory {
         NutboxERC20 _rewardToken,
         Types.Distribution[] memory _distributionEras,
         Types.EndowedAccount[] memory _endowedAccounts
-    ) public {
+    ) public returns(address) {
         require(address(_rewardToken) != address(0), 'Invalid reward token address');
         require(_distributionEras.length > 0, 'Should give at least one distribution');
 
@@ -43,6 +43,7 @@ contract StakingFactory {
         );
 
         emit StakingFeastCreated(msg.sender, feastAddress, address(_rewardToken));
+        return feastAddress;
     }
 
     function setFeeAddress(address _feeAddress) public {
