@@ -93,6 +93,7 @@ contract StakingTemplate is Ownable {
     Distribution[MAX_DISTRIBUTIONS] distributionEras;
     uint256 lastRewardBlock;
     NutboxERC20 rewardToken;
+    address factory;
 
     event Deposit(uint8 pid, string externalAccount, address nutboxAccount, uint256 amount);
     event Withdraw(uint8 pid, string externalAccount, address nutboxAccount, uint256 amount);
@@ -104,6 +105,10 @@ contract StakingTemplate is Ownable {
         _;
     }
 
+    constructor() {
+        factory = msg.sender;
+    }
+
     /**
      * @dev Create staking template contract instance.
      * The admin is the account who use StakingFactory contract deploy this template.
@@ -112,12 +117,13 @@ contract StakingTemplate is Ownable {
      * Notice:
      * Here we use Struct as function parameter, which supported in ABI-Encode-V2
      */
-    constructor (
+    function initialize (
         address _admin,
         NutboxERC20 _rewardToken,
         Distribution[] memory _distributionEras,
         EndowedAccount[] memory _endowedAccounts
-    ) {
+    ) public {
+        require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
         require(_rewardToken.hasDeployed(), 'Contract has not been deployed');
 
         admin = _admin;
