@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import './access/Ownable.sol';
 import './libraries/SafeMath.sol';
+import './libraries/Types.sol';
 import './interfaces/IERC20.sol';
 import './NutboxERC20.sol';
 
@@ -66,22 +67,6 @@ contract StakingTemplate is Ownable {
         uint256 totalStakedAmount;
     }
 
-    struct Distribution {
-        // if current block height > stopHeight, this distribution passed.
-        bool hasPassed;
-        // rewards per block of this distribution.
-        uint256 amount;
-        // when current block height > startHeight, distribution was enabled.
-        uint256 startHeight;
-        // when curent block height > stopHeight, distribution was disabled
-        uint256 stopHeight;
-    }
-
-    struct EndowedAccount {
-        address account;
-        uint256 amount;
-    }
-
     uint8 constant MAX_POOLS = 10;
     uint8 constant MAX_DISTRIBUTIONS = 6;
     uint8 constant MAX_ENDOWEDACCOUNTS = 10;
@@ -90,7 +75,7 @@ contract StakingTemplate is Ownable {
     uint8 numberOfPools;
     uint8 numberOfDistributionEras;
     Pool[MAX_POOLS] openedPools;
-    Distribution[MAX_DISTRIBUTIONS] distributionEras;
+    Types.Distribution[MAX_DISTRIBUTIONS] distributionEras;
     uint256 lastRewardBlock;
     NutboxERC20 rewardToken;
     address factory;
@@ -120,8 +105,8 @@ contract StakingTemplate is Ownable {
     function initialize (
         address _admin,
         NutboxERC20 _rewardToken,
-        Distribution[] memory _distributionEras,
-        EndowedAccount[] memory _endowedAccounts
+        Types.Distribution[] memory _distributionEras,
+        Types.EndowedAccount[] memory _endowedAccounts
     ) public {
         require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
         require(_rewardToken.hasDeployed(), 'Contract has not been deployed');
@@ -168,7 +153,7 @@ contract StakingTemplate is Ownable {
         return openedPools[pid].poolRatio;
     }
 
-    function getCurrentDistributionEra() public view returns (Distribution memory) {
+    function getCurrentDistributionEra() public view returns (Types.Distribution memory) {
         for(uint8 i = 0; i < numberOfDistributionEras; i++) {
             if (block.number >= distributionEras[i].startHeight && block.number <= distributionEras[i].stopHeight) {
                 return distributionEras[i];
@@ -416,7 +401,7 @@ contract StakingTemplate is Ownable {
      * 3) first distrubtion startHeight should greater than current block height
      * 4) startHeight shold less than stopHeight
      */
-    function _applyDistributionEras(Distribution[] memory _distributionEras) private {
+    function _applyDistributionEras(Types.Distribution[] memory _distributionEras) private {
         require(_distributionEras.length <= MAX_DISTRIBUTIONS, 'Too many distribution policy');
 
         // prechek
@@ -440,7 +425,7 @@ contract StakingTemplate is Ownable {
         }
     }
 
-    function _applyEndowedAccountsMining(EndowedAccount[] memory _endowedAccounts) private {
+    function _applyEndowedAccountsMining(Types.EndowedAccount[] memory _endowedAccounts) private {
         require(_endowedAccounts.length <= MAX_ENDOWEDACCOUNTS, 'Too many endowed accounts');
 
         // mint reward token to them
