@@ -24,7 +24,6 @@ contract NutboxERC20 is Context, IERC20 {
     string private _name;
     string private _symbol;
     uint8 private _decimals;
-    bool private _hasDeployed;
 
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
@@ -39,14 +38,6 @@ contract NutboxERC20 is Context, IERC20 {
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
-        _hasDeployed = true;
-    }
-
-    /**
-     * @dev Returns true if contract already deployed.
-     */
-    function hasDeployed() public view returns (bool) {
-        return _hasDeployed;
     }
 
     /**

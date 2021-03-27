@@ -109,7 +109,6 @@ contract StakingTemplate is Ownable {
         Types.EndowedAccount[] memory _endowedAccounts
     ) public {
         require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
-        require(_rewardToken.hasDeployed(), 'Contract has not been deployed');
 
         admin = _admin;
         numberOfPools = 0;
@@ -122,7 +121,6 @@ contract StakingTemplate is Ownable {
 
     function addPool(NutboxERC20 pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
         require(numberOfPools < MAX_POOLS, 'Can not add pool');
-        require(pair.hasDeployed(), 'Contract has not been deployed');
         require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
         openedPools[numberOfPools].pid = numberOfPools;
