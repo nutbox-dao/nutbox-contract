@@ -352,6 +352,12 @@ contract StakingTemplate is Ownable {
     function _calculateReward(uint256 from, uint256 to) internal view returns (uint256) {
         uint256 rewardedBlock = lastRewardBlock;
         uint256 rewards = 0;
+
+        if(distributionEras.length == 0 || distributionEras[distributionEras.length - 1].hasPassed) {
+            rewardedBlock = to;
+            return rewards;
+        }
+
         for (uint8 i = 0; i < distributionEras.length; i++) {
             if (distributionEras[i].hasPassed == true) {
                 require(from > distributionEras[i].stopHeight, 'Distribution era already passed');
