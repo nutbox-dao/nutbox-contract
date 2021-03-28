@@ -171,6 +171,8 @@ contract StakingTemplate is Ownable {
     function deposit(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
+        // check distribution era 0 to see whether the game has started
+        if(distributionEras[0].hasPassed == false && distributionEras[0].startHeight > block.number) return;
         // check amount
         if (amount == 0) return;
 
@@ -211,6 +213,8 @@ contract StakingTemplate is Ownable {
     function withdraw(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
+        // check distribution era 0 to see whether the game has started
+        if(distributionEras[0].hasPassed == false && distributionEras[0].startHeight > block.number) return;
         // check withdraw amount
         if (amount == 0) return;
         // check deposited amount
