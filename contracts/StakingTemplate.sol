@@ -241,11 +241,6 @@ contract StakingTemplate is Ownable {
 
     function update(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public
     {
-        // check pid
-        require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
-        // check withdraw amount
-        if (amount == 0) return;
-
         uint256 prevAmount = openedPools[pid].stakingInfo[nutboxAccount].amount;
 
         if (prevAmount < amount) { // deposit
