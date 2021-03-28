@@ -123,6 +123,9 @@ contract StakingTemplate is Ownable {
         require(numberOfPools < MAX_POOLS, 'Exceed MAX_POOLS, can not add pool any more');
         require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
+        // precheck ratios summary
+        _checkRatioSum(ratios);
+
         openedPools[numberOfPools].pid = numberOfPools;
         openedPools[numberOfPools].hasActived = true;
         openedPools[numberOfPools].stakingPair = pair;
@@ -136,6 +139,11 @@ contract StakingTemplate is Ownable {
 
     function setPoolRatios(uint8[] memory ratios) public onlyAdmin {
         require(numberOfPools >  0, 'No pool exist');
+        require((numberOfPools) == ratios.length, 'Wrong ratio count');
+
+        // precheck ratios summary
+        _checkRatioSum(ratios);
+
         _applyPoolsRatio(ratios);
     }
 
@@ -376,6 +384,14 @@ contract StakingTemplate is Ownable {
         }
     }
 
+    function _checkRatioSum(uint8[] memory ratios) private pure {
+        uint8 ratioSum = 0;
+        for(uint8 i = 0; i < ratios.length; i++) {
+            ratioSum += ratios[i];
+        }
+        require(ratioSum == 100, 'Ratio summary not equal to 100');
+    }
+
     /**
      * @dev Iterate every pool to update their ratio. 
      * Every ratio is an integer between [0, 100], the summuary of all pool's ration should 
@@ -384,13 +400,6 @@ contract StakingTemplate is Ownable {
      */
     function _applyPoolsRatio(uint8[] memory ratios) private {
         require(numberOfPools == ratios.length, 'Wrong ratio count');
-
-        // precheck ratios summary
-        uint8 ratioSum = 0;
-        for(uint8 i = 0; i < numberOfPools; i++) {
-            ratioSum += ratios[i];
-        }
-        require(ratioSum == 100, 'Ratio summary not equal to 100');
 
         // update pool ratio index
         for(uint8 i = 0; i < numberOfPools; i++) {
