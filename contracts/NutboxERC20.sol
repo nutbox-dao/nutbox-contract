@@ -5,6 +5,7 @@ pragma solidity >=0.6.0 <0.8.0;
 import './interfaces/IERC20.sol';
 import './libraries/SafeMath.sol';
 import './utils/Context.sol';
+import './access/Ownable.sol';
 
 /**
  * @dev Nutbox ERC20 token implementation.
@@ -12,7 +13,7 @@ import './utils/Context.sol';
  * Both tToken and cToken are entity of this contract.
  * Which is miningable and lockable
  */
-contract NutboxERC20 is Context, IERC20 {
+contract NutboxERC20 is Context, IERC20, Ownable {
     using SafeMath for uint256;
 
     mapping (address => uint256) private _balances;
@@ -107,7 +108,7 @@ contract NutboxERC20 is Context, IERC20 {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function mint(address recipient, uint256 amount) public override returns (bool) {
+    function mint(address recipient, uint256 amount) public override onlyOwner returns (bool) {
         _mint(recipient, amount);
         return true;
     }
