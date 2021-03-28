@@ -120,7 +120,7 @@ contract StakingTemplate is Ownable {
     }
 
     function addPool(NutboxERC20 pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
-        require(numberOfPools < MAX_POOLS, 'Can not add pool');
+        require(numberOfPools < MAX_POOLS, 'Exceed MAX_POOLS, can not add pool any more');
         require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
         openedPools[numberOfPools].pid = numberOfPools;
@@ -135,6 +135,7 @@ contract StakingTemplate is Ownable {
     }
 
     function setPoolRatios(uint8[] memory ratios) public onlyAdmin {
+        require(numberOfPools >  0, 'No pool exist');
         _applyPoolsRatio(ratios);
     }
 
@@ -161,7 +162,7 @@ contract StakingTemplate is Ownable {
 
     function deposit(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public {
         // check pid
-        require(numberOfPools > pid, 'Pool does not exist');
+        require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check amount
         if (amount == 0) return;
 
@@ -201,7 +202,7 @@ contract StakingTemplate is Ownable {
 
     function withdraw(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public {
         // check pid
-        require(numberOfPools > pid, 'Pool does not exist');
+        require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check withdraw amount
         if (amount == 0) return;
         // check deposited amount
@@ -233,7 +234,7 @@ contract StakingTemplate is Ownable {
     function update(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public
     {
         // check pid
-        require(numberOfPools > pid, 'Pool does not exist');
+        require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check withdraw amount
         if (amount == 0) return;
 
@@ -335,7 +336,7 @@ contract StakingTemplate is Ownable {
         rewardToken.mint(address(this), rewardsReadyToMinted);
 
         // update shareAcc of all pools
-        for (uint8 pid; pid < numberOfPools; pid++) {
+        for (uint8 pid = 0; pid < numberOfPools; pid++) {
             uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(100);
             openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
         }
