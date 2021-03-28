@@ -3,7 +3,7 @@ const NutboxERC20 = artifacts.require("NutboxERC20.sol")
 const TruffleAssert = require('truffle-assertions')
 const { assert } = require('chai')
 
-contract("Permission test", async accounts => {
+contract("Staking Pool test", async accounts => {
     before(async () => {
         // accounts balance: 1000 * 10 ** 18
     })
