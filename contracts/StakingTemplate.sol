@@ -307,7 +307,7 @@ contract StakingTemplate is Ownable {
         }
     }
 
-    function getPendingRewards() public view returns(uint256) {
+    function getTotalPendingRewards() public view returns(uint256) {
         uint256 rewards = 0;
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
             rewards.add(getPoolPendingRewards(pid));
@@ -315,7 +315,7 @@ contract StakingTemplate is Ownable {
         return rewards;
     }
 
-    function getPoolStakedAmount(uint8 pid) public view returns(uint256) {
+    function getUserStakedAmount(uint8 pid) public view returns(uint256) {
         return openedPools[pid].stakingInfo[msg.sender].amount;
     }
 
