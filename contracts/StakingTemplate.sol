@@ -84,6 +84,7 @@ contract StakingTemplate is Ownable {
     event Withdraw(uint8 pid, string externalAccount, address nutboxAccount, uint256 amount);
     event WithdrawRewards(address nutboxAccount, uint256 amount);
     event NewDistributionEra(uint256 amount, uint256 startHeight, uint256 stopHeight);
+    event PoolUpdated(uint8 pid, uint256 reward);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Account is not the admin");
@@ -303,7 +304,7 @@ contract StakingTemplate is Ownable {
         if (currentBlock > lastRewardBlock) {
             uint256 _shareAcc = openedPools[pid].shareAcc;
             uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock);
-            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).div(openedPools[pid].totalStakedAmount));
+            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(100).div(openedPools[pid].totalStakedAmount));
             uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
             return openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
         } else {
@@ -350,6 +351,7 @@ contract StakingTemplate is Ownable {
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
             uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(100);
             openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
+            emit PoolUpdated(pid, poolRewards);
         }
 
         lastRewardBlock = block.number;
