@@ -126,6 +126,8 @@ contract StakingTemplate is Ownable {
         // precheck ratios summary
         _checkRatioSum(ratios);
 
+        _updatePools();
+
         openedPools[numberOfPools].pid = numberOfPools;
         openedPools[numberOfPools].hasActived = true;
         openedPools[numberOfPools].stakingPair = pair;
@@ -143,6 +145,8 @@ contract StakingTemplate is Ownable {
 
         // precheck ratios summary
         _checkRatioSum(ratios);
+
+        _updatePools();
 
         _applyPoolsRatio(ratios);
     }
