@@ -26,31 +26,32 @@ contract StakingFactory {
         NutboxERC20 _rewardToken,
         Types.Distribution[] memory _distributionEras,
         Types.EndowedAccount[] memory _endowedAccounts
-    ) public returns(address) {
+    ) public {
         require(address(_rewardToken) != address(0), 'Invalid reward token address');
         require(_rewardToken.owner() == msg.sender, 'Deployer is not the owner of reward token');
         require(_rewardToken.totalSupply() == 0, 'Non-fresh token is not allowed in current staking mode');
         require(_distributionEras.length > 0, 'Should give at least one distribution');
 
+/*
         address feastAddress;
         bytes memory bytecode = type(StakingTemplate).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(_rewardToken));
         assembly {
             feastAddress := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-
-        StakingTemplate(feastAddress).initialize(
+*/
+        StakingTemplate feastAddress = new StakingTemplate();
+        // transfer ownership from user to staking contract so that token can be minted by contract
+        (bool success, ) = address(_rewardToken).delegatecall(abi.encodeWithSignature("transferOwnership(address)", address(feastAddress)));
+        
+        feastAddress.initialize(
             msg.sender,
             _rewardToken,
             _distributionEras,
             _endowedAccounts
         );
 
-        // transfer ownership from user to staking contract so that token can be minted by contract
-        _rewardToken.transferOwnership(feastAddress);
-
-        emit StakingFeastCreated(msg.sender, feastAddress, address(_rewardToken));
-        return feastAddress;
+        emit StakingFeastCreated(msg.sender, address(feastAddress), address(_rewardToken));
     }
 
     function setFeeAddress(address _feeAddress) public {

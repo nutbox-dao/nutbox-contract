@@ -328,6 +328,10 @@ contract StakingTemplate is Ownable {
         return openedPools[pid].totalStakedAmount;
     }
 
+    function getAdmin() public view returns(address) {
+        return admin;
+    }
+
     function _updatePools() private {
         uint256 rewardsReadyToMinted = 0;
         uint256 currentBlock = block.number;
