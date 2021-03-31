@@ -204,10 +204,9 @@ contract StakingTemplate is Ownable {
             if(pending > 0) {
                 openedPools[pid].stakingInfo[nutboxAccount].availableRewards = openedPools[pid].stakingInfo[nutboxAccount].availableRewards.add(pending);
             }
-
-            openedPools[pid].stakingPair.transferFrom(msg.sender, address(this), amount);
         }
 
+        openedPools[pid].stakingPair.transferFrom(msg.sender, address(this), amount);
         openedPools[pid].stakingInfo[nutboxAccount].amount = openedPools[pid].stakingInfo[nutboxAccount].amount.add(amount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.add(amount);
 
@@ -280,7 +279,7 @@ contract StakingTemplate is Ownable {
                 openedPools[pid].stakingInfo[msg.sender].availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
             }
             // add all pools available rewards
-            totalAvailableRewards.add(openedPools[pid].stakingInfo[msg.sender].availableRewards);
+            totalAvailableRewards = totalAvailableRewards.add(openedPools[pid].stakingInfo[msg.sender].availableRewards);
         }
 
         // transfer rewards to user
@@ -316,7 +315,7 @@ contract StakingTemplate is Ownable {
     function getTotalPendingRewards() public view returns(uint256) {
         uint256 rewards = 0;
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
-            rewards.add(getPoolPendingRewards(pid));
+            rewards = rewards.add(getPoolPendingRewards(pid));
         }
         return rewards;
     }
@@ -347,16 +346,17 @@ contract StakingTemplate is Ownable {
         emit RewardComputed(lastRewardBlock + 1, currentBlock, rewardsReadyToMinted);
 
         // save all rewards to contract temporary
-        rewardToken.mint(address(this), rewardsReadyToMinted);
+        if (rewardsReadyToMinted > 0)
+            rewardToken.mint(address(this), rewardsReadyToMinted);
 
         // update shareAcc of all pools
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
             uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(100);
             openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
-            emit PoolUpdated(pid, poolRewards, openedPools[pid].shareAcc);
+            emit PoolUpdated(pid, poolRewards.div(1e12), openedPools[pid].shareAcc);
         }
 
-        lastRewardBlock = block.number;
+        lastRewardBlock = currentBlock;
 
         for (uint8 era = 0; era < distributionEras.length; era++) {
             if (distributionEras[era].hasPassed == false && lastRewardBlock >= distributionEras[era].stopHeight) {
@@ -369,7 +369,7 @@ contract StakingTemplate is Ownable {
         uint256 rewardedBlock = lastRewardBlock;
         uint256 rewards = 0;
 
-        if(distributionEras.length == 0 || distributionEras[distributionEras.length - 1].hasPassed) {
+        if (distributionEras.length == 0) {
             rewardedBlock = to;
             return rewards;
         }
@@ -381,11 +381,10 @@ contract StakingTemplate is Ownable {
             }
 
             if (to <= distributionEras[i].stopHeight) {
-                rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
-                rewardedBlock = to;
+                rewards = rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
                 return rewards;
             } else {
-                rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
+                rewards = rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
                 rewardedBlock = distributionEras[i].stopHeight;
             }
         }
