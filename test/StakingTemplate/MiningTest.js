@@ -46,12 +46,12 @@ contract("Staking mining test1", async accounts => {
         )
 
         await TruffleAssert.reverts(
-            this.stakingFeast.deposit(0, "test", accounts[3], 100),
+            this.stakingFeast.deposit(0, "test", 100, {from: accounts[3]}),
             "Pool does not exist"
         )
 
         await TruffleAssert.reverts(
-            this.stakingFeast.withdraw(0, "test", accounts[3], 100),
+            this.stakingFeast.withdraw(0, "test", 100, {from: accounts[3]}),
             "Pool does not exist"
         )
     })
@@ -116,11 +116,11 @@ contract("Staking mining test2", async accounts => {
         await time.advanceBlockTo('99')
         
         // account1 deposit 100 TDOT at block 100, who's reward computing start at block 101
-        await this.stakingFeast.deposit(0, "account1", accounts[1], 100, {from: accounts[1]})
+        await this.stakingFeast.deposit(0, "account1", 100, {from: accounts[1]})
         await time.advanceBlockTo('199')
         
         // account2 deposit 100 TDOT at block 200, who's reward computing start at 201
-        await this.stakingFeast.deposit(0, "account2", accounts[2], 100, {from: accounts[2]})
+        await this.stakingFeast.deposit(0, "account2", 100, {from: accounts[2]})
         await time.advanceBlockTo('250')
 
         // check staked amount

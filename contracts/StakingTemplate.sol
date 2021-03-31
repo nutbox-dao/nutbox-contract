@@ -174,7 +174,7 @@ contract StakingTemplate is Ownable {
         }
     }
 
-    function deposit(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public {
+    function deposit(uint8 pid, string memory externalAccount, uint256 amount) public {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
@@ -188,34 +188,34 @@ contract StakingTemplate is Ownable {
         }
 
         // Add to staking list if account hasn't deposited before
-        if(!openedPools[pid].stakingInfo[nutboxAccount].hasDeposited) {
-            openedPools[pid].stakingInfo[nutboxAccount].hasDeposited = true;
-            openedPools[pid].stakingInfo[nutboxAccount].availableRewards = 0;
-            openedPools[pid].stakingInfo[nutboxAccount].externalAccount = externalAccount;
-            openedPools[pid].stakingInfo[nutboxAccount].amount = 0;
-            openedPools[pid].stakingInfo[nutboxAccount].userDebt = 0;
-            openedPools[pid].stakingList.push(nutboxAccount);
+        if(!openedPools[pid].stakingInfo[msg.sender].hasDeposited) {
+            openedPools[pid].stakingInfo[msg.sender].hasDeposited = true;
+            openedPools[pid].stakingInfo[msg.sender].availableRewards = 0;
+            openedPools[pid].stakingInfo[msg.sender].externalAccount = externalAccount;
+            openedPools[pid].stakingInfo[msg.sender].amount = 0;
+            openedPools[pid].stakingInfo[msg.sender].userDebt = 0;
+            openedPools[pid].stakingList.push(msg.sender);
         }
 
         _updatePools();
 
-        if (openedPools[pid].stakingInfo[nutboxAccount].amount > 0) {
-            uint256 pending = openedPools[pid].stakingInfo[nutboxAccount].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[nutboxAccount].userDebt);
+        if (openedPools[pid].stakingInfo[msg.sender].amount > 0) {
+            uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
             if(pending > 0) {
-                openedPools[pid].stakingInfo[nutboxAccount].availableRewards = openedPools[pid].stakingInfo[nutboxAccount].availableRewards.add(pending);
+                openedPools[pid].stakingInfo[msg.sender].availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
             }
         }
 
         openedPools[pid].stakingPair.transferFrom(msg.sender, address(this), amount);
-        openedPools[pid].stakingInfo[nutboxAccount].amount = openedPools[pid].stakingInfo[nutboxAccount].amount.add(amount);
+        openedPools[pid].stakingInfo[msg.sender].amount = openedPools[pid].stakingInfo[msg.sender].amount.add(amount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.add(amount);
 
-        openedPools[pid].stakingInfo[nutboxAccount].userDebt = openedPools[pid].stakingInfo[nutboxAccount].amount.mul(openedPools[pid].shareAcc).div(1e12);
+        openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
 
-        emit Deposit(pid, externalAccount, nutboxAccount, amount);
+        emit Deposit(pid, externalAccount, msg.sender, amount);
     }
 
-    function withdraw(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public {
+    function withdraw(uint8 pid, string memory externalAccount, uint256 amount) public {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
@@ -223,39 +223,39 @@ contract StakingTemplate is Ownable {
         // check withdraw amount
         if (amount == 0) return;
         // check deposited amount
-        if (openedPools[pid].stakingInfo[nutboxAccount].amount == 0) return;
+        if (openedPools[pid].stakingInfo[msg.sender].amount == 0) return;
 
         _updatePools();
 
-        uint256 pending = openedPools[pid].stakingInfo[nutboxAccount].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[nutboxAccount].userDebt);
+        uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
         if(pending > 0) {
-            openedPools[pid].stakingInfo[nutboxAccount].availableRewards = openedPools[pid].stakingInfo[nutboxAccount].availableRewards.add(pending);
+            openedPools[pid].stakingInfo[msg.sender].availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
         }
 
         uint256 withdrawAmount;
-        if (amount >= openedPools[pid].stakingInfo[nutboxAccount].amount)
-            withdrawAmount = openedPools[pid].stakingInfo[nutboxAccount].amount;
+        if (amount >= openedPools[pid].stakingInfo[msg.sender].amount)
+            withdrawAmount = openedPools[pid].stakingInfo[msg.sender].amount;
         else
             withdrawAmount = amount;
 
         openedPools[pid].stakingPair.transfer(msg.sender, amount);
 
-        openedPools[pid].stakingInfo[nutboxAccount].amount = openedPools[pid].stakingInfo[nutboxAccount].amount.sub(withdrawAmount);
+        openedPools[pid].stakingInfo[msg.sender].amount = openedPools[pid].stakingInfo[msg.sender].amount.sub(withdrawAmount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.sub(withdrawAmount);
 
-        openedPools[pid].stakingInfo[nutboxAccount].userDebt = openedPools[pid].stakingInfo[nutboxAccount].amount.mul(openedPools[pid].shareAcc).div(1e12);
+        openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
 
-        emit Withdraw(pid, externalAccount, nutboxAccount, withdrawAmount);
+        emit Withdraw(pid, externalAccount, msg.sender, withdrawAmount);
     }
 
-    function update(uint8 pid, string memory externalAccount, address nutboxAccount, uint256 amount) public
+    function update(uint8 pid, string memory externalAccount, uint256 amount) public
     {
-        uint256 prevAmount = openedPools[pid].stakingInfo[nutboxAccount].amount;
+        uint256 prevAmount = openedPools[pid].stakingInfo[msg.sender].amount;
 
         if (prevAmount < amount) { // deposit
-            deposit(pid, externalAccount, nutboxAccount, amount.sub(prevAmount));
+            deposit(pid, externalAccount, amount.sub(prevAmount));
         } else {   // withdraw
-            withdraw(pid, externalAccount, nutboxAccount, prevAmount.sub(amount));
+            withdraw(pid, externalAccount, prevAmount.sub(amount));
         }
     }
 
