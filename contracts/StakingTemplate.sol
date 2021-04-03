@@ -72,6 +72,8 @@ contract StakingTemplate is Ownable {
     uint8 constant MAX_ENDOWEDACCOUNTS = 10;
 
     address admin;
+    address dev;
+    uint16 feeRatio;    // actually fee is reward.mult(feeRatio).div(10000)
     uint8 numberOfPools;
     uint8 numberOfDistributionEras;
     Pool[MAX_POOLS] openedPools;
@@ -94,6 +96,7 @@ contract StakingTemplate is Ownable {
 
     constructor() {
         factory = msg.sender;
+        feeRatio = 0;
     }
 
     /**
@@ -113,6 +116,7 @@ contract StakingTemplate is Ownable {
         require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
 
         admin = _admin;
+        dev = _admin;
         numberOfPools = 0;
         numberOfDistributionEras = 0;
         lastRewardBlock = 0;
@@ -333,7 +337,7 @@ contract StakingTemplate is Ownable {
         // the right amount that delegator can award
         if (currentBlock > lastRewardBlock) {
             uint256 _shareAcc = openedPools[pid].shareAcc;
-            uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock);
+            uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - feeRatio).div(10000);
             _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(100).div(openedPools[pid].totalStakedAmount));
             uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
             return openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
@@ -358,8 +362,29 @@ contract StakingTemplate is Ownable {
         return openedPools[pid].totalStakedAmount;
     }
 
+    function setAdmin(address _admin) public onlyAdmin {
+        admin = _admin;
+    }
+
     function getAdmin() public view returns(address) {
         return admin;
+    }
+
+    function setDev(address _dev) public onlyAdmin {
+        dev = _dev;
+    }
+
+    function getDev() public view returns(address) {
+        return dev;
+    }
+
+    function setFeeRatio(uint16 _ratio) public {
+        require(_ratio <= 10000, 'can not set ratio greater than 10000');
+        feeRatio = _ratio;
+    }
+
+    function getFeeRatio() public view returns(uint16) {
+        return feeRatio;
     }
 
     function _updatePools() private {
@@ -380,8 +405,16 @@ contract StakingTemplate is Ownable {
         emit RewardComputed(lastRewardBlock + 1, currentBlock, rewardsReadyToMinted);
 
         // save all rewards to contract temporary
-        if (rewardsReadyToMinted > 0)
-            rewardToken.mint(address(this), rewardsReadyToMinted);
+        if (rewardsReadyToMinted > 0) {
+            // rewards belong to pools
+            rewardToken.mint(address(this), rewardsReadyToMinted.mul(10000 - feeRatio).div(10000));
+            if (feeRatio > 0) {
+                // rewards belong to dev
+                rewardToken.mint(dev, rewardsReadyToMinted.mul(feeRatio).div(10000));
+                // only rewards belong to pools can used to compute shareAcc
+                rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - feeRatio).div(10000);
+            }
+        }
 
         // update shareAcc of all pools
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
