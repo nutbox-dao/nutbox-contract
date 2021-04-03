@@ -260,9 +260,39 @@ contract StakingTemplate is Ownable {
     }
 
     /**
+     * @dev This function would withdraw siingle pool rewards that exist in the pool which available for user
+     */    
+    function withdrawPoolRewards(uint8 pid) public {
+        // game has not started
+        if (lastRewardBlock == 0) return;
+
+        // There are new blocks created after last updating, so update pools before withdraw
+        if(block.number > lastRewardBlock) {
+            _updatePools();
+        }
+
+        uint256 availableRewards = 0;
+        uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
+        if(pending > 0) {
+            openedPools[pid].stakingInfo[msg.sender].availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
+        }
+        // add all pools available rewards
+        availableRewards = availableRewards.add(openedPools[pid].stakingInfo[msg.sender].availableRewards);
+
+        // transfer rewards to user
+        rewardToken.transfer(msg.sender, availableRewards);
+
+        // after tranfer successfully, update staking info
+        openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
+        openedPools[pid].stakingInfo[msg.sender].availableRewards = 0;
+
+        emit WithdrawRewards(msg.sender, availableRewards);
+    }
+
+    /**
      * @dev This function would withdraw all rewards that exist in all pools which available for user
      */
-    function withdrawRewards() public {
+    function withdrawTotalRewards() public {
 
         // game has not started
         if (lastRewardBlock == 0) return;

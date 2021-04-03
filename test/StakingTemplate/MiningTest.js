@@ -147,13 +147,13 @@ contract("Staking mining test2", async accounts => {
         console.log('balance of account2: ', (await this.rewardToken.balanceOf(accounts[2])).valueOf())
         console.log('--------------------------------')
         // block: 251
-        await this.stakingFeast.withdrawRewards({from: accounts[1]})
+        await this.stakingFeast.withdrawTotalRewards({from: accounts[1]})
         let rewards1 = await this.rewardToken.balanceOf.call(accounts[1])
         console.log('balance of account1: ', rewards1.toString())
         assert.equal((await this.rewardToken.balanceOf.call(accounts[1])).valueOf(), '35100')
 
         // block: 252
-        await this.stakingFeast.withdrawRewards({from: accounts[2]})
+        await this.stakingFeast.withdrawTotalRewards({from: accounts[2]})
         let rewards2 = await this.rewardToken.balanceOf.call(accounts[2])
         console.log('balance of account2: ', rewards2.toString())
         let totalSupply = await this.rewardToken.totalSupply.call()
