@@ -73,7 +73,7 @@ contract StakingTemplate is Ownable {
 
     address admin;
     address dev;
-    uint16 feeRatio;    // actually fee is reward.mult(feeRatio).div(10000)
+    uint16 devRewardRatio;    // actually fee is reward.mult(devRewardRatio).div(10000)
     uint8 numberOfPools;
     uint8 numberOfDistributionEras;
     Pool[MAX_POOLS] openedPools;
@@ -96,7 +96,7 @@ contract StakingTemplate is Ownable {
 
     constructor() {
         factory = msg.sender;
-        feeRatio = 0;
+        devRewardRatio = 0;
     }
 
     /**
@@ -337,7 +337,7 @@ contract StakingTemplate is Ownable {
         // the right amount that delegator can award
         if (currentBlock > lastRewardBlock) {
             uint256 _shareAcc = openedPools[pid].shareAcc;
-            uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - feeRatio).div(10000);
+            uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
             _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(100).div(openedPools[pid].totalStakedAmount));
             uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
             return openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
@@ -378,13 +378,13 @@ contract StakingTemplate is Ownable {
         return dev;
     }
 
-    function setFeeRatio(uint16 _ratio) public {
+    function setDevRewardRatio(uint16 _ratio) public {
         require(_ratio <= 10000, 'can not set ratio greater than 10000');
-        feeRatio = _ratio;
+        devRewardRatio = _ratio;
     }
 
-    function getFeeRatio() public view returns(uint16) {
-        return feeRatio;
+    function getDevRewardRatio() public view returns(uint16) {
+        return devRewardRatio;
     }
 
     function _updatePools() private {
@@ -407,12 +407,12 @@ contract StakingTemplate is Ownable {
         // save all rewards to contract temporary
         if (rewardsReadyToMinted > 0) {
             // rewards belong to pools
-            rewardToken.mint(address(this), rewardsReadyToMinted.mul(10000 - feeRatio).div(10000));
-            if (feeRatio > 0) {
+            rewardToken.mint(address(this), rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000));
+            if (devRewardRatio > 0) {
                 // rewards belong to dev
-                rewardToken.mint(dev, rewardsReadyToMinted.mul(feeRatio).div(10000));
+                rewardToken.mint(dev, rewardsReadyToMinted.mul(devRewardRatio).div(10000));
                 // only rewards belong to pools can used to compute shareAcc
-                rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - feeRatio).div(10000);
+                rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000);
             }
         }
 
