@@ -380,6 +380,9 @@ contract StakingTemplate is Ownable {
 
     function setDevRewardRatio(uint16 _ratio) public {
         require(_ratio <= 10000, 'can not set ratio greater than 10000');
+
+        _updatePools();
+        
         devRewardRatio = _ratio;
     }
 
