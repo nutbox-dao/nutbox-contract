@@ -1,6 +1,5 @@
 const StakingTemplate = artifacts.require("StakingTemplate.sol")
-const NutboxERC20Staking = artifacts.require("NutboxERC20.sol")
-const NutboxERC20Reward = artifacts.require("NutboxERC20.sol")
+const NutboxERC20 = artifacts.require("NutboxERC20.sol")
 
 const TruffleAssert = require('truffle-assertions')
 const { assert } = require('chai')
@@ -9,9 +8,9 @@ const { time } = require('@openzeppelin/test-helpers')
 contract("Staking mining test1", async accounts => {
     before(async () => {
         this.stakingFeast = await StakingTemplate.deployed()
-        this.stakingToken = await NutboxERC20Staking.deployed("tDOT", "TDOT", 12)
+        this.stakingToken = await NutboxERC20.deployed("tDOT", "TDOT", 12)
         // account[0] would be the admin
-        this.rewardToken = await NutboxERC20Reward.deployed("Donut", "DNUT", 18)
+        this.rewardToken = await NutboxERC20.deployed("Donut", "DNUT", 18)
         await this.rewardToken.transferOwnership(this.stakingFeast.address, { from: accounts[0] })    })
 
     it("Should revert if no pool exist when deposit/withdraw", async () => {
@@ -39,7 +38,6 @@ contract("Staking mining test1", async accounts => {
                     "stopHeight": 400
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
@@ -61,14 +59,14 @@ contract("Staking mining test2", async accounts => {
     before(async () => {
         this.stakingFeast = await StakingTemplate.deployed()
 
-        this.stakingToken = await NutboxERC20Staking.deployed("tDOT", "TDOT", 12)
+        this.stakingToken = await NutboxERC20.deployed("tDOT", "TDOT", 12)
         await this.stakingToken.mint(accounts[1], 10000, {from: accounts[0]})
         await this.stakingToken.approve(this.stakingFeast.address, 10000, {from: accounts[1]});
         await this.stakingToken.mint(accounts[2], 10000, {from: accounts[0]})
         await this.stakingToken.approve(this.stakingFeast.address, 10000, {from: accounts[2]});
 
         // account[0] would be the admin
-        this.rewardToken = await NutboxERC20Reward.deployed("Donut", "DNUT", 18)
+        this.rewardToken = await NutboxERC20.deployed("Donut", "DNUT", 18)
         await this.rewardToken.transferOwnership(this.stakingFeast.address)
 
         // FIXME: why balance of account1 and account2 of rewardToken is 10000, should be 0
@@ -102,7 +100,6 @@ contract("Staking mining test2", async accounts => {
                     "stopHeight": 4000000000000
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }

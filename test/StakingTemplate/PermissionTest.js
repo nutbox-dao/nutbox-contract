@@ -15,7 +15,6 @@ contract("Permission test", async accounts => {
             accounts[0],
             rewardToken.address,
             [],
-            [],
             {
                 from: accounts[1]
             }
@@ -30,7 +29,6 @@ contract("Permission test", async accounts => {
         await stakingFeast.initialize(
             accounts[0],
             rewardToken.address,
-            [],
             []
         )
 
@@ -50,7 +48,6 @@ contract("Permission test", async accounts => {
         await stakingFeast.initialize(
             accounts[0],
             rewardToken.address,
-            [],
             []
         )
 

@@ -68,7 +68,6 @@ contract("Staking initialization test", async accounts => {
                     "stopHeight": 800
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
@@ -90,7 +89,6 @@ contract("Staking initialization test", async accounts => {
                     "stopHeight": 200
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
@@ -112,7 +110,6 @@ contract("Staking initialization test", async accounts => {
                     "stopHeight": 200
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
@@ -134,7 +131,6 @@ contract("Staking initialization test", async accounts => {
                     "stopHeight": 2
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
@@ -156,59 +152,9 @@ contract("Staking initialization test", async accounts => {
                     "stopHeight": 2
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
         ), "Invalid stop height of distribution")
-    })
-
-    it("Should revert if too many endowed accounts passed", async () => {
-        let stakingFeast = await StakingTemplate.deployed()
-        // account[0] would be the admin
-        let rewardToken = await NutboxERC20.deployed("Donut", "DNUT", 18)
-        await TruffleAssert.reverts(stakingFeast.initialize(
-            accounts[0],
-            rewardToken.address,
-            [],
-            accounts.concat(accounts[0]).map(account => {
-                return {
-                    "account": account,
-                    "amount": 100
-                }
-            }),   // accounts.length == 10
-            {
-                from: accounts[0]
-            }
-        ), "Too many endowed accounts")
-    })
-
-    it("Should set correctly of endowed amount", async () => {
-        let stakingFeast = await StakingTemplate.deployed()
-        // account[0] would be the admin
-        let rewardToken = await NutboxERC20.deployed("Donut", "DNUT", 18)
-        await rewardToken.transferOwnership(stakingFeast.address, { from: accounts[0] })
-        await stakingFeast.initialize(
-            accounts[0],
-            rewardToken.address,
-            [],
-            [
-                {
-                    "account": accounts[0],
-                    "amount": 100
-                },
-                {
-                    "account": accounts[1],
-                    "amount": 200
-                }
-            ],
-            {
-                from: accounts[0]
-            }
-        )
-
-        assert.equal(await rewardToken.balanceOf.call(accounts[0]).valueOf(), "100")
-        assert.equal(await rewardToken.balanceOf.call(accounts[1]).valueOf(), "200")
-        assert.equal(await rewardToken.totalSupply.call().valueOf(), "300")
     })
 })

@@ -8,6 +8,8 @@ contract("Staking mining test1", async accounts => {
 
     })
 
+    // TODO: check ownder from asset registry contract
+    /*
     it("Should revert if sender not the owner of reward token", async () => {
         let rewardToken = await NutboxERC20.deployed("Donut", "DNUT", 18)
         let factory = await StakingFactory.deployed(accounts[0])
@@ -34,14 +36,12 @@ contract("Staking mining test1", async accounts => {
                         "startHeight": 301,
                         "stopHeight": 400
                     }
-                ],
-                [],
-                {from: accounts[1]}
+                ]
             ),
             "Deployer is not the owner of reward token"
         )
     })
-
+*/
     it("Should revert if distribution era list is empty", async () => {
         let rewardToken = await NutboxERC20.deployed("Donut", "DNUT", 18)
         let factory = await StakingFactory.deployed(accounts[0])
@@ -49,7 +49,6 @@ contract("Staking mining test1", async accounts => {
         await TruffleAssert.reverts(
             factory.createStakingFeast(
                 rewardToken.address,
-                [],
                 [],
                 {from: accounts[0]}
             ),
@@ -86,7 +85,6 @@ contract("Staking mining test1", async accounts => {
                     "stopHeight": 400
                 }
             ],
-            [],
             {from: accounts[0]}
         )
 

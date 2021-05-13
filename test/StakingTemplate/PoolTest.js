@@ -38,7 +38,6 @@ contract("Staking Pool test", async accounts => {
                     "stopHeight": 400
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
@@ -85,7 +84,6 @@ contract("Staking Pool test", async accounts => {
                     "stopHeight": 400
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
@@ -134,7 +132,6 @@ contract("Staking Pool test", async accounts => {
                     "stopHeight": 400
                 }
             ],
-            [],
             {
                 from: accounts[0]
             }
