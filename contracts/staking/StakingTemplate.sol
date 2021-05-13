@@ -3,11 +3,10 @@
 pragma solidity >=0.6.0 <0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './access/Ownable.sol';
-import './libraries/SafeMath.sol';
-import './libraries/Types.sol';
-import './interfaces/IERC20.sol';
-import './NutboxERC20.sol';
+import '../common/access/Ownable.sol';
+import '../common/libraries/SafeMath.sol';
+import '../common/Types.sol';
+import '../asset/interfaces/IERC20.sol';
 
 /**
  * @dev Template contract of Nutbox staking module.
@@ -54,10 +53,10 @@ contract StakingTemplate is Ownable {
         // reward of current block are distributed by this options.
         uint8 poolRatio;
 
-        // stakingPair actually is a NutboxERC20Token entity (e.g. a contract address),
+        // stakingPair actually is a common ERC20 contract entity (e.g. a contract address),
         // it represents the asset user stake of this pool. Bascially, it should be a 
         // normal ERC20 token and a lptoken of a specific token exchange pair.
-        NutboxERC20 stakingPair;
+        address stakingPair;
 
         // Pool accumulation factor, updated when user deposit and withdraw staking asset.
         // Used to calculate rewards of every user rewards with a giving formula.
@@ -69,7 +68,6 @@ contract StakingTemplate is Ownable {
 
     uint8 constant MAX_POOLS = 10;
     uint8 constant MAX_DISTRIBUTIONS = 6;
-    uint8 constant MAX_ENDOWEDACCOUNTS = 10;
 
     address admin;
     address dev;
@@ -79,7 +77,7 @@ contract StakingTemplate is Ownable {
     Pool[MAX_POOLS] openedPools;
     Types.Distribution[MAX_DISTRIBUTIONS] distributionEras;
     uint256 lastRewardBlock;
-    NutboxERC20 rewardToken;
+    address rewardToken;
     address factory;
 
     event Deposit(uint8 pid, string externalAccount, address nutboxAccount, uint256 amount);
@@ -109,9 +107,8 @@ contract StakingTemplate is Ownable {
      */
     function initialize (
         address _admin,
-        NutboxERC20 _rewardToken,
-        Types.Distribution[] memory _distributionEras,
-        Types.EndowedAccount[] memory _endowedAccounts
+        address _rewardToken,
+        Types.Distribution[] memory _distributionEras
     ) public {
         require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
 
@@ -122,10 +119,9 @@ contract StakingTemplate is Ownable {
         lastRewardBlock = 0;
         rewardToken = _rewardToken;
         _applyDistributionEras(_distributionEras);
-        _applyEndowedAccountsMining(_endowedAccounts);
     }
 
-    function addPool(NutboxERC20 pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
+    function addPool(address pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
         require(numberOfPools < MAX_POOLS, 'Exceed MAX_POOLS, can not add pool any more');
         require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
@@ -210,7 +206,7 @@ contract StakingTemplate is Ownable {
             }
         }
 
-        openedPools[pid].stakingPair.transferFrom(msg.sender, address(this), amount);
+        IERC20(openedPools[pid].stakingPair).transferFrom(msg.sender, address(this), amount);
         openedPools[pid].stakingInfo[msg.sender].amount = openedPools[pid].stakingInfo[msg.sender].amount.add(amount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.add(amount);
 
@@ -242,7 +238,7 @@ contract StakingTemplate is Ownable {
         else
             withdrawAmount = amount;
 
-        openedPools[pid].stakingPair.transfer(msg.sender, amount);
+        IERC20(openedPools[pid].stakingPair).transfer(msg.sender, amount);
 
         openedPools[pid].stakingInfo[msg.sender].amount = openedPools[pid].stakingInfo[msg.sender].amount.sub(withdrawAmount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.sub(withdrawAmount);
@@ -284,7 +280,7 @@ contract StakingTemplate is Ownable {
         availableRewards = availableRewards.add(openedPools[pid].stakingInfo[msg.sender].availableRewards);
 
         // transfer rewards to user
-        rewardToken.transfer(msg.sender, availableRewards);
+        IERC20(rewardToken).transfer(msg.sender, availableRewards);
 
         // after tranfer successfully, update staking info
         openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
@@ -317,7 +313,7 @@ contract StakingTemplate is Ownable {
         }
 
         // transfer rewards to user
-        rewardToken.transfer(msg.sender, totalAvailableRewards);
+        IERC20(rewardToken).transfer(msg.sender, totalAvailableRewards);
 
         // after tranfer successfully, update staking info
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
@@ -410,10 +406,10 @@ contract StakingTemplate is Ownable {
         // save all rewards to contract temporary
         if (rewardsReadyToMinted > 0) {
             // rewards belong to pools
-            rewardToken.mint(address(this), rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000));
+            IERC20(rewardToken).mint(address(this), rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000));
             if (devRewardRatio > 0) {
                 // rewards belong to dev
-                rewardToken.mint(dev, rewardsReadyToMinted.mul(devRewardRatio).div(10000));
+                IERC20(rewardToken).mint(dev, rewardsReadyToMinted.mul(devRewardRatio).div(10000));
                 // only rewards belong to pools can used to compute shareAcc
                 rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000);
             }
@@ -512,17 +508,6 @@ contract StakingTemplate is Ownable {
         for(uint8 i = 0; i < _distributionEras.length; i++) {
             distributionEras[i] = _distributionEras[i];
             numberOfDistributionEras++;
-        }
-    }
-
-    function _applyEndowedAccountsMining(Types.EndowedAccount[] memory _endowedAccounts) private {
-        require(_endowedAccounts.length <= MAX_ENDOWEDACCOUNTS, 'Too many endowed accounts');
-
-        // mint reward token to them
-        for(uint8 i = 0; i < _endowedAccounts.length; i++) {
-            if (_endowedAccounts[i].account != address(0)) {
-                rewardToken.mint(_endowedAccounts[i].account, _endowedAccounts[i].amount);
-            }
         }
     }
 }
