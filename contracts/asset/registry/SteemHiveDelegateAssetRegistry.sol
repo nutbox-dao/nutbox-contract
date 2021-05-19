@@ -41,11 +41,11 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
 		registryHub = _registryHub;
 	}
 
-	// spec of foreignLocation:
-	//		chainId				uint8	bytes[0]		1: Steem, 2: Hive
-	//		assetType			bytes2	bytes[1, 2]		"sp"
-	//		agentAccountLen		uint32	bytes[3, 6]
-	//		agentAccount		bytes	bytes[7, end]
+	//spec of foreignLocation:
+	//  chainId             uint8   bytes[0]        1: Steem, 2: Hive
+	//  assetType           bytes2  bytes[1, 2]     "sp"
+	//  agentAccountLen     uint32  bytes[3, 6]
+	//  agentAccount        bytes   bytes[7, end]
 	function registerAsset(bytes memory foreignLocation, address homeLocation, bytes memory properties) external override {
 		// check foreignLocation
 		uint8 chainId = foreignLocation.toUint8(0);

@@ -42,11 +42,11 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
 		registryHub = _registryHub;
 	}
 
-	// spec of foreignLocation:
-	//		chainId				    uint8	    bytes[0]		2: Polkadot, 3: Kusama, 4,5,6,7 are reserved for other relaychain
-	//		paraId			        uint32	    bytes[1, 4]
-	//		trieIndex		        uint32	    bytes[5, 8]
-	//      communityAccount        bytes32     bytes[9, end]
+	//spec of foreignLocation:
+	//      chainId             uint8       bytes[0]        2: Polkadot, 3: Kusama, 4,5,6,7 are reserved for other relaychain
+	//      paraId              uint32      bytes[1, 4]
+	//      trieIndex           uint32      bytes[5, 8]
+	//      communityAccount    bytes32     bytes[9, end]
 	function registerAsset(bytes memory foreignLocation, address homeLocation, bytes memory properties) external override {
         require(foreignLocation.length == 41, 'SubstrateCrowdloanAssetRegistry: invalid foreignLocation format');
         
