@@ -23,5 +23,5 @@ library Types {
         address homeLocation;
         // mark whether asset is valid
         bool valid;
-  }
+    }
 }

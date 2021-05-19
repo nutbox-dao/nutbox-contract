@@ -66,9 +66,9 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
 
 		bytes32 assetId = keccak256(abi.encodePacked(foreignLocation, homeLocation));
 		bytes memory data = abi.encodeWithSignature(
-            "add(address,bytes32)",
-            msg.sender,
-            assetId
+			"add(address,bytes32)",
+			msg.sender,
+			assetId
         );
 
         (bool success,) = registryHub.call(data);

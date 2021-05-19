@@ -46,7 +46,7 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
 	//		chainId				    uint8	    bytes[0]		2: Polkadot, 3: Kusama, 4,5,6,7 are reserved for other relaychain
 	//		paraId			        uint32	    bytes[1, 4]
 	//		trieIndex		        uint32	    bytes[5, 8]
-    //      communityAccount        bytes32     bytes[9, end]
+	//      communityAccount        bytes32     bytes[9, end]
 	function registerAsset(bytes memory foreignLocation, address homeLocation, bytes memory properties) external override {
         require(foreignLocation.length == 41, 'SubstrateCrowdloanAssetRegistry: invalid foreignLocation format');
         
@@ -69,9 +69,9 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
 
 		bytes32 assetId = keccak256(abi.encodePacked(foreignLocation, homeLocation));
 		bytes memory data = abi.encodeWithSignature(
-            "add(address,bytes32)",
-            msg.sender,
-            assetId
+			"add(address,bytes32)",
+			msg.sender,
+			assetId
         );
 
         (bool success,) = registryHub.call(data);
