@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import '../common/Types.sol';
 import './StakingTemplate.sol';
 
@@ -13,33 +14,41 @@ import './StakingTemplate.sol';
  */
 contract StakingFactory {
 
+    address public registryHub;
     address public feeAddress;
 
-    event StakingFeastCreated(address indexed creater, address stakingFeast, address rewardToken);
+    event StakingFeastCreated(address indexed creater, address stakingFeast, bytes32 rewardAsset);
 
-    constructor(address _feeAddress) {
+    constructor(address _registryHub, address _feeAddress) {
+        registryHub = _registryHub;
         feeAddress = _feeAddress;
     }
 
     // only owner of reward token can call this method
     function createStakingFeast (
-        address _rewardToken,
+        bytes32 _rewardAsset,
         Types.Distribution[] memory _distributionEras
     ) public {
-        require(address(_rewardToken) != address(0), 'Invalid reward token address');
         require(_distributionEras.length > 0, 'Should give at least one distribution');
-
-        StakingTemplate feastAddress = new StakingTemplate();
-        // transfer ownership from user to staking contract so that token can be minted by contract
-        (bool success, ) = address(_rewardToken).delegatecall(abi.encodeWithSignature("transferOwnership(address)", address(feastAddress)));
         
+        address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
+        require(tokenAddress != address(0), 'Reward asset is not registered');
+
+        StakingTemplate feastAddress = new StakingTemplate(registryHub);
+
+        if (IRegistryHub(registryHub).mintable(_rewardAsset)) {
+            // grant MINTER_ROLE to staking feast contract
+            bytes32 MINTER_ROLE = ERC20PresetMinterPauser(tokenAddress).MINTER_ROLE();
+            ERC20PresetMinterPauser(tokenAddress).grantRole(MINTER_ROLE, address(feastAddress));
+        }
+
         feastAddress.initialize(
             msg.sender,
-            _rewardToken,
+            _rewardAsset,
             _distributionEras
         );
 
-        emit StakingFeastCreated(msg.sender, address(feastAddress), address(_rewardToken));
+        emit StakingFeastCreated(msg.sender, address(feastAddress), _rewardAsset);
     }
 
     function setFeeAddress(address _feeAddress) public {

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
-import '../../common/access/Ownable.sol';
 import '../../common/libraries/BytesLib.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
 
@@ -23,7 +23,6 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
     }
 
     address public registryHub;
-    mapping (bytes32 => bytes) public idToForeignLocation;
     mapping (bytes32 => Metadata) public idToMetadata;
     mapping (bytes32 => bool) public assetLifeCycle;
 
@@ -69,15 +68,17 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
 
         bytes32 assetId = keccak256(abi.encodePacked(foreignLocation, homeLocation));
         bytes memory data = abi.encodeWithSignature(
-            "add(address,bytes32)",
+            "add(address,bool,bytes32,address,bytes)",
             msg.sender,
-            assetId
+            assetId,
+            homeLocation,
+            foreignLocation,
+            true
         );
 
         (bool success,) = registryHub.call(data);
         require(success, "failed to call register bub");
 
-        idToForeignLocation[assetId] = foreignLocation;
         idToMetadata[assetId] = meta;
         assetLifeCycle[assetId] = true;
 

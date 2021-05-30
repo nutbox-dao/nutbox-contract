@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
-import '../../common/access/Ownable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
     address public registryHub;
-    mapping (bytes32 => address) public idToHomeLocation;
 
     event HomeChainAssetRegistered(
         address indexed owner,
@@ -33,15 +32,16 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
         bytes32 assetId = keccak256(abi.encodePacked(foreignLocation, homeLocation));
         bytes memory data = abi.encodeWithSignature(
-            "add(address,bytes32)",
+            "add(address,bool,bytes32,address,bytes)",
             msg.sender,
-            assetId
+            assetId,
+            homeLocation,
+            foreignLocation,
+            false
         );
 
         (bool success,) = registryHub.call(data);
         require(success, "failed to call register bub");
-
-        idToHomeLocation[assetId] = homeLocation;
 
         emit HomeChainAssetRegistered(msg.sender, homeLocation);
     }

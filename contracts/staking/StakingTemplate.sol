@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../common/access/Ownable.sol';
-import '../common/libraries/SafeMath.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '../common/Types.sol';
-import '../asset/interfaces/IERC20.sol';
+import '../asset/interfaces/IRegistryHub.sol';
+import '../asset/handler/ERC20AssetHandler.sol';
 
 /**
  * @dev Template contract of Nutbox staking module.
@@ -27,8 +29,6 @@ contract StakingTemplate is Ownable {
         uint256 availableRewards;
         // User's debt that should be removed when calculating their final rewards.
         uint256 userDebt;
-        // External accountId, e.g. a Polkadot acccount or a Steem account
-        string externalAccount;
     }
 
     struct Pool {
@@ -53,10 +53,10 @@ contract StakingTemplate is Ownable {
         // reward of current block are distributed by this options.
         uint8 poolRatio;
 
-        // stakingPair actually is a common ERC20 contract entity (e.g. a contract address),
-        // it represents the asset user stake of this pool. Bascially, it should be a 
-        // normal ERC20 token and a lptoken of a specific token exchange pair.
-        address stakingPair;
+        // stakingPair actually is a asset contract entity, it represents the asset user stake of this pool. 
+        // Bascially, it should be a normal ERC20 token or a lptoken of a specific token exchange pair 
+        // or the trustless asset.
+        bytes32 stakingPair;
 
         // Pool accumulation factor, updated when user deposit and withdraw staking asset.
         // Used to calculate rewards of every user rewards with a giving formula.
@@ -77,11 +77,12 @@ contract StakingTemplate is Ownable {
     Pool[MAX_POOLS] openedPools;
     Types.Distribution[MAX_DISTRIBUTIONS] distributionEras;
     uint256 lastRewardBlock;
-    address rewardToken;
+    bytes32 rewardAsset;
     address factory;
+    address registryHub;
 
-    event Deposit(uint8 pid, string externalAccount, address nutboxAccount, uint256 amount);
-    event Withdraw(uint8 pid, string externalAccount, address nutboxAccount, uint256 amount);
+    event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
+    event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
     event WithdrawRewards(address nutboxAccount, uint256 amount);
     event NewDistributionEra(uint256 amount, uint256 startHeight, uint256 stopHeight);
     event PoolUpdated(uint8 pid, uint256 reward, uint256 shareAcc);
@@ -92,7 +93,8 @@ contract StakingTemplate is Ownable {
         _;
     }
 
-    constructor() {
+    constructor(address _registryHub) {
+        registryHub = _registryHub;
         factory = msg.sender;
         devRewardRatio = 0;
     }
@@ -107,7 +109,7 @@ contract StakingTemplate is Ownable {
      */
     function initialize (
         address _admin,
-        address _rewardToken,
+        bytes32 _rewardAsset,
         Types.Distribution[] memory _distributionEras
     ) public {
         require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
@@ -117,11 +119,43 @@ contract StakingTemplate is Ownable {
         numberOfPools = 0;
         numberOfDistributionEras = 0;
         lastRewardBlock = 0;
-        rewardToken = _rewardToken;
+        rewardAsset = _rewardAsset;
         _applyDistributionEras(_distributionEras);
     }
 
-    function addPool(address pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
+    function adminDepositReward(uint256 amount) public onlyAdmin {
+        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+        bytes memory data = abi.encodeWithSignature(
+            "lockAsset(bytes32,bytes32,address,uint256)",
+            source,
+            rewardAsset,
+            msg.sender,
+            amount
+        );
+        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+        require(success, "failed to call lockAsset");
+    }
+
+    function adminWithdrawReward(uint256 amount) public onlyAdmin {
+        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+        bytes memory data = abi.encodeWithSignature(
+            "unlockAsset(bytes32,bytes32,address,uint256)",
+            source,
+            rewardAsset,
+            msg.sender,
+            amount
+        );
+        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+        require(success, "failed to call unlockAsset");
+    }
+
+    // function getCurrentDeposit() public view returns(uint256) {
+    //     bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+    //     address erc20Handler = IRegistryHub(registryHub).getERC20AssetHandler();
+    //     return ERC20AssetHandler(erc20Handler).getBalance(source);
+    // }
+
+    function addPool(bytes32 pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
         require(numberOfPools < MAX_POOLS, 'Exceed MAX_POOLS, can not add pool any more');
         require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
@@ -130,12 +164,24 @@ contract StakingTemplate is Ownable {
 
         _updatePools();
 
+        if (IRegistryHub(registryHub).isTrustless(pair)) {
+            bytes memory data = abi.encodeWithSignature(
+                "attachPool(bytes32,address,uint8)",
+                pair,
+                address(this),
+                numberOfPools
+            );
+            (bool success,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
+            require(success, "failed to call attachPool");
+        }
+
         openedPools[numberOfPools].pid = numberOfPools;
         openedPools[numberOfPools].hasActived = true;
         openedPools[numberOfPools].stakingPair = pair;
         openedPools[numberOfPools].shareAcc = 0;
         openedPools[numberOfPools].totalStakedAmount = 0;
         numberOfPools += 1;
+        // _applyPoolsRatio never failed
         _applyPoolsRatio(ratios);
 
         return numberOfPools;
@@ -174,7 +220,14 @@ contract StakingTemplate is Ownable {
         }
     }
 
-    function deposit(uint8 pid, string memory externalAccount, uint256 amount) public {
+    function deposit(uint8 pid, address depositer, uint256 amount) public {
+        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+            require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
+        }
+        internalDeposit(pid, depositer, amount);
+    }
+
+    function internalDeposit(uint8 pid, address depositer, uint256 amount) private {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
@@ -188,34 +241,52 @@ contract StakingTemplate is Ownable {
         }
 
         // Add to staking list if account hasn't deposited before
-        if(!openedPools[pid].stakingInfo[msg.sender].hasDeposited) {
-            openedPools[pid].stakingInfo[msg.sender].hasDeposited = true;
-            openedPools[pid].stakingInfo[msg.sender].availableRewards = 0;
-            openedPools[pid].stakingInfo[msg.sender].externalAccount = externalAccount;
-            openedPools[pid].stakingInfo[msg.sender].amount = 0;
-            openedPools[pid].stakingInfo[msg.sender].userDebt = 0;
-            openedPools[pid].stakingList.push(msg.sender);
+        if(!openedPools[pid].stakingInfo[depositer].hasDeposited) {
+            openedPools[pid].stakingInfo[depositer].hasDeposited = true;
+            openedPools[pid].stakingInfo[depositer].availableRewards = 0;
+            openedPools[pid].stakingInfo[depositer].amount = 0;
+            openedPools[pid].stakingInfo[depositer].userDebt = 0;
+            openedPools[pid].stakingList.push(depositer);
         }
 
         _updatePools();
 
-        if (openedPools[pid].stakingInfo[msg.sender].amount > 0) {
-            uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
+        if (openedPools[pid].stakingInfo[depositer].amount > 0) {
+            uint256 pending = openedPools[pid].stakingInfo[depositer].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[depositer].userDebt);
             if(pending > 0) {
-                openedPools[pid].stakingInfo[msg.sender].availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
+                openedPools[pid].stakingInfo[depositer].availableRewards = openedPools[pid].stakingInfo[depositer].availableRewards.add(pending);
             }
         }
 
-        IERC20(openedPools[pid].stakingPair).transferFrom(msg.sender, address(this), amount);
-        openedPools[pid].stakingInfo[msg.sender].amount = openedPools[pid].stakingInfo[msg.sender].amount.add(amount);
+        if (!IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+            bytes32 source = keccak256(abi.encodePacked(address(this), openedPools[pid].stakingPair));
+            bytes memory data = abi.encodeWithSignature(
+                "lockAsset(bytes32,bytes32,address,uint256)",
+                source,
+                openedPools[pid].stakingPair,
+                depositer,
+                amount
+            );
+            (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+            require(success, "failed to call lockAsset");
+        }
+
+        openedPools[pid].stakingInfo[depositer].amount = openedPools[pid].stakingInfo[depositer].amount.add(amount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.add(amount);
 
-        openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
+        openedPools[pid].stakingInfo[depositer].userDebt = openedPools[pid].stakingInfo[depositer].amount.mul(openedPools[pid].shareAcc).div(1e12);
 
-        emit Deposit(pid, externalAccount, msg.sender, amount);
+        emit Deposit(pid, depositer, amount);
     }
 
-    function withdraw(uint8 pid, string memory externalAccount, uint256 amount) public {
+    function withdraw(uint8 pid, address depositer, uint256 amount) public {
+        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+            require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
+        }
+        internalWithdraw(pid, depositer, amount);
+    }
+
+    function internalWithdraw(uint8 pid, address depositer, uint256 amount) private {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
@@ -223,39 +294,50 @@ contract StakingTemplate is Ownable {
         // check withdraw amount
         if (amount == 0) return;
         // check deposited amount
-        if (openedPools[pid].stakingInfo[msg.sender].amount == 0) return;
+        if (openedPools[pid].stakingInfo[depositer].amount == 0) return;
 
         _updatePools();
 
-        uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
+        uint256 pending = openedPools[pid].stakingInfo[depositer].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[depositer].userDebt);
         if(pending > 0) {
-            openedPools[pid].stakingInfo[msg.sender].availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
+            openedPools[pid].stakingInfo[depositer].availableRewards = openedPools[pid].stakingInfo[depositer].availableRewards.add(pending);
         }
 
         uint256 withdrawAmount;
-        if (amount >= openedPools[pid].stakingInfo[msg.sender].amount)
-            withdrawAmount = openedPools[pid].stakingInfo[msg.sender].amount;
+        if (amount >= openedPools[pid].stakingInfo[depositer].amount)
+            withdrawAmount = openedPools[pid].stakingInfo[depositer].amount;
         else
             withdrawAmount = amount;
 
-        IERC20(openedPools[pid].stakingPair).transfer(msg.sender, amount);
+        if (!IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+            bytes32 source = keccak256(abi.encodePacked(address(this), openedPools[pid].stakingPair));
+            bytes memory data = abi.encodeWithSignature(
+                "unlockAsset(bytes32,bytes32,address,uint256)",
+                source,
+                openedPools[pid].stakingPair,
+                depositer,
+                withdrawAmount
+            );
+            (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+            require(success, "failed to call unlockAsset");
+        }
 
-        openedPools[pid].stakingInfo[msg.sender].amount = openedPools[pid].stakingInfo[msg.sender].amount.sub(withdrawAmount);
+        openedPools[pid].stakingInfo[depositer].amount = openedPools[pid].stakingInfo[depositer].amount.sub(withdrawAmount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.sub(withdrawAmount);
 
-        openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
+        openedPools[pid].stakingInfo[depositer].userDebt = openedPools[pid].stakingInfo[depositer].amount.mul(openedPools[pid].shareAcc).div(1e12);
 
-        emit Withdraw(pid, externalAccount, msg.sender, withdrawAmount);
+        emit Withdraw(pid, depositer, withdrawAmount);
     }
 
-    function update(uint8 pid, string memory externalAccount, uint256 amount) public
+    function update(uint8 pid, address depositer, uint256 amount) public
     {
-        uint256 prevAmount = openedPools[pid].stakingInfo[msg.sender].amount;
+        uint256 prevAmount = openedPools[pid].stakingInfo[depositer].amount;
 
         if (prevAmount < amount) { // deposit
-            deposit(pid, externalAccount, amount.sub(prevAmount));
+            deposit(pid, depositer, amount.sub(prevAmount));
         } else {   // withdraw
-            withdraw(pid, externalAccount, prevAmount.sub(amount));
+            withdraw(pid, depositer, prevAmount.sub(amount));
         }
     }
 
@@ -280,7 +362,16 @@ contract StakingTemplate is Ownable {
         availableRewards = availableRewards.add(openedPools[pid].stakingInfo[msg.sender].availableRewards);
 
         // transfer rewards to user
-        IERC20(rewardToken).transfer(msg.sender, availableRewards);
+        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+        bytes memory data = abi.encodeWithSignature(
+            "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
+            source,
+            rewardAsset,
+            msg.sender,
+            availableRewards
+        );
+        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+        require(success, "failed to call unlockOrMintAsset");
 
         // after tranfer successfully, update staking info
         openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
@@ -313,7 +404,16 @@ contract StakingTemplate is Ownable {
         }
 
         // transfer rewards to user
-        IERC20(rewardToken).transfer(msg.sender, totalAvailableRewards);
+        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+        bytes memory data = abi.encodeWithSignature(
+            "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
+            source,
+            rewardAsset,
+            msg.sender,
+            totalAvailableRewards
+        );
+        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+        require(success, "failed to call unlockOrMintAsset");
 
         // after tranfer successfully, update staking info
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
@@ -405,11 +505,20 @@ contract StakingTemplate is Ownable {
 
         // save all rewards to contract temporary
         if (rewardsReadyToMinted > 0) {
-            // rewards belong to pools
-            IERC20(rewardToken).mint(address(this), rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000));
             if (devRewardRatio > 0) {
-                // rewards belong to dev
-                IERC20(rewardToken).mint(dev, rewardsReadyToMinted.mul(devRewardRatio).div(10000));
+                // only send rewards belong to dev, reward belong to user would send when
+                // they withdraw reward manually
+                bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+                bytes memory data = abi.encodeWithSignature(
+                    "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
+                    source,
+                    rewardAsset,
+                    dev,
+                    rewardsReadyToMinted.mul(devRewardRatio).div(10000)
+                );
+                (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+                require(success, "failed to call unlockOrMintAsset");
+
                 // only rewards belong to pools can used to compute shareAcc
                 rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000);
             }
@@ -471,8 +580,6 @@ contract StakingTemplate is Ownable {
      * Because pools always less than MAX_POOLS, so the loop is in control
      */
     function _applyPoolsRatio(uint8[] memory ratios) private {
-        require(numberOfPools == ratios.length, 'Wrong ratio count');
-
         // update pool ratio index
         for(uint8 i = 0; i < numberOfPools; i++) {
             openedPools[i].poolRatio = ratios[i];
