@@ -40,7 +40,7 @@ contract RegistryHub is IRegistryHub, Ownable {
         whiteList[_contract] = true;
     }
 
-    function add(address owner, bool trustless, bytes32 id, address homeLocation, bytes memory foreignLocation) external override {
+    function add(address owner, bytes32 id, address homeLocation, bytes memory foreignLocation, bool trustless) external override {
         require(whiteList[msg.sender], 'Permission denied: contract is not white list');
         require(registryRecord[owner][id] == false, 'Asset already registered');
 
