@@ -83,7 +83,7 @@ contract Bridge is AccessControl, IBridge {
         return proposalHistory[keccak256(abi.encodePacked(chainId, sequence, extrinsicHash))];
     }
 
- // keccak256(chainId, sequence, extrinsicHash)
+    // keccak256(chainId, sequence, extrinsicHash)
     function voteProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash) override external {
         // check relayer
         require(relayerRegistry[msg.sender] == true, 'Permission denied: sender is not relayer');
