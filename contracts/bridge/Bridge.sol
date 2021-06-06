@@ -8,6 +8,7 @@ import '@openzeppelin/contracts/access/AccessControl.sol';
 import '../common/Types.sol';
 import './interfaces/IBridge.sol';
 import './interfaces/IExecutor.sol';
+import '../asset/interfaces/IRegistryHub.sol';
 
 contract Bridge is AccessControl, IBridge {
     using SafeMath for uint256;
@@ -77,6 +78,19 @@ contract Bridge is AccessControl, IBridge {
     function adminRenonceAdmin(address _newAdmin) external onlyAdmin {
         grantRole(DEFAULT_ADMIN_ROLE, _newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function adminDepositAsset(bytes32 assetId, uint256 amount) public onlyAdmin {
+        bytes32 source = keccak256(abi.encodePacked(address(this), assetId));
+        bytes memory data = abi.encodeWithSignature(
+            "lockAsset(bytes32,bytes32,address,uint256)",
+            source,
+            assetId,
+            msg.sender,
+            amount
+        );
+        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+        require(success, "failed to call lockAsset");
     }
 
     function getProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash) override external view returns(Types.Proposal memory) {
