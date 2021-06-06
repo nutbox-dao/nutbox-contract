@@ -26,6 +26,9 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     // assetId => PoolInfo
     mapping (bytes32 => PoolInfo) private attachedPool;
 
+    event AttachedPool(bytes32 assetId, address stakingFeast, uint8 pid);
+    event BalanceUpdated(bytes32 source, bytes32 assetId, address account, uint256 amount);
+
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
         _;
@@ -53,6 +56,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     function attachPool(bytes32 assetId, address stakingFeast, uint8 pid) external onlyBridge {
         attachedPool[assetId].stakingFeast = stakingFeast;
         attachedPool[assetId].pid = pid;
+        emit AttachedPool(assetId, stakingFeast, pid);
     }
 
     function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount) override external onlyBridge {
@@ -71,6 +75,8 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
             (bool success,) = attachedPool[assetId].stakingFeast.call(data);
             require(success, "failed to call stakingFeast::update");
         }
+
+        emit BalanceUpdated(source, assetId, account, amount);
     }
 
     function getBalance(bytes32 source, address account) override view external returns(uint256) {

@@ -23,6 +23,10 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
 
     event WhitelistManagerAdded(address manager);
     event WhitelistManagerRemoved(address manager);
+    event LockAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount);
+    event BurnAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount);
+    event UnlockAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount);
+    event MintAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -71,9 +75,11 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
         if (IRegistryHub(registryHub).mintable(assetId)) {
             burnERC20(tokenAddress, depositer, amount);
+            emit BurnAsset(source, assetId, depositer, amount);
         } else {
             lockERC20(tokenAddress, depositer, address(this), amount);
             depositBalance[source] = depositBalance[source].add(amount);
+            emit LockAsset(source, assetId, depositer, amount);
         }
     }
 
@@ -83,6 +89,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
         lockERC20(tokenAddress, depositer, address(this), amount);
         depositBalance[source] = depositBalance[source].add(amount);
+        emit LockAsset(source, assetId, depositer, amount);
     }
 
     function unlockOrMintAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount) override external {
@@ -91,10 +98,12 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
         if (IRegistryHub(registryHub).mintable(assetId)) {
             mintERC20(tokenAddress, address(recipient), amount);
+            emit MintAsset(source, assetId, recipient, amount);
         } else {
             require(depositBalance[source] >= amount, 'Insufficient deposited asset balance');
             releaseERC20(tokenAddress, address(recipient), amount);
             depositBalance[source] = depositBalance[source].sub(amount);
+            emit UnlockAsset(source, assetId, recipient, amount);
         }
     }
 
@@ -105,6 +114,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
         releaseERC20(tokenAddress, address(recipient), amount);
         depositBalance[source] = depositBalance[source].sub(amount);
+        emit UnlockAsset(source, assetId, recipient, amount);
     }
 
     function getBalance(bytes32 source) view external returns(uint256) {
