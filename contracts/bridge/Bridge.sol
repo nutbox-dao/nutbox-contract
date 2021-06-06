@@ -114,6 +114,7 @@ contract Bridge is AccessControl, IBridge {
                 proposal.status = Types.ProposalStatus.Cancelled;
                 emit ProposalCancelled(proposal, msg.sender);
             } else {
+                require(proposal.extrinsicHash == extrinsicHash, 'Extrinsic hash mismatch');
                 hasVotedOnProposal[proposalId][msg.sender] = true;
                 proposal.ayeVotes = proposal.ayeVotes + 1;
                 emit ProposalVoted(proposal, msg.sender);
