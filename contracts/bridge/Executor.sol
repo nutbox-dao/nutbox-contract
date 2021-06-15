@@ -21,17 +21,18 @@ contract Executor is AccessControl, IExecutor {
     }
 
     modifier onlyBridge() {
-        require(msg.sender == bridge, "Sender is not bridge");
+        require(bridge != address(0) && msg.sender == bridge, "Sender is not bridge");
         _;
     }
 
-    constructor(address _registryHub, address _bridge) public {
+    constructor(address _registryHub) public {
         require(_registryHub != address(0), 'Invalid registry hub address');
-        require(_bridge != address(0), 'Invalid bridge address');
-
-        registryHub = _registryHub;
-        bridge = _bridge;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function adminSetBridge(address _bridge) public onlyAdmin {
+        require(_bridge != address(0), 'Invalid bridge address');
+        bridge = _bridge;
     }
 
     function adminRenonceAdmin(address _newAdmin) external onlyAdmin {

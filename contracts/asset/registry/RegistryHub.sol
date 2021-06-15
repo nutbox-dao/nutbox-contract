@@ -29,7 +29,10 @@ contract RegistryHub is IRegistryHub, Ownable {
 
     event NewAsset(address owner, bytes32 id);
 
-    constructor(address _erc20AssetHandler, address _erc721AssetHandler, address _trustlessAssetHandler) {
+    constructor() {
+    }
+
+    function setAssetHandlers(address _erc20AssetHandler, address _erc721AssetHandler, address _trustlessAssetHandler) public onlyOwner {
         erc20AssetHandler = _erc20AssetHandler;
         erc721AssetHandler = _erc721AssetHandler;
         trustlessAssetHandler = _trustlessAssetHandler;
