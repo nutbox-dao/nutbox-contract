@@ -3,6 +3,7 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
+const fs = require("fs");
 
 const ERC20AssetHandlerJson = require('../build/contracts/ERC20AssetHandler.json');
 const TrustlessAssetHandlerJson = require('../build/contracts/TrustlessAssetHandler.json');
@@ -186,6 +187,25 @@ async function main() {
     await deployStakingFactoryContract(env);
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
+
+    // dump to local file
+    const output = {
+        RegistryHub: env.registryHubContract ? env.registryHubContract : "Not Deployed",
+        HomeChainAssetRegistry: env.homeChainAssetRegistryContract ? env.homeChainAssetRegistryContract : "Not Deployed",
+        SteemHiveDelegateAssetRegistry: env.steemHiveDelegateAssetRegistryContract ? env.steemHiveDelegateAssetRegistryContract : "Not Deployed",
+        SubstrateCrowdloanAssetRegistry: env.substrateCrowdloanAssetRegistryContract ? env.substrateCrowdloanAssetRegistryContract : "Not Deployed",
+        SubstrateNominateAssetRegistry: env.substrateNominateAssetRegistryContract ? env.substrateNominateAssetRegistryContract : "Not Deployed",
+        ERC20AssetHandler: env.erc20AssetHandlerContract ? env.erc20AssetHandlerContract : "Not Deployed",
+        ERC721AssetHandler: env.erc721AssetHandlerContract ? env.erc721AssetHandlerContract : "Not Deployed",
+        TrustlessAssetHandler: env.trustlessAssetHandlerContract ? env.trustlessAssetHandlerContract : "Not Deployed",
+        Executor:  env.exectorContract ? env.exectorContract : "Not Deployed",
+        Bridge: env.bridgeContract ? env.bridgeContract : "Not Deployed",
+        StakingFactory: env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed"
+    };
+    
+    const outfile = './contracts.json'
+    const jsonStr = JSON.stringify(output, undefined, 2);
+    fs.writeFileSync(outfile, jsonStr, { encoding: "utf-8" });
 
     console.log(`
     ================================================================

@@ -15,17 +15,18 @@ const StakingTemplateJson = require('../build/contracts/StakingTemplate.json');
 const ExectorJson = require('../build/contracts/Executor.json');
 const BridgeJson = require('../build/contracts/Bridge.json');
 const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const Contracts = require('./contracts.json');
 
-const RegistryHubAddress = '0x30E0b89a526f33395c2b560724b071B3AF158E2c';
-const HomeChainAssetRegistryAddress = '0xecF6B570C569dB9858422d1a9E5C93FDb94D937f';
-const SteemHiveDelegateAssetRegistryAddress = '0x8fCD5AD701b7c1c60dc8548e1492b4Bf0E686758';
-const SubstrateCrowdloanAssetRegistryAddress = '0x51F6a8ef4237b45E771328e6E9E0C977EF295EC0';
-const SubstrateNominateAssetRegistryAddress = '0x7FEBAc047CF3d2538F1Ea5Cd932E4ee66A914536';
-const ERC20AssetHandlerAddress = '0x53212181581FCa0f65Db352a15775486dF338F3C';
-const TrustlessAssetHandlerAddress = '0xF3746ef2cF02f291da86649B87e773232319f089';
-const ExecutorAddress = '0x41a6bE22D454Aa8252c34a511F2Cd2891172eF23';
-const BridgeAddress = '0xf697A0E388f0b3322eC454a15E8FD828851b7073';
-const StakingFactoryAddress = '0xd679D28925bFD2BBD162d94193FAA87e3C15eC74';
+const RegistryHubAddress = Contracts.RegistryHub;
+const HomeChainAssetRegistryAddress = Contracts.HomeChainAssetRegistry;
+const SteemHiveDelegateAssetRegistryAddress = Contracts.SteemHiveDelegateAssetRegistry;
+const SubstrateCrowdloanAssetRegistryAddress = Contracts.SubstrateCrowdloanAssetRegistry;
+const SubstrateNominateAssetRegistryAddress = Contracts.SubstrateNominateAssetRegistry;
+const ERC20AssetHandlerAddress = Contracts.ERC20AssetHandler;
+const TrustlessAssetHandlerAddress = Contracts.TrustlessAssetHandler;
+const ExecutorAddress = Contracts.Executor;
+const BridgeAddress = Contracts.Bridge;
+const StakingFactoryAddress = Contracts.StakingFactory;
 
 function main() {
     let env = {};

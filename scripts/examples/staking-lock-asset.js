@@ -10,10 +10,11 @@ const StakingTemplateJson = require('../../build/contracts/StakingTemplate.json'
 const RegistryHubJson = require('../../build/contracts/RegistryHub.json');
 const SimpleERC20Json = require('../../build/contracts/SimpleERC20.json');
 const ERC20AssetHandlerJson = require('../../build/contracts/ERC20AssetHandler.json');
+const Contracts = require('../contracts.json');
 
-const RegistryHubAddress = '0x30E0b89a526f33395c2b560724b071B3AF158E2c';
-const StakingFactoryAddress = '0xd679D28925bFD2BBD162d94193FAA87e3C15eC74';
-const ERC20AssetHandlerAddress = '0x53212181581FCa0f65Db352a15775486dF338F3C';
+const RegistryHubAddress = Contracts.RegistryHub;
+const StakingFactoryAddress = Contracts.StakingFactory;
+const ERC20AssetHandlerAddress = Contracts.ERC20AssetHandler;
 
 async function main() {
     let env = {};

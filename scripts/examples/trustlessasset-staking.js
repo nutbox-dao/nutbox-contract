@@ -12,12 +12,13 @@ const SimpleERC20Json = require('../../build/contracts/SimpleERC20.json');
 const ERC20AssetHandlerJson = require('../../build/contracts/ERC20AssetHandler.json');
 const TrustlessAssetHandlerJson = require('../../build/contracts/TrustlessAssetHandler.json');
 const BridgeJson= require('../../build/contracts/Bridge.json');
+const Contracts = require('../contracts.json');
 
-const RegistryHubAddress = '0x30E0b89a526f33395c2b560724b071B3AF158E2c';
-const StakingFactoryAddress = '0xd679D28925bFD2BBD162d94193FAA87e3C15eC74';
-const ERC20AssetHandlerAddress = '0x53212181581FCa0f65Db352a15775486dF338F3C';
-const TrustlessAssetHandlerAddress = '0xF3746ef2cF02f291da86649B87e773232319f089';
-const BridgeAddress = '0xf697A0E388f0b3322eC454a15E8FD828851b7073';
+const RegistryHubAddress = Contract.RegistryHub;
+const StakingFactoryAddress = Contracts.StakingFactory;
+const ERC20AssetHandlerAddress = Contracts.ERC20AssetHandler;
+const TrustlessAssetHandlerAddress = Contracts.TrustlessAssetHandler;
+const BridgeAddress = Contracts.Bridge;
 
 async function main() {
     let env = {};

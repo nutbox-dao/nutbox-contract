@@ -10,12 +10,13 @@ const SteemHiveDelegateAssetRegistryJson = require('../../build/contracts/SteemH
 const SubstrateCrowdloanAssetRegistryJson = require('../../build/contracts/SubstrateCrowdloanAssetRegistry.json');
 const SubstrateNominateAssetRegistryJson = require('../../build/contracts/SubstrateNominateAssetRegistry.json');
 const SimpleERC20Json = require('../../build/contracts/SimpleERC20.json');
+const Contracts = require('../contracts.json');
 
-const RegistryHubAddress = '0x30E0b89a526f33395c2b560724b071B3AF158E2c';
-const HomeChainAssetRegistryAddress = '0xecF6B570C569dB9858422d1a9E5C93FDb94D937f';
-const SteemHiveDelegateAssetRegistryAddress = '0x8fCD5AD701b7c1c60dc8548e1492b4Bf0E686758';
-const SubstrateCrowdloanAssetRegistryAddress = '0x51F6a8ef4237b45E771328e6E9E0C977EF295EC0';
-const SubstrateNominateAssetRegistryAddress = '0x7FEBAc047CF3d2538F1Ea5Cd932E4ee66A914536';
+const RegistryHubAddress = Contracts.RegistryHub;
+const HomeChainAssetRegistryAddress = Contracts.HomeChainAssetRegistry;
+const SteemHiveDelegateAssetRegistryAddress = Contracts.SteemHiveDelegateAssetRegistry;
+const SubstrateCrowdloanAssetRegistryAddress = Contracts.SubstrateCrowdloanAssetRegistry;
+const SubstrateNominateAssetRegistryAddress = Contracts.SubstrateNominateAssetRegistry;
 
 async function deployERC20(env) {
     const factory = new ethers.ContractFactory(SimpleERC20Json.abi, SimpleERC20Json.bytecode, env.wallet);
