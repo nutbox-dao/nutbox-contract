@@ -73,17 +73,6 @@ async function main() {
         );
         await waitForTx(env.provider, tx.hash);
 
-        // attach pool
-        // FIXME: Only bridge has permission attach pool so far
-        const TrustlessAssetHandler = new ethers.Contract(TrustlessAssetHandlerAddress, TrustlessAssetHandlerJson.abi, env.wallet);
-        const tx0 = await TrustlessAssetHandler.attachPool(
-            substrateCrowdloanAsset,
-            stakingFeast,
-            0,
-            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-        );
-        await waitForTx(env.provider, tx0.hash);
-
         /**** Following are simulation of bridge proposal's voting and execution ****/
         const Bridge = new ethers.Contract(BridgeAddress, BridgeJson.abi, env.wallet);
         // add current sender as relayer( NOT IN PRODUCTION ENV)

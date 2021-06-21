@@ -186,6 +186,16 @@ async function main() {
     // deploy staking factory contract
     await deployStakingFactoryContract(env);
 
+    // set StakingFactory as whitelist manager of ERC20AssetHandler
+    const erc20AssetHandler = new ethers.Contract(env.erc20AssetHandlerContract, ERC20AssetHandlerJson.abi, env.wallet);
+    await erc20AssetHandler.adminAddWhitelistManager(env.stakingFactoryContract);
+    console.log('Set StakingFactory as whitelist manager of ERC20AssetHandler');
+
+    // set StakingFactory as whitelist manager of TrustlessAssetHandler
+    const trustlessAssetHandler = new ethers.Contract(env.trustlessAssetHandlerContract, TrustlessAssetHandlerJson.abi, env.wallet);
+    await trustlessAssetHandler.adminAddWhitelistManager(env.stakingFactoryContract);
+    console.log('Set StakingFactory as whitelist manager of TrustlessAssetHandler');
+
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
     // dump to local file

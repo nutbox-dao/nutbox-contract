@@ -48,6 +48,20 @@ contract StakingFactory {
             _distributionEras
         );
 
+        // add feast into whitelist of ERC20AssetHandler
+        bytes memory data = abi.encodeWithSignature(
+            "setWhiteList(address)",
+            feastAddress
+        );
+        (bool success1,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+        require(success1, "failed to call ERC20AssetHandler.setWhitelist");
+
+        // add feast into whitelist of TrustlessAssetHandler
+        (bool success2,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
+        require(success2, "failed to call TrustlessAssetHandler.setWhitelist");
+
+        // TODO: add feast into whitelist of ERC721AssetHandler
+
         emit StakingFeastCreated(msg.sender, address(feastAddress), _rewardAsset);
     }
 

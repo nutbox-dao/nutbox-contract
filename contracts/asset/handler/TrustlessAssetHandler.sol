@@ -26,11 +26,21 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     // assetId => PoolInfo
     mapping (bytes32 => PoolInfo) private attachedPool;
 
+    bytes32 public constant WHITELIST_MANAGER_ROLE = keccak256("WHITELIST_MANAGER_ROLE");
+
+    event WhitelistManagerAdded(address manager);
+    event WhitelistManagerRemoved(address manager);
     event AttachedPool(bytes32 assetId, address stakingFeast, uint8 pid);
     event BalanceUpdated(bytes32 source, bytes32 assetId, address account, uint256 amount);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
+        _;
+    }
+
+    modifier onlyAdminOrWhitelistManager() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(WHITELIST_MANAGER_ROLE, msg.sender),
+            "Sender is not admin or in whitelist manager group");
         _;
     }
 
@@ -46,6 +56,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         bridge = _bridge;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setRoleAdmin(WHITELIST_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
     function setRegistryHub(address _registryHub) public onlyAdmin {
@@ -53,7 +64,25 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         registryHub = _registryHub;
     }
 
-    function attachPool(bytes32 assetId, address stakingFeast, uint8 pid) external onlyBridge {
+    function adminAddWhitelistManager(address _manager) public onlyAdmin {
+        require(!hasRole(WHITELIST_MANAGER_ROLE, _manager), "Address already in the whitelist manager group");
+        grantRole(WHITELIST_MANAGER_ROLE, _manager);
+        emit WhitelistManagerAdded(_manager);
+    }
+
+    function adminRemoveWhitelistManager(address _manager) public onlyAdmin {
+        require(hasRole(WHITELIST_MANAGER_ROLE, _manager), "Address not in the whitelist manager group");
+        revokeRole(WHITELIST_MANAGER_ROLE, _manager);
+        emit WhitelistManagerRemoved(_manager);
+    }
+
+    function setWhitelist(address _contract) public onlyAdminOrWhitelistManager {
+        require(_contract != address(0), 'Invalid contract address');
+        whiteList[_contract] = true;
+    }
+
+    function attachPool(bytes32 assetId, address stakingFeast, uint8 pid) external {
+        require(whiteList[msg.sender], 'Permission denied: contract not in whitelist');
         attachedPool[assetId].stakingFeast = stakingFeast;
         attachedPool[assetId].pid = pid;
         emit AttachedPool(assetId, stakingFeast, pid);
