@@ -12,6 +12,8 @@ contract RegistryHub is IRegistryHub, Ownable {
     mapping (address => bool) public whiteList;
     // owner => assetIdList
     mapping (address => bytes32[]) public registryHub;
+    // owner => counter
+    mapping (address => uint8) public registryCounter;
     // owner => assetId => hasRegistered
     mapping (bytes32 => bool) private registryRecord;
     // assetId => isMintable
@@ -49,6 +51,7 @@ contract RegistryHub is IRegistryHub, Ownable {
 
         registryHub[owner].push(id);
         registryRecord[id] = true;
+        registryCounter[owner] = registryCounter[owner] + 1;
         idToForeignLocation[id] = foreignLocation;
         idToHomeLocation[id] = homeLocation;
         trustlessAsset[id] = trustless;
