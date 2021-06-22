@@ -3,14 +3,14 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
-const { waitForTx } = require('../utils.js');
+const { waitForTx } = require('./utils.js');
 
-const StakingFactoryJson = require('../../build/contracts/StakingFactory.json');
-const StakingTemplateJson = require('../../build/contracts/StakingTemplate.json')
-const RegistryHubJson = require('../../build/contracts/RegistryHub.json');
-const SimpleERC20Json = require('../../build/contracts/SimpleERC20.json');
-const ERC20AssetHandlerJson = require('../../build/contracts/ERC20AssetHandler.json');
-const Contracts = require('../contracts.json');
+const StakingFactoryJson = require('../build/contracts/StakingFactory.json');
+const StakingTemplateJson = require('../build/contracts/StakingTemplate.json')
+const RegistryHubJson = require('../build/contracts/RegistryHub.json');
+const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const ERC20AssetHandlerJson = require('../build/contracts/ERC20AssetHandler.json');
+const Contracts = require('./contracts.json');
 
 const RegistryHubAddress = Contracts.RegistryHub;
 const StakingFactoryAddress = Contracts.StakingFactory;
@@ -58,15 +58,6 @@ async function main() {
     await waitForTx(env.provider, tx.hash);
 
     StakingFactory.on('StakingFeastCreated', async (creater, stakingFeast, rewardAsset) => {
-
-        // add staking feast to whitelist of erc20 asset handler, so that it has the permission to deposit reward
-        const ERC20AssetHandler = new ethers.Contract(ERC20AssetHandlerAddress, ERC20AssetHandlerJson.abi, env.wallet);
-        const tx0 = await ERC20AssetHandler.setWhiteList(   // need admin permission
-            stakingFeast, 
-            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-        );
-        await waitForTx(env.provider, tx0.hash);
-
         // approve
         const rewardHomeLocation = await RegistryHub.getHomeLocation(rewardAsset);
         const SimpleERC20 = new ethers.Contract(rewardHomeLocation, SimpleERC20Json.abi, env.wallet);

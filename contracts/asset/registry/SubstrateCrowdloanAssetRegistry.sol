@@ -28,6 +28,7 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
 
     event SubstrateCrowdloanAssetRegistered(
         address indexed owner,
+        bytes32 indexed id,
         Metadata meta
     );
 
@@ -82,6 +83,6 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
         idToMetadata[assetId] = meta;
         assetLifeCycle[assetId] = true;
 
-        emit SubstrateCrowdloanAssetRegistered(msg.sender, meta);
+        emit SubstrateCrowdloanAssetRegistered(msg.sender, assetId, meta);
     }
 }

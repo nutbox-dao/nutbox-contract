@@ -71,14 +71,14 @@ async function deploySubstrateNominateAssetRegistryContract(env) {
     console.log("✓ SubstrateNominateAssetRegistry contract deployed");
 }
 
-async function deployExectorContract(env) {
+async function deployExecutorContract(env) {
     let factory = new ethers.ContractFactory(ExectorJson.abi, ExectorJson.bytecode, env.wallet);
     let contract = await factory.deploy(
         env.registryHubContract,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();
-    env.exectorContract = contract.address;
+    env.executorContract = contract.address;
     console.log("✓ Proposal Exector contract deployed");
 }
 
@@ -86,7 +86,7 @@ async function deployBridgeContract(env) {
     let factory = new ethers.ContractFactory(BridgeJson.abi, BridgeJson.bytecode, env.wallet);
     let contract = await factory.deploy(
         env.registryHubContract,
-        env.exectorContract,
+        env.executorContract,
         ethers.utils.parseEther(env.bridgeFee.toString()),
         env.bridgeExpiry,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
@@ -113,7 +113,7 @@ async function deployTrustlessAssetHandlerContract(env) {
     let factory = new ethers.ContractFactory(TrustlessAssetHandlerJson.abi, TrustlessAssetHandlerJson.bytecode, env.wallet);
     let contract = await factory.deploy(
         env.registryHubContract,
-        env.bridgeContract,
+        env.executorContract,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();
@@ -166,7 +166,7 @@ async function main() {
     await deploySubstrateNominateAssetRegistryContract(env);
 
     // deploy bridge contract
-    await deployExectorContract(env);
+    await deployExecutorContract(env);
     await deployBridgeContract(env);
 
     // deploy asset handlers
@@ -179,12 +179,32 @@ async function main() {
     console.log('RegistryHub has set asset handlers');
 
     // exector set bridge
-    const executor = new ethers.Contract(env.exectorContract, ExectorJson.abi, env.wallet);
+    const executor = new ethers.Contract(env.executorContract, ExectorJson.abi, env.wallet);
     await executor.adminSetBridge(env.bridgeContract);
     console.log('Executor has set bridge');
 
     // deploy staking factory contract
     await deployStakingFactoryContract(env);
+
+    // set StakingFactory as whitelist manager of ERC20AssetHandler
+    const erc20AssetHandler = new ethers.Contract(env.erc20AssetHandlerContract, ERC20AssetHandlerJson.abi, env.wallet);
+    await erc20AssetHandler.adminAddWhitelistManager(env.stakingFactoryContract);
+    console.log('Set StakingFactory as whitelist manager of ERC20AssetHandler');
+
+    // set StakingFactory as whitelist manager of TrustlessAssetHandler
+    const trustlessAssetHandler = new ethers.Contract(env.trustlessAssetHandlerContract, TrustlessAssetHandlerJson.abi, env.wallet);
+    await trustlessAssetHandler.adminAddWhitelistManager(env.stakingFactoryContract);
+    console.log('Set StakingFactory as whitelist manager of TrustlessAssetHandler');
+
+    // add Executor into whitelist of ERC20AssetHandler
+    await erc20AssetHandler.setWhitelist(env.executorContract);
+    console.log('Add Executor into whitelist of ERC20AssetHandler');
+
+    // add Executor into whitelist of TrustlessAssetHandler
+    await trustlessAssetHandler.setWhitelist(env.executorContract);
+    console.log('Add Executor into whitelist of TrustlessAssetHandler');
+
+    // TODO: add Executor into whitelist of ERC721AssetHandler
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
@@ -198,7 +218,7 @@ async function main() {
         ERC20AssetHandler: env.erc20AssetHandlerContract ? env.erc20AssetHandlerContract : "Not Deployed",
         ERC721AssetHandler: env.erc721AssetHandlerContract ? env.erc721AssetHandlerContract : "Not Deployed",
         TrustlessAssetHandler: env.trustlessAssetHandlerContract ? env.trustlessAssetHandlerContract : "Not Deployed",
-        Executor:  env.exectorContract ? env.exectorContract : "Not Deployed",
+        Executor:  env.executorContract ? env.executorContract : "Not Deployed",
         Bridge: env.bridgeContract ? env.bridgeContract : "Not Deployed",
         StakingFactory: env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed"
     };
@@ -239,7 +259,7 @@ async function main() {
     ----------------------------------------------------------------
     TrustlessAssetHandler:              ${env.trustlessAssetHandlerContract ? env.trustlessAssetHandlerContract : "Not Deployed"}
     ----------------------------------------------------------------
-    Executor:                           ${env.exectorContract ? env.exectorContract : "Not Deployed"}
+    Executor:                           ${env.executorContract ? env.executorContract : "Not Deployed"}
     ----------------------------------------------------------------
     Bridge:                             ${env.bridgeContract ? env.bridgeContract : "Not Deployed"}
     ----------------------------------------------------------------

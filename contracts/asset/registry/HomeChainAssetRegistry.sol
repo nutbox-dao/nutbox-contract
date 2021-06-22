@@ -12,6 +12,7 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
     event HomeChainAssetRegistered(
         address indexed owner,
+        bytes32 indexed id,
         address indexed homeLocation
     );
 
@@ -43,6 +44,6 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
         (bool success,) = registryHub.call(data);
         require(success, "failed to call register bub");
 
-        emit HomeChainAssetRegistered(msg.sender, homeLocation);
+        emit HomeChainAssetRegistered(msg.sender, assetId, homeLocation);
     }
 }

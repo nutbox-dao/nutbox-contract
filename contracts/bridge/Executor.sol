@@ -27,6 +27,7 @@ contract Executor is AccessControl, IExecutor {
 
     constructor(address _registryHub) public {
         require(_registryHub != address(0), 'Invalid registry hub address');
+        registryHub = _registryHub;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -45,8 +46,8 @@ contract Executor is AccessControl, IExecutor {
         if(extrinsicType == 0) {    // asset
             uint8 assetType = extrinsic.toUint8(1);
             bytes32 assetId = extrinsic.toBytes32(2);
-            bytes memory recipientBytes = extrinsic.slice(33, 20);
-            uint256 amount = extrinsic.toUint256(52);
+            bytes memory recipientBytes = extrinsic.slice(34, 20);
+            uint256 amount = extrinsic.toUint256(54);
             bytes32 source = keccak256(abi.encodePacked(bridge, assetId));
             bytes20 recipient;
             assembly {

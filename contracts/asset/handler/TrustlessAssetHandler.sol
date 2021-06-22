@@ -17,7 +17,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     }
 
     address public registryHub;
-    address public bridge;
+    address public executor;
 
     // contract => hasWhitelisted
     mapping (address => bool) private whiteList;
@@ -26,6 +26,10 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     // assetId => PoolInfo
     mapping (bytes32 => PoolInfo) private attachedPool;
 
+    bytes32 public constant WHITELIST_MANAGER_ROLE = keccak256("WHITELIST_MANAGER_ROLE");
+
+    event WhitelistManagerAdded(address manager);
+    event WhitelistManagerRemoved(address manager);
     event AttachedPool(bytes32 assetId, address stakingFeast, uint8 pid);
     event BalanceUpdated(bytes32 source, bytes32 assetId, address account, uint256 amount);
 
@@ -34,18 +38,25 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         _;
     }
 
-    modifier onlyBridge() {
-        require(msg.sender == bridge, "sender is not bridge");
+    modifier onlyAdminOrWhitelistManager() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(WHITELIST_MANAGER_ROLE, msg.sender),
+            "Sender is not admin or in whitelist manager group");
         _;
     }
 
-    constructor(address _registryHub, address _bridge) public {
+    modifier onlyExecutor() {
+        require(msg.sender == executor, "sender is not executor");
+        _;
+    }
+
+    constructor(address _registryHub, address _executor) public {
         require(_registryHub != address(0), 'Invalid registry hub address');
-        require(_bridge != address(0), 'Invalid bridge hub address');
+        require(_executor != address(0), 'Invalid executor hub address');
         registryHub = _registryHub;
-        bridge = _bridge;
+        executor = _executor;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setRoleAdmin(WHITELIST_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
     function setRegistryHub(address _registryHub) public onlyAdmin {
@@ -53,13 +64,31 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         registryHub = _registryHub;
     }
 
-    function attachPool(bytes32 assetId, address stakingFeast, uint8 pid) external onlyBridge {
+    function adminAddWhitelistManager(address _manager) public onlyAdmin {
+        require(!hasRole(WHITELIST_MANAGER_ROLE, _manager), "Address already in the whitelist manager group");
+        grantRole(WHITELIST_MANAGER_ROLE, _manager);
+        emit WhitelistManagerAdded(_manager);
+    }
+
+    function adminRemoveWhitelistManager(address _manager) public onlyAdmin {
+        require(hasRole(WHITELIST_MANAGER_ROLE, _manager), "Address not in the whitelist manager group");
+        revokeRole(WHITELIST_MANAGER_ROLE, _manager);
+        emit WhitelistManagerRemoved(_manager);
+    }
+
+    function setWhitelist(address _contract) public onlyAdminOrWhitelistManager {
+        require(_contract != address(0), 'Invalid contract address');
+        whiteList[_contract] = true;
+    }
+
+    function attachPool(bytes32 assetId, address stakingFeast, uint8 pid) external {
+        require(whiteList[msg.sender], 'Permission denied: contract not in whitelist');
         attachedPool[assetId].stakingFeast = stakingFeast;
         attachedPool[assetId].pid = pid;
         emit AttachedPool(assetId, stakingFeast, pid);
     }
 
-    function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount) override external onlyBridge {
+    function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount) override external onlyExecutor {
         // check if the asset is trustless
         require(IRegistryHub(registryHub).isTrustless(assetId), 'Asset is not trustless');
         depositBalance[source][account] = amount;
@@ -74,9 +103,8 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
             );
             (bool success,) = attachedPool[assetId].stakingFeast.call(data);
             require(success, "failed to call stakingFeast::update");
+            emit BalanceUpdated(source, assetId, account, amount);
         }
-
-        emit BalanceUpdated(source, assetId, account, amount);
     }
 
     function getBalance(bytes32 source, address account) override view external returns(uint256) {
