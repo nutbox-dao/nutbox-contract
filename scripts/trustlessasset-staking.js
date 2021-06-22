@@ -3,18 +3,18 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
-const { waitForTx } = require('../utils.js');
+const { waitForTx } = require('./utils.js');
 
-const StakingFactoryJson = require('../../build/contracts/StakingFactory.json');
-const StakingTemplateJson = require('../../build/contracts/StakingTemplate.json')
-const RegistryHubJson = require('../../build/contracts/RegistryHub.json');
-const SimpleERC20Json = require('../../build/contracts/SimpleERC20.json');
-const ERC20AssetHandlerJson = require('../../build/contracts/ERC20AssetHandler.json');
-const TrustlessAssetHandlerJson = require('../../build/contracts/TrustlessAssetHandler.json');
-const BridgeJson= require('../../build/contracts/Bridge.json');
-const Contracts = require('../contracts.json');
+const StakingFactoryJson = require('../build/contracts/StakingFactory.json');
+const StakingTemplateJson = require('../build/contracts/StakingTemplate.json')
+const RegistryHubJson = require('../build/contracts/RegistryHub.json');
+const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const ERC20AssetHandlerJson = require('../build/contracts/ERC20AssetHandler.json');
+const TrustlessAssetHandlerJson = require('../build/contracts/TrustlessAssetHandler.json');
+const BridgeJson= require('../build/contracts/Bridge.json');
+const Contracts = require('./contracts.json');
 
-const RegistryHubAddress = Contract.RegistryHub;
+const RegistryHubAddress = Contracts.RegistryHub;
 const StakingFactoryAddress = Contracts.StakingFactory;
 const ERC20AssetHandlerAddress = Contracts.ERC20AssetHandler;
 const TrustlessAssetHandlerAddress = Contracts.TrustlessAssetHandler;
@@ -32,6 +32,7 @@ async function main() {
     const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.provider);
     const homeChainAsset = await RegistryHub.registryHub(env.wallet.address, 0);
     const substrateCrowdloanAsset = await RegistryHub.registryHub(env.wallet.address, 2);
+    console.log('substrateCrowdloanAsset: ', substrateCrowdloanAsset);
 
     const StakingFactory = new ethers.Contract(
         StakingFactoryAddress, StakingFactoryJson.abi, env.wallet
@@ -42,20 +43,20 @@ async function main() {
             {
                 "hasPassed": false,
                 "amount": 300,
-                "startHeight": 201,
-                "stopHeight": 300
+                "startHeight": 1301,
+                "stopHeight": 1400
             },
             {
                 "hasPassed": false,
                 "amount": 200,
-                "startHeight": 301,
-                "stopHeight": 400
+                "startHeight": 1401,
+                "stopHeight": 1500
             },
             {
                 "hasPassed": false,
                 "amount": 100,
-                "startHeight": 401,
-                "stopHeight": 500
+                "startHeight": 1501,
+                "stopHeight": 1600
             }
         ],  // distribution eras
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
@@ -89,7 +90,7 @@ async function main() {
             ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 1).substr(2) + // assetType: 0
             substrateCrowdloanAsset.substr(2) + // assetId
             env.wallet.address.substr(2) + // recipientBytes
-            ethers.utils.hexZeroPad(ethers.utils.bigNumberify(1000000000).toHexString(), 32).substr(2); // amount
+            ethers.utils.hexZeroPad(ethers.BigNumber.from(1000000000).toHexString(), 32).substr(2); // amount
         
         // generate extrinsicHash
         const extrinsicHash = ethers.utils.keccak256(extrinsic);

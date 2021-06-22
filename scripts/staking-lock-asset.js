@@ -3,14 +3,14 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
-const { waitForTx } = require('../utils.js');
+const { waitForTx } = require('./utils.js');
 
-const StakingFactoryJson = require('../../build/contracts/StakingFactory.json');
-const StakingTemplateJson = require('../../build/contracts/StakingTemplate.json')
-const RegistryHubJson = require('../../build/contracts/RegistryHub.json');
-const SimpleERC20Json = require('../../build/contracts/SimpleERC20.json');
-const ERC20AssetHandlerJson = require('../../build/contracts/ERC20AssetHandler.json');
-const Contracts = require('../contracts.json');
+const StakingFactoryJson = require('../build/contracts/StakingFactory.json');
+const StakingTemplateJson = require('../build/contracts/StakingTemplate.json')
+const RegistryHubJson = require('../build/contracts/RegistryHub.json');
+const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const ERC20AssetHandlerJson = require('../build/contracts/ERC20AssetHandler.json');
+const Contracts = require('./contracts.json');
 
 const RegistryHubAddress = Contracts.RegistryHub;
 const StakingFactoryAddress = Contracts.StakingFactory;

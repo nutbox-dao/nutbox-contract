@@ -17,7 +17,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     }
 
     address public registryHub;
-    address public bridge;
+    address public executor;
 
     // contract => hasWhitelisted
     mapping (address => bool) private whiteList;
@@ -44,16 +44,16 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         _;
     }
 
-    modifier onlyBridge() {
-        require(msg.sender == bridge, "sender is not bridge");
+    modifier onlyExecutor() {
+        require(msg.sender == executor, "sender is not executor");
         _;
     }
 
-    constructor(address _registryHub, address _bridge) public {
+    constructor(address _registryHub, address _executor) public {
         require(_registryHub != address(0), 'Invalid registry hub address');
-        require(_bridge != address(0), 'Invalid bridge hub address');
+        require(_executor != address(0), 'Invalid executor hub address');
         registryHub = _registryHub;
-        bridge = _bridge;
+        executor = _executor;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setRoleAdmin(WHITELIST_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
@@ -88,7 +88,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         emit AttachedPool(assetId, stakingFeast, pid);
     }
 
-    function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount) override external onlyBridge {
+    function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount) override external onlyExecutor {
         // check if the asset is trustless
         require(IRegistryHub(registryHub).isTrustless(assetId), 'Asset is not trustless');
         depositBalance[source][account] = amount;
@@ -103,9 +103,8 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
             );
             (bool success,) = attachedPool[assetId].stakingFeast.call(data);
             require(success, "failed to call stakingFeast::update");
+            emit BalanceUpdated(source, assetId, account, amount);
         }
-
-        emit BalanceUpdated(source, assetId, account, amount);
     }
 
     function getBalance(bytes32 source, address account) override view external returns(uint256) {

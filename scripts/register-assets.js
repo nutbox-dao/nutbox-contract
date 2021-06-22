@@ -3,14 +3,14 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
-const { waitForTx } = require('../utils.js');
-const RegistryHubJson = require('../../build/contracts/RegistryHub.json');
-const HomeChainAssetRegistryJson = require('../../build/contracts/HomeChainAssetRegistry.json');
-const SteemHiveDelegateAssetRegistryJson = require('../../build/contracts/SteemHiveDelegateAssetRegistry.json');
-const SubstrateCrowdloanAssetRegistryJson = require('../../build/contracts/SubstrateCrowdloanAssetRegistry.json');
-const SubstrateNominateAssetRegistryJson = require('../../build/contracts/SubstrateNominateAssetRegistry.json');
-const SimpleERC20Json = require('../../build/contracts/SimpleERC20.json');
-const Contracts = require('../contracts.json');
+const { waitForTx } = require('./utils.js');
+const RegistryHubJson = require('../build/contracts/RegistryHub.json');
+const HomeChainAssetRegistryJson = require('../build/contracts/HomeChainAssetRegistry.json');
+const SteemHiveDelegateAssetRegistryJson = require('../build/contracts/SteemHiveDelegateAssetRegistry.json');
+const SubstrateCrowdloanAssetRegistryJson = require('../build/contracts/SubstrateCrowdloanAssetRegistry.json');
+const SubstrateNominateAssetRegistryJson = require('../build/contracts/SubstrateNominateAssetRegistry.json');
+const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const Contracts = require('./contracts.json');
 
 const RegistryHubAddress = Contracts.RegistryHub;
 const HomeChainAssetRegistryAddress = Contracts.HomeChainAssetRegistry;
@@ -59,11 +59,11 @@ async function main() {
     const HomeChainAssetRegistry = new ethers.Contract(
         HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet
     );
-    const tx = await HomeChainAssetRegistry.registerAsset(
+    const tx0 = await HomeChainAssetRegistry.registerAsset(
         '0x', env.simpleERC20Contract, '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
-    await waitForTx(env.provider, tx.hash);
+    await waitForTx(env.provider, tx0.hash);
 
     // steem hive delegate asset registry
     const SteemHiveDelegateAssetRegistry = new ethers.Contract(
@@ -74,11 +74,11 @@ async function main() {
     //  assetType           bytes2  bytes[1, 2]     "sp"
     //  agentAccountLen     uint32  bytes[3, 6]
     //  agentAccount        bytes   bytes[7, end]
-    const tx = await SteemHiveDelegateAssetRegistry.registerAsset(
+    const tx1 = await SteemHiveDelegateAssetRegistry.registerAsset(
         '0x0173700000000411223344', '0x0000000000000000000000000000000000000000', '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
-    await waitForTx(env.provider, tx.hash);
+    await waitForTx(env.provider, tx1.hash);
 
     // substrate crowdloan asset registry
     const SubstrateCrowdloanAssetRegistry = new ethers.Contract(
@@ -90,7 +90,7 @@ async function main() {
     //      paraId              uint32      bytes[1, 4]
     //      trieIndex           uint32      bytes[5, 8]
     //      communityAccount    bytes32     bytes[9, end]
-    const tx = await SubstrateCrowdloanAssetRegistry.registerAsset(
+    const tx2 = await SubstrateCrowdloanAssetRegistry.registerAsset(
         '0x' + 
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substr(2) +     // chainId: polkadot
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2004), 4).substr(2) +  // paraId: 2004
@@ -100,7 +100,7 @@ async function main() {
         '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
-    await waitForTx(env.provider, tx.hash);
+    await waitForTx(env.provider, tx2.hash);
 
     // substrate nominate asset registry
     const SubstrateNominateAssetRegistry = new ethers.Contract(
@@ -111,7 +111,7 @@ async function main() {
     //      chainId             uint8       bytes[0]        2: Polkadot, 3: Kusama, 4,5,6,7 are reserved for other relaychain
     //                                                      8-107 are reserved for FRAME based standalone chains
     //      validatorAccount    bytes32     bytes[1, end]
-    const tx = await SubstrateNominateAssetRegistry.registerAsset(
+    const tx3 = await SubstrateNominateAssetRegistry.registerAsset(
         '0x' + 
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substr(2) +     // chainId: polkadot
         ethers.utils.hexZeroPad(ethers.utils.hexlify(8), 32).substr(2),     // validatorAccount        
@@ -119,7 +119,7 @@ async function main() {
         '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
-    await waitForTx(env.provider, tx.hash);
+    await waitForTx(env.provider, tx3.hash);
 }
 
 main()
