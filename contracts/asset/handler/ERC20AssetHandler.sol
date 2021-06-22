@@ -64,7 +64,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         emit WhitelistManagerRemoved(_manager);
     }
 
-    function setWhiteList(address _contract) public onlyAdminOrWhitelistManager {
+    function setWhitelist(address _contract) public onlyAdminOrWhitelistManager {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
     }
