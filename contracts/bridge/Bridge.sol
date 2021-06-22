@@ -162,7 +162,7 @@ contract Bridge is AccessControl, IBridge {
 
         proposal.status = Types.ProposalStatus.Executed;
 
-        emit ProposalExecuted(proposal, relayer);
+        emit ProposalExecuted(proposal, msg.sender);
     }
 
     function cancelProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash) override external {

@@ -50,7 +50,7 @@ contract StakingFactory {
 
         // add feast into whitelist of ERC20AssetHandler
         bytes memory data = abi.encodeWithSignature(
-            "setWhiteList(address)",
+            "setWhitelist(address)",
             feastAddress
         );
         (bool success1,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
