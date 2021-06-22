@@ -26,6 +26,7 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
 
     event SubstrateNominateAssetRegistered(
         address indexed owner,
+        bytes32 indexed id,
         Metadata meta
     );
 
@@ -75,6 +76,6 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
         idToMetadata[assetId] = meta;
         assetLifeCycle[assetId] = true;
 
-        emit SubstrateNominateAssetRegistered(msg.sender, meta);
+        emit SubstrateNominateAssetRegistered(msg.sender, assetId, meta);
     }
 }

@@ -27,6 +27,7 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
 
     event SteemHiveDelegateAssetRegisterd(
         address indexed owner,
+        bytes32 indexed id,
         Metadata meta
     );
 
@@ -79,6 +80,6 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
         idToMetadata[assetId] = meta;
         assetLifeCycle[assetId] = true;
 
-        emit SteemHiveDelegateAssetRegisterd(msg.sender, meta);
+        emit SteemHiveDelegateAssetRegisterd(msg.sender, assetId, meta);
     }
 }

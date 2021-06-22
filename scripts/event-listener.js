@@ -39,23 +39,23 @@ function main() {
     });
 
     const HomeChainAssetRegistry = new ethers.Contract(HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.provider);
-    HomeChainAssetRegistry.on('HomeChainAssetRegistered', (owner, location) => {
-        console.log(`HomeChainAssetRegistry::HomeChainAssetRegistered(${owner}, ${location})`);
+    HomeChainAssetRegistry.on('HomeChainAssetRegistered', (owner, id, location) => {
+        console.log(`HomeChainAssetRegistry::HomeChainAssetRegistered(${owner}, ${id}, ${location})`);
     });
 
     const SteemHiveDelegateAssetRegistry = new ethers.Contract(SteemHiveDelegateAssetRegistryAddress, SteemHiveDelegateAssetRegistryJson.abi, env.provider);
-    SteemHiveDelegateAssetRegistry.on('SteemHiveDelegateAssetRegisterd', (owner, meta) => {
-        console.log(`SteemHiveDelegateAssetRegistry::SteemHiveDelegateAssetRegisterd(${owner}, ${meta})`);
+    SteemHiveDelegateAssetRegistry.on('SteemHiveDelegateAssetRegisterd', (owner, id, meta) => {
+        console.log(`SteemHiveDelegateAssetRegistry::SteemHiveDelegateAssetRegisterd(${owner}, ${id}, ${meta})`);
     });
 
     const SubstrateCrowdloanAssetRegistry = new ethers.Contract(SubstrateCrowdloanAssetRegistryAddress, SubstrateCrowdloanAssetRegistryJson.abi, env.provider);
-    SubstrateCrowdloanAssetRegistry.on('SubstrateCrowdloanAssetRegistered', (owner, meta) => {
-        console.log(`SubstrateCrowdloanAssetRegistry::SubstrateCrowdloanAssetRegistered(${owner}, ${meta})`);
+    SubstrateCrowdloanAssetRegistry.on('SubstrateCrowdloanAssetRegistered', (owner, id, meta) => {
+        console.log(`SubstrateCrowdloanAssetRegistry::SubstrateCrowdloanAssetRegistered(${owner}, ${id}, ${meta})`);
     });
 
     const SubstrateNominateAssetRegistry = new ethers.Contract(SubstrateNominateAssetRegistryAddress, SubstrateNominateAssetRegistryJson.abi, env.provider);
-    SubstrateNominateAssetRegistry.on('SubstrateNominateAssetRegistered', (owner, meta) => {
-        console.log(`SubstrateNominateAssetRegistry::SubstrateNominateAssetRegistered(${owner}, ${meta})`);
+    SubstrateNominateAssetRegistry.on('SubstrateNominateAssetRegistered', (owner, id, meta) => {
+        console.log(`SubstrateNominateAssetRegistry::SubstrateNominateAssetRegistered(${owner}, ${id}, ${meta})`);
     });
 
     const ERC20AssetHandler = new ethers.Contract(ERC20AssetHandlerAddress, ERC20AssetHandlerJson.abi, env.provider);
