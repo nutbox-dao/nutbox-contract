@@ -9,7 +9,7 @@ const TrustlessAssetHandlerJson = require('../build/contracts/TrustlessAssetHand
 const Contracts = require('./contracts.json');
 
 const RegistryHubAddress = Contracts.RegistryHub;
-const AssetsOwner = '0x03bAb49C10c93f123eeE13b82adc55d1B07C9fb2';
+const AssetsOwner = '0xb182f4892397BF758179B220C881E32ce6EE32E2';
 const BridgeAddress = Contracts.Bridge;
 const TrustlessAssetHandlerAddress = Contracts.TrustlessAssetHandler;
 
@@ -19,7 +19,6 @@ async function main() {
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
 
     const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.provider);
-
     const homeChainAsset = await RegistryHub.registryHub(AssetsOwner, 0);
     const steemHiveDelegateAsset = await RegistryHub.registryHub(AssetsOwner, 1);
     const substrateCrowdloanAsset = await RegistryHub.registryHub(AssetsOwner, 2);
