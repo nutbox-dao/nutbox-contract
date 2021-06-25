@@ -22,6 +22,8 @@ contract RegistryHub is IRegistryHub, Ownable {
     mapping (bytes32 => bytes) private idToForeignLocation;
     // assetId => homeLocation
     mapping (bytes32 => address) private idToHomeLocation;
+    // assetId => registryContract
+    mapping (bytes32 => address) private idToRegistryContract;
     // assetid => trustless
     mapping (bytes32 => bool) private trustlessAsset;
 
@@ -54,6 +56,7 @@ contract RegistryHub is IRegistryHub, Ownable {
         registryCounter[owner] = registryCounter[owner] + 1;
         idToForeignLocation[id] = foreignLocation;
         idToHomeLocation[id] = homeLocation;
+        idToRegistryContract[id] = msg.sender;
         trustlessAsset[id] = trustless;
         emit NewAsset(owner, id);
     }
@@ -77,6 +80,10 @@ contract RegistryHub is IRegistryHub, Ownable {
 
     function getForeignLocation(bytes32 id) external override view returns(bytes memory) {
         return idToForeignLocation[id];
+    }
+
+    function getRegistryContract(bytes32 id) external override view returns(address) {
+        return idToRegistryContract[id];
     }
 
     function getERC20AssetHandler() external override view returns(address) {
