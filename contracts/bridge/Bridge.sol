@@ -13,7 +13,7 @@ import '../asset/interfaces/IRegistryHub.sol';
 contract Bridge is AccessControl, IBridge {
     using SafeMath for uint256;
 
-    uint256 public threadhold;
+    uint256 public threshold;
     uint256 public relayerCount;
     uint256 public fee;
     uint256 public expiry;
@@ -62,9 +62,9 @@ contract Bridge is AccessControl, IBridge {
         relayerCount--;
     }
 
-    function adminSetThreadhold(uint256 _threadhold) external onlyAdmin {
-        require(_threadhold >= 1, 'Invalid threadhold value');
-        threadhold = _threadhold;
+    function adminSetThreshold(uint256 _threshold) external onlyAdmin {
+        require(_threshold >= 1, 'Invalid threshold value');
+        threshold = _threshold;
     }
 
     function adminSetFee(uint256 _fee) external onlyAdmin{
@@ -136,7 +136,7 @@ contract Bridge is AccessControl, IBridge {
         }
 
         if (proposal.status != Types.ProposalStatus.Cancelled) {
-            if (threadhold <= 1 || proposal.ayeVotes >= threadhold) {
+            if (threshold <= 1 || proposal.ayeVotes >= threshold) {
                 proposal.status = Types.ProposalStatus.Passed;
                 emit ProposalPassed(proposal, msg.sender);
             }

@@ -80,8 +80,8 @@ async function main() {
         const tx1 = await Bridge.adminAddRelayer(env.wallet.address, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
         await waitForTx(env.provider, tx1.hash);
 
-        // set threadhold
-        const tx2 = await Bridge.adminSetThreadhold(1, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
+        // set threshold
+        const tx2 = await Bridge.adminSetThreshold(1, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
         await waitForTx(env.provider, tx2.hash);
 
         // generate extrinsic
