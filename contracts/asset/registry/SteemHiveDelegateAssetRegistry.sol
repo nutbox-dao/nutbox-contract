@@ -43,7 +43,7 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
 
     //spec of foreignLocation:
     //  chainId             uint8   bytes[0]        1: Steem, 2: Hive
-    //  assetType           bytes2  bytes[1, 2]     "sp"
+    //  assetType           bytes2  bytes[1, 2]     "sp" or "hp"
     //  agentAccountLen     uint32  bytes[3, 6]
     //  agentAccount        bytes   bytes[7, end]
     function registerAsset(bytes memory foreignLocation, address homeLocation, bytes memory properties) external override {
@@ -51,7 +51,10 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
         uint8 chainId = foreignLocation.toUint8(0);
         require(chainId == 1 || chainId == 2, 'SteemHiveDelegateAssetRegistry: invalid chain id');
         string memory assetType = string(foreignLocation.slice(1, 2));
-        require(keccak256(abi.encodePacked((assetType))) == keccak256(abi.encodePacked(('sp'))), 'SteemHiveDelegateAssetRegistry: invalid asset type');
+        require(
+            keccak256(abi.encodePacked(assetType)) == keccak256(abi.encodePacked('sp')) || 
+            keccak256(abi.encodePacked(assetType)) == keccak256(abi.encodePacked('hp'))
+        , 'SteemHiveDelegateAssetRegistry: invalid asset type');
         uint32 agentAccountLen = foreignLocation.toUint32(3);
         bytes memory agentAccount = foreignLocation.slice(7, agentAccountLen);
 

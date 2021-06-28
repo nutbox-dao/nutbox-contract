@@ -12,7 +12,8 @@ interface IRegistryHub {
     function isTrustless(bytes32 id) external returns(bool);
     function getHomeLocation(bytes32 id) external returns(address);
     function getForeignLocation(bytes32 id) external returns(bytes memory);
-
+    function getRegistryContract(bytes32 id) external returns(address);
+    
     function getERC20AssetHandler() external returns(address);
     function getERC721AssetHandler() external returns(address);
     function getTrustlessAssetHandler() external returns(address);
