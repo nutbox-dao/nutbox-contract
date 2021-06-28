@@ -17,6 +17,11 @@ contract StakingFactory {
     address public registryHub;
     address public feeAddress;
 
+    // owner => stakingFeastList
+    mapping (address => address[]) public stakingFeastRecord;
+    // owner => counter
+    mapping (address => uint8) public stakingFeastCounter;
+
     event StakingFeastCreated(address indexed creater, address stakingFeast, bytes32 rewardAsset);
 
     constructor(address _registryHub, address _feeAddress) {
@@ -61,6 +66,10 @@ contract StakingFactory {
         require(success2, "failed to call TrustlessAssetHandler.setWhitelist");
 
         // TODO: add feast into whitelist of ERC721AssetHandler
+
+        // save record
+        stakingFeastRecord[msg.sender].push(address(feastAddress));
+        stakingFeastCounter[msg.sender] = stakingFeastCounter[msg.sender] + 1;
 
         emit StakingFeastCreated(msg.sender, address(feastAddress), _rewardAsset);
     }
