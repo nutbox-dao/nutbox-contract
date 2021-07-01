@@ -9,7 +9,6 @@ import '../../common/Types.sol';
  */
 interface IBridge {
     function getProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash) external returns(Types.Proposal memory);
-    function voteProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash) external;
-    function executeProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash, bytes calldata extrinsic) external;
+    function voteProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash, bytes calldata extrinsic) external;
     function cancelProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash) external;
 }
