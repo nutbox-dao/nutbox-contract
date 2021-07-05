@@ -54,8 +54,6 @@ async function main() {
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
 
-    console.log();
-
     // home chain asset registry
     const HomeChainAssetRegistry = new ethers.Contract(
         HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet

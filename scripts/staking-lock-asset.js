@@ -82,8 +82,6 @@ async function main() {
         const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2));
         const depositedReward = await ERC20AssetHandler.getBalance(source);
         console.log(`Deposited reward by ${env.wallet.address}: ${depositedReward}`);
-
-        const tx3 = await StakingFeast.
     });
 
     process.stdin.resume();//so the program will not close instantly
