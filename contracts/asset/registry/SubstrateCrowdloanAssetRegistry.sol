@@ -52,7 +52,7 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
 
         // check foreignLocation
         uint8 chainId = foreignLocation.toUint8(0);
-        require(chainId >= 2 || chainId <= 7, 'SubstrateCrowdloanAssetRegistry: invalid chain id');
+        require(chainId >= 2 && chainId <= 7, 'SubstrateCrowdloanAssetRegistry: invalid chain id');
         uint32 paraId = foreignLocation.toUint32(1);
         uint32 trieIndex = foreignLocation.toUint32(5);
         bytes32 communityAccount = foreignLocation.toBytes32(9);

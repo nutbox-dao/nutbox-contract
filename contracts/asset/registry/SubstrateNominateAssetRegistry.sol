@@ -49,7 +49,7 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
 
         // check foreignLocation
         uint8 chainId = foreignLocation.toUint8(0);
-        require(chainId >= 2 || chainId <= 107, 'SubstrateNominateAssetRegistry: invalid chain id');
+        require(chainId >= 2 && chainId <= 107, 'SubstrateNominateAssetRegistry: invalid chain id');
         bytes32 validatorAccount = foreignLocation.toBytes32(1);
 
         Metadata memory meta = Metadata({
