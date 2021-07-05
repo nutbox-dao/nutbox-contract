@@ -57,6 +57,8 @@ async function main() {
     );
     await waitForTx(env.provider, tx.hash);
 
+    const ERC20AssetHandler = new ethers.Contract(ERC20AssetHandlerAddress, ERC20AssetHandlerJson.abi, env.wallet)
+
     StakingFactory.on('StakingFeastCreated', async (creater, stakingFeast, rewardAsset) => {
         // approve
         const rewardHomeLocation = await RegistryHub.getHomeLocation(rewardAsset);
@@ -80,6 +82,8 @@ async function main() {
         const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2));
         const depositedReward = await ERC20AssetHandler.getBalance(source);
         console.log(`Deposited reward by ${env.wallet.address}: ${depositedReward}`);
+
+        const tx3 = await StakingFeast.
     });
 
     process.stdin.resume();//so the program will not close instantly
