@@ -100,19 +100,10 @@ async function main() {
             2,  // chainId: polkadot
             0,  // sequence: 0
             extrinsicHash,
-            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-        );
-        await waitForTx(env.provider, tx3.hash);
-
-        // execute proposal
-        const tx4 = await Bridge.executeProposal(
-            2,
-            0,
-            extrinsicHash,
             extrinsic,
             { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
         );
-        await waitForTx(env.provider, tx4.hash);
+        await waitForTx(env.provider, tx3.hash);
     });
 
     process.stdin.resume();//so the program will not close instantly

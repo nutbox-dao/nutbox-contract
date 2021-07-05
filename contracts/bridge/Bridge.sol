@@ -98,7 +98,7 @@ contract Bridge is AccessControl, IBridge {
     }
 
     // keccak256(chainId, sequence, extrinsicHash)
-    function voteProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash) override external {
+    function voteProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash, bytes calldata extrinsic) override external {
         // check relayer
         require(relayerRegistry[msg.sender] == true, 'Permission denied: sender is not relayer');
 
@@ -123,6 +123,7 @@ contract Bridge is AccessControl, IBridge {
             // vote this proposal YES
             hasVotedOnProposal[proposalId][msg.sender] = true;
             emit ProposalVoted(proposal, msg.sender);
+            _tryResolveProposal(proposalId, extrinsic);
         } else {
             if (block.number.sub(proposal.createdHeight) > expiry) {
                 proposal.status = Types.ProposalStatus.Cancelled;
@@ -132,37 +133,9 @@ contract Bridge is AccessControl, IBridge {
                 hasVotedOnProposal[proposalId][msg.sender] = true;
                 proposal.ayeVotes = proposal.ayeVotes + 1;
                 emit ProposalVoted(proposal, msg.sender);
+                _tryResolveProposal(proposalId, extrinsic);
             }
         }
-
-        if (proposal.status != Types.ProposalStatus.Cancelled) {
-            if (threshold <= 1 || proposal.ayeVotes >= threshold) {
-                proposal.status = Types.ProposalStatus.Passed;
-                emit ProposalPassed(proposal, msg.sender);
-            }
-        }
-    }
-
-    function executeProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash, bytes calldata extrinsic) override external {
-        // check relayer
-        require(relayerRegistry[msg.sender] == true, 'Permission denied: sender is not relayer');
-
-        bytes32 proposalId = keccak256(abi.encodePacked(chainId, sequence, extrinsicHash));
-        Types.Proposal storage proposal = proposalHistory[proposalId];
-
-        require(proposal.status == Types.ProposalStatus.Passed, "Proposal can not be executed under current status");
-
-        // execute proposal
-        bytes memory data = abi.encodeWithSignature(
-            "executeProposal(bytes)",
-            extrinsic
-        );
-        (bool success,) = executor.call(data);
-        require(success, "failed to call executor");
-
-        proposal.status = Types.ProposalStatus.Executed;
-
-        emit ProposalExecuted(proposal, msg.sender);
     }
 
     function cancelProposal(uint8 chainId, uint64 sequence, bytes32 extrinsicHash) override external {
@@ -176,5 +149,28 @@ contract Bridge is AccessControl, IBridge {
 
         proposal.status = Types.ProposalStatus.Cancelled;
         emit ProposalCancelled(proposal, msg.sender);
+    }
+
+    function _tryResolveProposal(bytes32 proposalId, bytes calldata extrinsic) private {
+        Types.Proposal storage proposal = proposalHistory[proposalId];
+
+        if (proposal.status != Types.ProposalStatus.Cancelled) {
+            if (threshold <= 1 || proposal.ayeVotes >= threshold) {
+                proposal.status = Types.ProposalStatus.Passed;
+                emit ProposalPassed(proposal, msg.sender);
+
+                // execute proposal
+                bytes memory data = abi.encodeWithSignature(
+                    "executeProposal(bytes)",
+                    extrinsic
+                );
+                (bool success,) = executor.call(data);
+                require(success, "failed to call executor");
+
+                proposal.status = Types.ProposalStatus.Executed;
+
+                emit ProposalExecuted(proposal, msg.sender);
+            }
+        }
     }
 }
