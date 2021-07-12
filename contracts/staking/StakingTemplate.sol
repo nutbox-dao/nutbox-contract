@@ -51,7 +51,8 @@ contract StakingTemplate is Ownable {
         // poolRatio is a configuration argument that the staking pool deployer give.
         // Case NutboxStakingTemplate contract support mult-pool staking, every pool's
         // reward of current block are distributed by this options.
-        uint8 poolRatio;
+        // Suport 2 decimals
+        uint16 poolRatio;
 
         // stakingPair actually is a asset contract entity, it represents the asset user stake of this pool. 
         // Bascially, it should be a normal ERC20 token or a lptoken of a specific token exchange pair 
@@ -155,7 +156,7 @@ contract StakingTemplate is Ownable {
     //     return ERC20AssetHandler(erc20Handler).getBalance(source);
     // }
 
-    function addPool(bytes32 pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
+    function addPool(bytes32 pair, uint16[] memory ratios) public onlyAdmin returns (uint8) {
         require(numberOfPools < MAX_POOLS, 'Exceed MAX_POOLS, can not add pool any more');
         require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
@@ -187,7 +188,7 @@ contract StakingTemplate is Ownable {
         return numberOfPools;
     }
 
-    function setPoolRatios(uint8[] memory ratios) public onlyAdmin {
+    function setPoolRatios(uint16[] memory ratios) public onlyAdmin {
         require(numberOfPools >  0, 'No pool exist');
         require((numberOfPools) == ratios.length, 'Wrong ratio count');
 
@@ -199,15 +200,15 @@ contract StakingTemplate is Ownable {
         _applyPoolsRatio(ratios);
     }
 
-    function getPoolRatios() public view returns (uint8[MAX_POOLS] memory) {
-        uint8[MAX_POOLS] memory ratios;
-        for(uint8 i = 0; i < numberOfPools; i++) {
+    function getPoolRatios() public view returns (uint16[MAX_POOLS] memory) {
+        uint16[MAX_POOLS] memory ratios;
+        for(uint16 i = 0; i < numberOfPools; i++) {
             ratios[i] = openedPools[i].poolRatio;
         }
         return ratios;
     }
 
-    function getSinglePoolRatio(uint8 pid) public view returns (uint8) {
+    function getSinglePoolRatio(uint8 pid) public view returns (uint16) {
         require(pid < MAX_POOLS, 'Invalid pid');
         return openedPools[pid].poolRatio;
     }
@@ -565,21 +566,21 @@ contract StakingTemplate is Ownable {
         }
     }
 
-    function _checkRatioSum(uint8[] memory ratios) private pure {
-        uint8 ratioSum = 0;
-        for(uint8 i = 0; i < ratios.length; i++) {
+    function _checkRatioSum(uint16[] memory ratios) private pure {
+        uint16 ratioSum = 0;
+        for(uint16 i = 0; i < ratios.length; i++) {
             ratioSum += ratios[i];
         }
-        require(ratioSum == 100, 'Ratio summary not equal to 100');
+        require(ratioSum == 10000, 'Ratio summary not equal to 10000');
     }
 
     /**
      * @dev Iterate every pool to update their ratio. 
-     * Every ratio is an integer between [0, 100], the summuary of all pool's ration should 
-     * equal to 100.
+     * Every ratio is an integer between [0, 10000], the summuary of all pool's ration should 
+     * equal to 10000.
      * Because pools always less than MAX_POOLS, so the loop is in control
      */
-    function _applyPoolsRatio(uint8[] memory ratios) private {
+    function _applyPoolsRatio(uint16[] memory ratios) private {
         // update pool ratio index
         for(uint8 i = 0; i < numberOfPools; i++) {
             openedPools[i].poolRatio = ratios[i];
