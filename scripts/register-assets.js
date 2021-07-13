@@ -53,6 +53,7 @@ async function main() {
     await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
+    return;
 
     // home chain asset registry
     const HomeChainAssetRegistry = new ethers.Contract(
@@ -63,6 +64,7 @@ async function main() {
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await waitForTx(env.provider, tx0.hash);
+    return;
 
     // steem hive delegate asset registry
     const SteemHiveDelegateAssetRegistry = new ethers.Contract(
