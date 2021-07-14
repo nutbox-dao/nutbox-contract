@@ -80,8 +80,8 @@ contract StakingTemplate is Ownable {
     uint8 public numberOfDistributionEras;
     Pool[MAX_POOLS] public openedPools;
     Types.Distribution[MAX_DISTRIBUTIONS] public distributionEras;
-    uint256 lastRewardBlock;
-    bytes32 rewardAsset;
+    uint256 public lastRewardBlock;
+    bytes32 public rewardAsset;
     address factory;
     address registryHub;
 
