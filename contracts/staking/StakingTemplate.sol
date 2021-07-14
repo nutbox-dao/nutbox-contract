@@ -45,6 +45,9 @@ contract StakingTemplate is Ownable {
         // We add stakingList here to let us iterate stakingInfo sometimes
         address[] stakingList;
 
+        // Pool name that user provided
+        string poolName;
+
         // When pool was added, we treat it actived.
         bool hasActived;
 
@@ -156,7 +159,7 @@ contract StakingTemplate is Ownable {
     //     return ERC20AssetHandler(erc20Handler).getBalance(source);
     // }
 
-    function addPool(bytes32 pair, uint16[] memory ratios) public onlyAdmin returns (uint8) {
+    function addPool(bytes32 pair, string memory poolName, uint16[] memory ratios) public onlyAdmin returns (uint8) {
         require(numberOfPools < MAX_POOLS, 'Exceed MAX_POOLS, can not add pool any more');
         require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
@@ -177,6 +180,7 @@ contract StakingTemplate is Ownable {
         }
 
         openedPools[numberOfPools].pid = numberOfPools;
+        openedPools[numberOfPools].poolName = poolName;
         openedPools[numberOfPools].hasActived = true;
         openedPools[numberOfPools].stakingPair = pair;
         openedPools[numberOfPools].shareAcc = 0;
