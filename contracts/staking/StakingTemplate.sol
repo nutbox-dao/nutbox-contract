@@ -45,6 +45,9 @@ contract StakingTemplate is Ownable {
         // We add stakingList here to let us iterate stakingInfo sometimes
         address[] stakingList;
 
+         // total user count of this pool
+        uint64 stakingAddressCount;
+
         // Pool name that user provided
         string poolName;
 
@@ -76,12 +79,12 @@ contract StakingTemplate is Ownable {
     address admin;
     address dev;
     uint16 devRewardRatio;    // actually fee is reward.mult(devRewardRatio).div(10000)
-    uint8 numberOfPools;
-    uint8 numberOfDistributionEras;
+    uint8 public numberOfPools;
+    uint8 public numberOfDistributionEras;
     Pool[MAX_POOLS] public openedPools;
-    Types.Distribution[MAX_DISTRIBUTIONS] distributionEras;
-    uint256 lastRewardBlock;
-    bytes32 rewardAsset;
+    Types.Distribution[MAX_DISTRIBUTIONS] public distributionEras;
+    uint256 public lastRewardBlock;
+    bytes32 public rewardAsset;
     address factory;
     address registryHub;
 
