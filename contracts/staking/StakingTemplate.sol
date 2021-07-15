@@ -46,7 +46,7 @@ contract StakingTemplate is Ownable {
         address[] stakingList;
 
          // total stakers of this pool
-        uint64 stakers;
+        uint64 stakerCount;
 
         // Pool name that user provided
         string poolName;
@@ -188,7 +188,7 @@ contract StakingTemplate is Ownable {
         openedPools[numberOfPools].stakingPair = pair;
         openedPools[numberOfPools].shareAcc = 0;
         openedPools[numberOfPools].totalStakedAmount = 0;
-        openedPools[numberOfPools].stakers = 0;
+        openedPools[numberOfPools].stakerCount = 0;
         numberOfPools += 1;
         // _applyPoolsRatio never failed
         _applyPoolsRatio(ratios);
@@ -256,7 +256,7 @@ contract StakingTemplate is Ownable {
             openedPools[pid].stakingInfo[depositer].amount = 0;
             openedPools[pid].stakingInfo[depositer].userDebt = 0;
             openedPools[pid].stakingList.push(depositer);
-            openedPools[pid].stakers += 1;
+            openedPools[pid].stakerCount += 1;
         }
 
         _updatePools();
