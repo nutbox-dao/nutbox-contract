@@ -45,7 +45,7 @@ contract StakingTemplate is Ownable {
         // We add stakingList here to let us iterate stakingInfo sometimes
         address[] stakingList;
 
-         // total user count of this pool
+         // total stakers of this pool
         uint64 stakerCount;
 
         // Pool name that user provided
