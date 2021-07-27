@@ -434,7 +434,7 @@ contract StakingTemplate is Ownable {
         emit WithdrawRewards(msg.sender, totalAvailableRewards);
     }
 
-    function getPoolPendingRewards(uint8 pid) public view returns(uint256) {
+    function getUserPendingRewards(uint8 pid, address user) public view returns(uint256) {
         uint256 currentBlock = block.number;
         // game has not started
         if (lastRewardBlock == 0) return 0;
@@ -445,23 +445,23 @@ contract StakingTemplate is Ownable {
             uint256 _shareAcc = openedPools[pid].shareAcc;
             uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
             _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(100).div(openedPools[pid].totalStakedAmount));
-            uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
-            return openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
+            uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
+            return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
         } else {
-            return openedPools[pid].stakingInfo[msg.sender].availableRewards;
+            return openedPools[pid].stakingInfo[user].availableRewards;
         }
     }
 
-    function getTotalPendingRewards() public view returns(uint256) {
+    function getUserTotalPendingRewards(address user) public view returns(uint256) {
         uint256 rewards = 0;
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
-            rewards = rewards.add(getPoolPendingRewards(pid));
+            rewards = rewards.add(getUserPendingRewards(pid, user));
         }
         return rewards;
     }
 
-    function getUserStakedAmount(uint8 pid) public view returns(uint256) {
-        return openedPools[pid].stakingInfo[msg.sender].amount;
+    function getUserStakedAmount(uint8 pid, address user) public view returns(uint256) {
+        return openedPools[pid].stakingInfo[user].amount;
     }
 
     function getPoolTotalStakedAmount(uint8 pid) public view returns(uint256) {
