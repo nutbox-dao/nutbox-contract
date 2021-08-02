@@ -242,7 +242,7 @@ contract StakingTemplate is Ownable {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
-        if(distributionEras[0].hasPassed == false && distributionEras[0].startHeight > block.number) return;
+        if(distributionEras[0].startHeight > block.number) return;
         // check amount
         if (amount == 0) return;
 
@@ -304,7 +304,7 @@ contract StakingTemplate is Ownable {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
-        if(distributionEras[0].hasPassed == false && distributionEras[0].startHeight > block.number) return;
+        if(distributionEras[0].startHeight > block.number) return;
         // check withdraw amount
         if (amount == 0) return;
         // check deposited amount
@@ -447,9 +447,9 @@ contract StakingTemplate is Ownable {
         // the right amount that delegator can award
         if (currentBlock > lastRewardBlock) {
             uint256 _shareAcc = openedPools[pid].shareAcc;
-            if (_shareAcc == 0 || openedPools[pid].totalStakedAmount == 0) return 0;
-            uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
-            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(100).div(openedPools[pid].totalStakedAmount));
+            if (openedPools[pid].totalStakedAmount == 0) return 0;
+            uint256 unmintedRewards = calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
+            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
             uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
             return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
         } else {
@@ -501,6 +501,29 @@ contract StakingTemplate is Ownable {
         return devRewardRatio;
     }
 
+    function calculateReward(uint256 from, uint256 to) public view returns (uint256) {
+        uint256 rewardedBlock = from - 1;
+        uint256 rewards = 0;
+
+        if (distributionEras.length == 0) {
+            return rewards;
+        }
+
+        for (uint8 i = 0; i < distributionEras.length; i++) {
+            if (rewardedBlock > distributionEras[i].stopHeight){
+                continue;
+            }
+
+            if (to <= distributionEras[i].stopHeight) {
+                rewards = rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
+                return rewards;
+            } else {
+                rewards = rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
+                rewardedBlock = distributionEras[i].stopHeight;
+            }
+        }
+    }
+
     function _updatePools() private {
         uint256 rewardsReadyToMinted = 0;
         uint256 currentBlock = block.number;
@@ -515,7 +538,7 @@ contract StakingTemplate is Ownable {
         if (currentBlock <= lastRewardBlock) return;
 
         // calculate reward Rewards under current blocks
-        rewardsReadyToMinted = _calculateReward(lastRewardBlock + 1, currentBlock);
+        rewardsReadyToMinted = calculateReward(lastRewardBlock + 1, currentBlock);
         emit RewardComputed(lastRewardBlock + 1, currentBlock, rewardsReadyToMinted);
 
         // save all rewards to contract temporary
@@ -541,43 +564,12 @@ contract StakingTemplate is Ownable {
 
         // update shareAcc of all pools
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
-            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(100);
+            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(10000);
             openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
             emit PoolUpdated(pid, poolRewards.div(1e12), openedPools[pid].shareAcc);
         }
 
         lastRewardBlock = currentBlock;
-
-        for (uint8 era = 0; era < distributionEras.length; era++) {
-            if (distributionEras[era].hasPassed == false && lastRewardBlock >= distributionEras[era].stopHeight) {
-                distributionEras[era].hasPassed = true;
-            }
-        }
-    }
-
-    function _calculateReward(uint256 from, uint256 to) internal view returns (uint256) {
-        uint256 rewardedBlock = lastRewardBlock;
-        uint256 rewards = 0;
-
-        if (distributionEras.length == 0) {
-            rewardedBlock = to;
-            return rewards;
-        }
-
-        for (uint8 i = 0; i < distributionEras.length; i++) {
-            if (distributionEras[i].hasPassed == true) {
-                require(from > distributionEras[i].stopHeight, 'Distribution era already passed');
-                continue;
-            }
-
-            if (to <= distributionEras[i].stopHeight) {
-                rewards = rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
-                return rewards;
-            } else {
-                rewards = rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
-                rewardedBlock = distributionEras[i].stopHeight;
-            }
-        }
     }
 
     function _checkRatioSum(uint16[] memory ratios) private pure {
@@ -604,10 +596,9 @@ contract StakingTemplate is Ownable {
     /**
      * @dev Check and set distribution policy
      * _distributionEras must less than or equal to MAX_DISTRIBUTIONS and all distribution should meet following condidtion: 
-     * 1) hasPassed should be false
-     * 2) amount should greater than 0
-     * 3) first distrubtion startHeight should greater than current block height
-     * 4) startHeight shold less than stopHeight
+     * 1) amount should greater than 0
+     * 2) first distrubtion startHeight should greater than current block height
+     * 3) startHeight shold less than stopHeight
      */
     function _applyDistributionEras(Types.Distribution[] memory _distributionEras) private {
         require(_distributionEras.length <= MAX_DISTRIBUTIONS, 'Too many distribution policy');
@@ -615,14 +606,12 @@ contract StakingTemplate is Ownable {
         // prechek
         for(uint8 i = 0; i < _distributionEras.length; i++) {
             // check 1)
-            require(_distributionEras[i].hasPassed == false, 'Invlalid initial state of distribution');
-            // check 2)
             require(_distributionEras[i].amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');
-            // check 3)
+            // check 2)
             if (i == 0) {
                 require(_distributionEras[i].startHeight > block.number, 'Invalid start height of distribution');
             }
-            // check 4)
+            // check 3)
             require(_distributionEras[i].startHeight < _distributionEras[i].stopHeight, 'Invalid stop height of distribution');
         }
 
