@@ -21,7 +21,7 @@ const SubstrateNominateAssetRegistryAddress = Contracts.SubstrateNominateAssetRe
 async function deployERC20(env) {
     const factory = new ethers.ContractFactory(SimpleERC20Json.abi, SimpleERC20Json.bytecode, env.wallet);
     const contract = await factory.deploy(
-        "TestCoin", "TC", ethers.utils.parseUnits("10000.0", 18), env.wallet.address,
+        "WALNUT", "NUT", ethers.utils.parseUnits("10000.0", 18), env.wallet.address,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();
@@ -49,6 +49,7 @@ async function main() {
 
     // deploy erc20 contract
     await deployERC20(env);
+    return;
     await setWhitelist(env, HomeChainAssetRegistryAddress);
     await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
