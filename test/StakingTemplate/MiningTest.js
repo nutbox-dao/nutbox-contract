@@ -20,19 +20,16 @@ contract("Staking mining test1", async accounts => {
             this.rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 300,
                     "startHeight": 101,
                     "stopHeight": 200
                 },
                 {
-                    "hasPassed": false,
                     "amount": 200,
                     "startHeight": 201,
                     "stopHeight": 300
                 },
                 {
-                    "hasPassed": false,
                     "amount": 100,
                     "startHeight": 301,
                     "stopHeight": 400
@@ -82,19 +79,16 @@ contract("Staking mining test2", async accounts => {
             this.rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 300,
                     "startHeight": 99,
                     "stopHeight": 200
                 },
                 {
-                    "hasPassed": false,
                     "amount": 200,
                     "startHeight": 201,
                     "stopHeight": 300
                 },
                 {
-                    "hasPassed": false,
                     "amount": 100,
                     "startHeight": 301,
                     "stopHeight": 4000000000000

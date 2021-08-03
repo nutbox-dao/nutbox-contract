@@ -1,18 +1,15 @@
 let distributionEras = [
     {
-        'hasPassed': false,
         'amount': 20,
         'startHeight': 101,
         'stopHeight': 200
     },
     {
-        'hasPassed': false,
         'amount': 10,
         'startHeight': 201,
         'stopHeight': 300
     },
     {
-        'hasPassed': false,
         'amount': 5,
         'startHeight': 301,
         'stopHeight': 10000
@@ -23,23 +20,16 @@ let rewardedBlock;
 function calculate_rewards(from, to) {
     rewardedBlock = from - 1;
     let rewards = 0;
+
     for (let i = 0; i < distributionEras.length; i++) {
-        if (distributionEras[i].hasPassed === true) {
-            if(from <= distributionEras[i].stopHeight) {
-                throw Error('Era ' + i + ' already passed');
-            }
+        if (rewardedBlock > distributionEras[i].stopHeight){
             continue;
         }
 
         if (to <= distributionEras[i].stopHeight) {
-            if(to === distributionEras[i].stopHeight) {
-                distributionEras[i].hasPassed = true;
-            }
             rewards += (to - rewardedBlock)*distributionEras[i].amount;
-            rewardedBlock = to;
             return rewards;
         } else {
-            distributionEras[i].hasPassed = true;
             rewards += (distributionEras[i].stopHeight - rewardedBlock)*distributionEras[i].amount;
             rewardedBlock = distributionEras[i].stopHeight;
         }

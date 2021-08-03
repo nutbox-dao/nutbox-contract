@@ -20,19 +20,16 @@ contract("Staking Pool test", async accounts => {
             rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 300,
                     "startHeight": 101,
                     "stopHeight": 200
                 },
                 {
-                    "hasPassed": false,
                     "amount": 200,
                     "startHeight": 201,
                     "stopHeight": 300
                 },
                 {
-                    "hasPassed": false,
                     "amount": 100,
                     "startHeight": 301,
                     "stopHeight": 400
@@ -66,19 +63,16 @@ contract("Staking Pool test", async accounts => {
             rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 300,
                     "startHeight": 101,
                     "stopHeight": 200
                 },
                 {
-                    "hasPassed": false,
                     "amount": 200,
                     "startHeight": 201,
                     "stopHeight": 300
                 },
                 {
-                    "hasPassed": false,
                     "amount": 100,
                     "startHeight": 301,
                     "stopHeight": 400
@@ -114,19 +108,16 @@ contract("Staking Pool test", async accounts => {
             rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 300,
                     "startHeight": 101,
                     "stopHeight": 200
                 },
                 {
-                    "hasPassed": false,
                     "amount": 200,
                     "startHeight": 201,
                     "stopHeight": 300
                 },
                 {
-                    "hasPassed": false,
                     "amount": 100,
                     "startHeight": 301,
                     "stopHeight": 400

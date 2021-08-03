@@ -26,43 +26,36 @@ contract("Staking initialization test", async accounts => {
             rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 60,
                     "startHeight": 101,
                     "stopHeight": 200
                 },
                 {
-                    "hasPassed": false,
                     "amount": 50,
                     "startHeight": 201,
                     "stopHeight": 300
                 },
                 {
-                    "hasPassed": false,
                     "amount": 40,
                     "startHeight": 301,
                     "stopHeight": 400
                 },
                 {
-                    "hasPassed": false,
                     "amount": 30,
                     "startHeight": 401,
                     "stopHeight": 500
                 },
                 {
-                    "hasPassed": false,
                     "amount": 20,
                     "startHeight": 501,
                     "stopHeight": 600
                 },
                 {
-                    "hasPassed": false,
                     "amount": 10,
                     "startHeight": 601,
                     "stopHeight": 700
                 },
                 {
-                    "hasPassed": false,
                     "amount": 5,
                     "startHeight": 701,
                     "stopHeight": 800
@@ -83,7 +76,6 @@ contract("Staking initialization test", async accounts => {
             rewardToken.address,
             [
                 {
-                    "hasPassed": true,
                     "amount": 60,
                     "startHeight": 101,
                     "stopHeight": 200
@@ -104,7 +96,6 @@ contract("Staking initialization test", async accounts => {
             rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 0,
                     "startHeight": 101,
                     "stopHeight": 200
@@ -125,7 +116,6 @@ contract("Staking initialization test", async accounts => {
             rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 10,
                     "startHeight": 1,
                     "stopHeight": 2
@@ -146,7 +136,6 @@ contract("Staking initialization test", async accounts => {
             rewardToken.address,
             [
                 {
-                    "hasPassed": false,
                     "amount": 10,
                     "startHeight": 1000,
                     "stopHeight": 2

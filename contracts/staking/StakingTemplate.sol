@@ -522,6 +522,7 @@ contract StakingTemplate is Ownable {
                 rewardedBlock = distributionEras[i].stopHeight;
             }
         }
+        return 0;
     }
 
     function _updatePools() private {
@@ -564,6 +565,7 @@ contract StakingTemplate is Ownable {
 
         // update shareAcc of all pools
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
+            if (openedPools[pid].totalStakedAmount == 0) continue;
             uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(10000);
             openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
             emit PoolUpdated(pid, poolRewards.div(1e12), openedPools[pid].shareAcc);

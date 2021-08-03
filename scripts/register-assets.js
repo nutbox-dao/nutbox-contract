@@ -49,7 +49,6 @@ async function main() {
 
     // deploy erc20 contract
     await deployERC20(env);
-    return;
     await setWhitelist(env, HomeChainAssetRegistryAddress);
     await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
