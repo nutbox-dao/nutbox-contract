@@ -45,13 +45,20 @@ contract StakingTemplate is Ownable {
         // We add stakingList here to let us iterate stakingInfo sometimes
         address[] stakingList;
 
+         // total stakers of this pool
+        uint64 stakerCount;
+
+        // Pool name that user provided
+        string poolName;
+
         // When pool was added, we treat it actived.
         bool hasActived;
 
         // poolRatio is a configuration argument that the staking pool deployer give.
         // Case NutboxStakingTemplate contract support mult-pool staking, every pool's
         // reward of current block are distributed by this options.
-        uint8 poolRatio;
+        // Suport 2 decimals
+        uint16 poolRatio;
 
         // stakingPair actually is a asset contract entity, it represents the asset user stake of this pool. 
         // Bascially, it should be a normal ERC20 token or a lptoken of a specific token exchange pair 
@@ -72,12 +79,12 @@ contract StakingTemplate is Ownable {
     address admin;
     address dev;
     uint16 devRewardRatio;    // actually fee is reward.mult(devRewardRatio).div(10000)
-    uint8 numberOfPools;
-    uint8 numberOfDistributionEras;
-    Pool[MAX_POOLS] openedPools;
-    Types.Distribution[MAX_DISTRIBUTIONS] distributionEras;
-    uint256 lastRewardBlock;
-    bytes32 rewardAsset;
+    uint8 public numberOfPools;
+    uint8 public numberOfDistributionEras;
+    Pool[MAX_POOLS] public openedPools;
+    Types.Distribution[MAX_DISTRIBUTIONS] public distributionEras;
+    uint256 public lastRewardBlock;
+    bytes32 public rewardAsset;
     address factory;
     address registryHub;
 
@@ -155,7 +162,7 @@ contract StakingTemplate is Ownable {
     //     return ERC20AssetHandler(erc20Handler).getBalance(source);
     // }
 
-    function addPool(bytes32 pair, uint8[] memory ratios) public onlyAdmin returns (uint8) {
+    function addPool(bytes32 pair, string memory poolName, uint16[] memory ratios) public onlyAdmin returns (uint8) {
         require(numberOfPools < MAX_POOLS, 'Exceed MAX_POOLS, can not add pool any more');
         require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
 
@@ -176,10 +183,12 @@ contract StakingTemplate is Ownable {
         }
 
         openedPools[numberOfPools].pid = numberOfPools;
+        openedPools[numberOfPools].poolName = poolName;
         openedPools[numberOfPools].hasActived = true;
         openedPools[numberOfPools].stakingPair = pair;
         openedPools[numberOfPools].shareAcc = 0;
         openedPools[numberOfPools].totalStakedAmount = 0;
+        openedPools[numberOfPools].stakerCount = 0;
         numberOfPools += 1;
         // _applyPoolsRatio never failed
         _applyPoolsRatio(ratios);
@@ -187,7 +196,7 @@ contract StakingTemplate is Ownable {
         return numberOfPools;
     }
 
-    function setPoolRatios(uint8[] memory ratios) public onlyAdmin {
+    function setPoolRatios(uint16[] memory ratios) public onlyAdmin {
         require(numberOfPools >  0, 'No pool exist');
         require((numberOfPools) == ratios.length, 'Wrong ratio count');
 
@@ -199,15 +208,15 @@ contract StakingTemplate is Ownable {
         _applyPoolsRatio(ratios);
     }
 
-    function getPoolRatios() public view returns (uint8[MAX_POOLS] memory) {
-        uint8[MAX_POOLS] memory ratios;
-        for(uint8 i = 0; i < numberOfPools; i++) {
+    function getPoolRatios() public view returns (uint16[MAX_POOLS] memory) {
+        uint16[MAX_POOLS] memory ratios;
+        for(uint16 i = 0; i < numberOfPools; i++) {
             ratios[i] = openedPools[i].poolRatio;
         }
         return ratios;
     }
 
-    function getSinglePoolRatio(uint8 pid) public view returns (uint8) {
+    function getSinglePoolRatio(uint8 pid) public view returns (uint16) {
         require(pid < MAX_POOLS, 'Invalid pid');
         return openedPools[pid].poolRatio;
     }
@@ -220,18 +229,20 @@ contract StakingTemplate is Ownable {
         }
     }
 
-    function deposit(uint8 pid, address depositer, uint256 amount) public {
+    function deposit(uint8 pid, address depositor, uint256 amount) public {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
+            internalDeposit(pid, depositor, amount);
+        }else{
+            internalDeposit(pid, msg.sender, amount);
         }
-        internalDeposit(pid, depositer, amount);
     }
 
-    function internalDeposit(uint8 pid, address depositer, uint256 amount) private {
+    function internalDeposit(uint8 pid, address depositor, uint256 amount) private {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
-        if(distributionEras[0].hasPassed == false && distributionEras[0].startHeight > block.number) return;
+        if(distributionEras[0].startHeight > block.number) return;
         // check amount
         if (amount == 0) return;
 
@@ -241,20 +252,21 @@ contract StakingTemplate is Ownable {
         }
 
         // Add to staking list if account hasn't deposited before
-        if(!openedPools[pid].stakingInfo[depositer].hasDeposited) {
-            openedPools[pid].stakingInfo[depositer].hasDeposited = true;
-            openedPools[pid].stakingInfo[depositer].availableRewards = 0;
-            openedPools[pid].stakingInfo[depositer].amount = 0;
-            openedPools[pid].stakingInfo[depositer].userDebt = 0;
-            openedPools[pid].stakingList.push(depositer);
+        if(!openedPools[pid].stakingInfo[depositor].hasDeposited) {
+            openedPools[pid].stakingInfo[depositor].hasDeposited = true;
+            openedPools[pid].stakingInfo[depositor].availableRewards = 0;
+            openedPools[pid].stakingInfo[depositor].amount = 0;
+            openedPools[pid].stakingInfo[depositor].userDebt = 0;
+            openedPools[pid].stakingList.push(depositor);
+            openedPools[pid].stakerCount += 1;
         }
 
         _updatePools();
 
-        if (openedPools[pid].stakingInfo[depositer].amount > 0) {
-            uint256 pending = openedPools[pid].stakingInfo[depositer].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[depositer].userDebt);
+        if (openedPools[pid].stakingInfo[depositor].amount > 0) {
+            uint256 pending = openedPools[pid].stakingInfo[depositor].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[depositor].userDebt);
             if(pending > 0) {
-                openedPools[pid].stakingInfo[depositer].availableRewards = openedPools[pid].stakingInfo[depositer].availableRewards.add(pending);
+                openedPools[pid].stakingInfo[depositor].availableRewards = openedPools[pid].stakingInfo[depositor].availableRewards.add(pending);
             }
         }
 
@@ -264,48 +276,50 @@ contract StakingTemplate is Ownable {
                 "lockAsset(bytes32,bytes32,address,uint256)",
                 source,
                 openedPools[pid].stakingPair,
-                depositer,
+                depositor,
                 amount
             );
             (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
             require(success, "failed to call lockAsset");
         }
 
-        openedPools[pid].stakingInfo[depositer].amount = openedPools[pid].stakingInfo[depositer].amount.add(amount);
+        openedPools[pid].stakingInfo[depositor].amount = openedPools[pid].stakingInfo[depositor].amount.add(amount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.add(amount);
 
-        openedPools[pid].stakingInfo[depositer].userDebt = openedPools[pid].stakingInfo[depositer].amount.mul(openedPools[pid].shareAcc).div(1e12);
+        openedPools[pid].stakingInfo[depositor].userDebt = openedPools[pid].stakingInfo[depositor].amount.mul(openedPools[pid].shareAcc).div(1e12);
 
-        emit Deposit(pid, depositer, amount);
+        emit Deposit(pid, depositor, amount);
     }
 
-    function withdraw(uint8 pid, address depositer, uint256 amount) public {
+    function withdraw(uint8 pid, address depositor, uint256 amount) public {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
+            internalWithdraw(pid, depositor, amount);
+        }else{
+            internalWithdraw(pid, msg.sender, amount);
         }
-        internalWithdraw(pid, depositer, amount);
     }
 
-    function internalWithdraw(uint8 pid, address depositer, uint256 amount) private {
+    function internalWithdraw(uint8 pid, address depositor, uint256 amount) private {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
-        if(distributionEras[0].hasPassed == false && distributionEras[0].startHeight > block.number) return;
+        if(distributionEras[0].startHeight > block.number) return;
         // check withdraw amount
         if (amount == 0) return;
         // check deposited amount
-        if (openedPools[pid].stakingInfo[depositer].amount == 0) return;
+        if (openedPools[pid].stakingInfo[depositor].amount == 0) return;
 
         _updatePools();
 
-        uint256 pending = openedPools[pid].stakingInfo[depositer].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[depositer].userDebt);
+        uint256 pending = openedPools[pid].stakingInfo[depositor].amount.mul(openedPools[pid].shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[depositor].userDebt);
         if(pending > 0) {
-            openedPools[pid].stakingInfo[depositer].availableRewards = openedPools[pid].stakingInfo[depositer].availableRewards.add(pending);
+            openedPools[pid].stakingInfo[depositor].availableRewards = openedPools[pid].stakingInfo[depositor].availableRewards.add(pending);
         }
 
         uint256 withdrawAmount;
-        if (amount >= openedPools[pid].stakingInfo[depositer].amount)
-            withdrawAmount = openedPools[pid].stakingInfo[depositer].amount;
+        if (amount >= openedPools[pid].stakingInfo[depositor].amount)
+            withdrawAmount = openedPools[pid].stakingInfo[depositor].amount;
         else
             withdrawAmount = amount;
 
@@ -315,29 +329,29 @@ contract StakingTemplate is Ownable {
                 "unlockAsset(bytes32,bytes32,address,uint256)",
                 source,
                 openedPools[pid].stakingPair,
-                depositer,
+                depositor,
                 withdrawAmount
             );
             (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
             require(success, "failed to call unlockAsset");
         }
 
-        openedPools[pid].stakingInfo[depositer].amount = openedPools[pid].stakingInfo[depositer].amount.sub(withdrawAmount);
+        openedPools[pid].stakingInfo[depositor].amount = openedPools[pid].stakingInfo[depositor].amount.sub(withdrawAmount);
         openedPools[pid].totalStakedAmount = openedPools[pid].totalStakedAmount.sub(withdrawAmount);
 
-        openedPools[pid].stakingInfo[depositer].userDebt = openedPools[pid].stakingInfo[depositer].amount.mul(openedPools[pid].shareAcc).div(1e12);
+        openedPools[pid].stakingInfo[depositor].userDebt = openedPools[pid].stakingInfo[depositor].amount.mul(openedPools[pid].shareAcc).div(1e12);
 
-        emit Withdraw(pid, depositer, withdrawAmount);
+        emit Withdraw(pid, depositor, withdrawAmount);
     }
 
-    function update(uint8 pid, address depositer, uint256 amount) public
+    function update(uint8 pid, address depositor, uint256 amount) public
     {
-        uint256 prevAmount = openedPools[pid].stakingInfo[depositer].amount;
+        uint256 prevAmount = openedPools[pid].stakingInfo[depositor].amount;
 
         if (prevAmount < amount) { // deposit
-            deposit(pid, depositer, amount.sub(prevAmount));
+            deposit(pid, depositor, amount.sub(prevAmount));
         } else {   // withdraw
-            withdraw(pid, depositer, prevAmount.sub(amount));
+            withdraw(pid, depositor, prevAmount.sub(amount));
         }
     }
 
@@ -424,7 +438,7 @@ contract StakingTemplate is Ownable {
         emit WithdrawRewards(msg.sender, totalAvailableRewards);
     }
 
-    function getPoolPendingRewards(uint8 pid) public view returns(uint256) {
+    function getUserPendingRewards(uint8 pid, address user) public view returns(uint256) {
         uint256 currentBlock = block.number;
         // game has not started
         if (lastRewardBlock == 0) return 0;
@@ -433,25 +447,26 @@ contract StakingTemplate is Ownable {
         // the right amount that delegator can award
         if (currentBlock > lastRewardBlock) {
             uint256 _shareAcc = openedPools[pid].shareAcc;
-            uint256 unmintedRewards = _calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
-            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(100).div(openedPools[pid].totalStakedAmount));
-            uint256 pending = openedPools[pid].stakingInfo[msg.sender].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[msg.sender].userDebt);
-            return openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
+            if (openedPools[pid].totalStakedAmount == 0) return 0;
+            uint256 unmintedRewards = calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
+            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
+            uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
+            return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
         } else {
-            return openedPools[pid].stakingInfo[msg.sender].availableRewards;
+            return openedPools[pid].stakingInfo[user].availableRewards;
         }
     }
 
-    function getTotalPendingRewards() public view returns(uint256) {
+    function getUserTotalPendingRewards(address user) public view returns(uint256) {
         uint256 rewards = 0;
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
-            rewards = rewards.add(getPoolPendingRewards(pid));
+            rewards = rewards.add(getUserPendingRewards(pid, user));
         }
         return rewards;
     }
 
-    function getUserStakedAmount(uint8 pid) public view returns(uint256) {
-        return openedPools[pid].stakingInfo[msg.sender].amount;
+    function getUserStakedAmount(uint8 pid, address user) public view returns(uint256) {
+        return openedPools[pid].stakingInfo[user].amount;
     }
 
     function getPoolTotalStakedAmount(uint8 pid) public view returns(uint256) {
@@ -486,6 +501,33 @@ contract StakingTemplate is Ownable {
         return devRewardRatio;
     }
 
+    function calculateReward(uint256 from, uint256 to) public view returns (uint256) {
+        uint256 rewardedBlock = from - 1;
+        uint256 rewards = 0;
+
+        if (distributionEras.length == 0) {
+            return rewards;
+        }
+        if (rewardedBlock < distributionEras[0].startHeight){
+            rewardedBlock = distributionEras[0].startHeight - 1;
+        }
+
+        for (uint8 i = 0; i < distributionEras.length; i++) {
+            if (rewardedBlock > distributionEras[i].stopHeight){
+                continue;
+            }
+
+            if (to <= distributionEras[i].stopHeight) {
+                rewards = rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
+                return rewards;
+            } else {
+                rewards = rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
+                rewardedBlock = distributionEras[i].stopHeight;
+            }
+        }
+        return rewards;
+    }
+
     function _updatePools() private {
         uint256 rewardsReadyToMinted = 0;
         uint256 currentBlock = block.number;
@@ -500,7 +542,7 @@ contract StakingTemplate is Ownable {
         if (currentBlock <= lastRewardBlock) return;
 
         // calculate reward Rewards under current blocks
-        rewardsReadyToMinted = _calculateReward(lastRewardBlock + 1, currentBlock);
+        rewardsReadyToMinted = calculateReward(lastRewardBlock + 1, currentBlock);
         emit RewardComputed(lastRewardBlock + 1, currentBlock, rewardsReadyToMinted);
 
         // save all rewards to contract temporary
@@ -526,60 +568,30 @@ contract StakingTemplate is Ownable {
 
         // update shareAcc of all pools
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
-            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(100);
+            if(openedPools[pid].totalStakedAmount == 0) continue;
+            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(10000);
             openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
             emit PoolUpdated(pid, poolRewards.div(1e12), openedPools[pid].shareAcc);
         }
 
         lastRewardBlock = currentBlock;
-
-        for (uint8 era = 0; era < distributionEras.length; era++) {
-            if (distributionEras[era].hasPassed == false && lastRewardBlock >= distributionEras[era].stopHeight) {
-                distributionEras[era].hasPassed = true;
-            }
-        }
     }
 
-    function _calculateReward(uint256 from, uint256 to) internal view returns (uint256) {
-        uint256 rewardedBlock = lastRewardBlock;
-        uint256 rewards = 0;
-
-        if (distributionEras.length == 0) {
-            rewardedBlock = to;
-            return rewards;
-        }
-
-        for (uint8 i = 0; i < distributionEras.length; i++) {
-            if (distributionEras[i].hasPassed == true) {
-                require(from > distributionEras[i].stopHeight, 'Distribution era already passed');
-                continue;
-            }
-
-            if (to <= distributionEras[i].stopHeight) {
-                rewards = rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
-                return rewards;
-            } else {
-                rewards = rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
-                rewardedBlock = distributionEras[i].stopHeight;
-            }
-        }
-    }
-
-    function _checkRatioSum(uint8[] memory ratios) private pure {
-        uint8 ratioSum = 0;
-        for(uint8 i = 0; i < ratios.length; i++) {
+    function _checkRatioSum(uint16[] memory ratios) private pure {
+        uint16 ratioSum = 0;
+        for(uint16 i = 0; i < ratios.length; i++) {
             ratioSum += ratios[i];
         }
-        require(ratioSum == 100, 'Ratio summary not equal to 100');
+        require(ratioSum == 10000, 'Ratio summary not equal to 10000');
     }
 
     /**
      * @dev Iterate every pool to update their ratio. 
-     * Every ratio is an integer between [0, 100], the summuary of all pool's ration should 
-     * equal to 100.
+     * Every ratio is an integer between [0, 10000], the summuary of all pool's ration should 
+     * equal to 10000.
      * Because pools always less than MAX_POOLS, so the loop is in control
      */
-    function _applyPoolsRatio(uint8[] memory ratios) private {
+    function _applyPoolsRatio(uint16[] memory ratios) private {
         // update pool ratio index
         for(uint8 i = 0; i < numberOfPools; i++) {
             openedPools[i].poolRatio = ratios[i];
@@ -589,10 +601,9 @@ contract StakingTemplate is Ownable {
     /**
      * @dev Check and set distribution policy
      * _distributionEras must less than or equal to MAX_DISTRIBUTIONS and all distribution should meet following condidtion: 
-     * 1) hasPassed should be false
-     * 2) amount should greater than 0
-     * 3) first distrubtion startHeight should greater than current block height
-     * 4) startHeight shold less than stopHeight
+     * 1) amount should greater than 0
+     * 2) first distrubtion startHeight should greater than current block height
+     * 3) startHeight shold less than stopHeight
      */
     function _applyDistributionEras(Types.Distribution[] memory _distributionEras) private {
         require(_distributionEras.length <= MAX_DISTRIBUTIONS, 'Too many distribution policy');
@@ -600,14 +611,12 @@ contract StakingTemplate is Ownable {
         // prechek
         for(uint8 i = 0; i < _distributionEras.length; i++) {
             // check 1)
-            require(_distributionEras[i].hasPassed == false, 'Invlalid initial state of distribution');
-            // check 2)
             require(_distributionEras[i].amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');
-            // check 3)
+            // check 2)
             if (i == 0) {
                 require(_distributionEras[i].startHeight > block.number, 'Invalid start height of distribution');
             }
-            // check 4)
+            // check 3)
             require(_distributionEras[i].startHeight < _distributionEras[i].stopHeight, 'Invalid stop height of distribution');
         }
 
