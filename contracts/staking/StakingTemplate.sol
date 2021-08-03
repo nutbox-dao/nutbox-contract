@@ -508,6 +508,9 @@ contract StakingTemplate is Ownable {
         if (distributionEras.length == 0) {
             return rewards;
         }
+        if (rewardedBlock < distributionEras[0].startHeight){
+            rewardedBlock = distributionEras[0].startHeight - 1;
+        }
 
         for (uint8 i = 0; i < distributionEras.length; i++) {
             if (rewardedBlock > distributionEras[i].stopHeight){
