@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
+import '../../MintableERC20.sol';
 
 contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
@@ -40,6 +41,8 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
             foreignLocation,
             false
         );
+
+
 
         (bool success,) = registryHub.call(data);
         require(success, "failed to call register bub");
