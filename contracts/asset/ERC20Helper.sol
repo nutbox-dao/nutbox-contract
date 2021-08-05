@@ -6,11 +6,13 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import '../MintableERC20.sol';
+import '../Log.sol';
 
 /**
     @title Helper of ERC20 assets.
  */
-contract ERC20Helper {
+contract ERC20Helper is LogContract {
     using SafeMath for uint256;
 
     /**
@@ -54,8 +56,11 @@ contract ERC20Helper {
         @param amount Amount of token to mint.
      */
     function mintERC20(address tokenAddress, address recipient, uint256 amount) internal {
-        ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
+        emit Log("Mint Start");
+        MintableERC20 erc20 = MintableERC20(tokenAddress);
+        emit Log("Construct ERC20");
         erc20.mint(recipient, amount);
+        emit Log("Mint Over");
 
     }
 

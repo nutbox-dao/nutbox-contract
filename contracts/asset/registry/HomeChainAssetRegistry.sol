@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-import '../../MintableERC20.sol';
 
 contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
@@ -42,10 +41,21 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
             false
         );
 
-
-
         (bool success,) = registryHub.call(data);
-        require(success, "failed to call register bub");
+        require(success, "failed to call register hub");
+
+        // set mintable asset
+        bytes memory isMintableData = abi.encodeWithSignature("isMintable()(bool)");
+        (bool readMintableSuccess, ) = homeLocation.call(isMintableData);
+
+        if (readMintableSuccess){
+            bytes memory setMintableData = abi.encodeWithSignature(
+                "setMintable(bytes32)",
+                assetId
+            );
+            (bool setMintableResult,) = registryHub.call(setMintableData);
+            require(setMintableResult, "failed to call set mintable asset");
+        }
 
         emit HomeChainAssetRegistered(msg.sender, assetId, homeLocation);
     }

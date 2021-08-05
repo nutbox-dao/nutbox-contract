@@ -85,7 +85,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
 
     function lockAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) external {
         require(whiteList[msg.sender], 'Permission denied: contract is not white list');
-
+        emit Log('LockAsset');
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
         lockERC20(tokenAddress, depositer, address(this), amount);
         depositBalance[source] = depositBalance[source].add(amount);
@@ -93,13 +93,17 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
     }
 
     function unlockOrMintAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount) override external {
+        emit Log('0');
         require(whiteList[msg.sender], 'Permission denied: contract is not white list');
-
+        emit Log('1');
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
+        emit Log('2');
         if (IRegistryHub(registryHub).mintable(assetId)) {
+            emit Log('mintable');
             mintERC20(tokenAddress, address(recipient), amount);
             emit MintAsset(source, assetId, recipient, amount);
         } else {
+            emit Log('simple');
             require(depositBalance[source] >= amount, 'Insufficient deposited asset balance');
             releaseERC20(tokenAddress, address(recipient), amount);
             depositBalance[source] = depositBalance[source].sub(amount);
