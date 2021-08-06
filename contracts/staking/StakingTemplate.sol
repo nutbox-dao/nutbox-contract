@@ -131,7 +131,7 @@ contract StakingTemplate is Ownable {
     }
 
     function adminDepositReward(uint256 amount) public onlyAdmin {
-        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, "admin"));
         bytes memory data = abi.encodeWithSignature(
             "lockAsset(bytes32,bytes32,address,uint256)",
             source,
@@ -144,7 +144,7 @@ contract StakingTemplate is Ownable {
     }
 
     function adminWithdrawReward(uint256 amount) public onlyAdmin {
-        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, "admin"));
         bytes memory data = abi.encodeWithSignature(
             "unlockAsset(bytes32,bytes32,address,uint256)",
             source,

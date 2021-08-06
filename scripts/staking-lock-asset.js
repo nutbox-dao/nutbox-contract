@@ -77,7 +77,7 @@ async function main() {
         await waitForTx(env.provider, tx2.hash);
 
         // query balance
-        const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2));
+        const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2) + "admin");
         const depositedReward = await ERC20AssetHandler.getBalance(source);
         console.log(`Deposited reward by ${env.wallet.address}: ${depositedReward}`);
     });
