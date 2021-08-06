@@ -71,7 +71,7 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
         );
 
         (bool success,) = registryHub.call(data);
-        require(success, "failed to call register bub");
+        require(success, "failed to call register hub");
 
         idToMetadata[assetId] = meta;
         assetLifeCycle[assetId] = true;

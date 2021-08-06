@@ -35,22 +35,19 @@ async function main() {
         homeChainAsset, // reward asset
         [
             {
-                "hasPassed": false,
                 "amount": 300,
-                "startHeight": 201,
-                "stopHeight": 300
+                "startHeight": 2000,
+                "stopHeight": 5000
             },
             {
-                "hasPassed": false,
                 "amount": 200,
-                "startHeight": 301,
-                "stopHeight": 400
+                "startHeight": 5001,
+                "stopHeight": 5100
             },
             {
-                "hasPassed": false,
                 "amount": 100,
-                "startHeight": 401,
-                "stopHeight": 500
+                "startHeight": 5101,
+                "stopHeight": 5200
             }
         ],  // distribution eras
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
@@ -77,7 +74,8 @@ async function main() {
         await waitForTx(env.provider, tx2.hash);
 
         // query balance
-        const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2));
+        const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2) + "61646d696e");
+        const ERC20AssetHandler = new ethers.Contract(ERC20AssetHandlerAddress, ERC20AssetHandlerJson.abi, env.wallet);
         const depositedReward = await ERC20AssetHandler.getBalance(source);
         console.log(`Deposited reward by ${env.wallet.address}: ${depositedReward}`);
     });
