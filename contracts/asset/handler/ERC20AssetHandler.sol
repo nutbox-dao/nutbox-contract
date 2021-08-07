@@ -85,7 +85,6 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
 
     function lockAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) external {
         require(whiteList[msg.sender], 'Permission denied: contract is not white list');
-        emit Log('LockAsset');
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
         lockERC20(tokenAddress, depositer, address(this), amount);
         depositBalance[source] = depositBalance[source].add(amount);

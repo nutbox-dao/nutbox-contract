@@ -77,9 +77,6 @@ function main() {
     ERC20AssetHandler.on('MintAsset', (source, assetId, recipient, amount) => {
         console.log(`ERC20AssetHandler::MintAsset(${source}, ${assetId}, ${recipient}, ${amount})`);
     });
-    ERC20AssetHandler.on('Log', (message) => {
-        console.log('Log:', message)
-    });
 
     const TrustlessAssetHandler = new ethers.Contract(TrustlessAssetHandlerAddress, TrustlessAssetHandlerJson.abi, env.provider);
     TrustlessAssetHandler.on('AttachedPool', (assetId, stakingFeast, pid) => {

@@ -77,7 +77,6 @@ async function main() {
 
         // query balance
         const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2) + "61646d696e");
-        const ERC20AssetHandler = new ethers.Contract(ERC20AssetHandlerAddress, ERC20AssetHandlerJson.abi, env.wallet);
         const depositedReward = await ERC20AssetHandler.getBalance(source);
         console.log(`Deposited reward by ${env.wallet.address}: ${depositedReward}`);
     });

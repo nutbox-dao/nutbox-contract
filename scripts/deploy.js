@@ -223,7 +223,7 @@ async function main() {
         StakingFactory: env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed"
     };
     
-    const outfile = './contracts.json'
+    const outfile = './scripts/contracts.json'
     const jsonStr = JSON.stringify(output, undefined, 2);
     fs.writeFileSync(outfile, jsonStr, { encoding: "utf-8" });
 
