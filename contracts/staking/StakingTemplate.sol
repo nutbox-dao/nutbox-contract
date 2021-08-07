@@ -376,7 +376,7 @@ contract StakingTemplate is Ownable {
         availableRewards = availableRewards.add(openedPools[pid].stakingInfo[msg.sender].availableRewards);
 
         // transfer rewards to user
-        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
         bytes memory data = abi.encodeWithSignature(
             "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
             source,
@@ -418,7 +418,7 @@ contract StakingTemplate is Ownable {
         }
 
         // transfer rewards to user
-        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
         bytes memory data = abi.encodeWithSignature(
             "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
             source,
@@ -445,16 +445,16 @@ contract StakingTemplate is Ownable {
 
         // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
         // the right amount that delegator can award
-        if (currentBlock > lastRewardBlock) {
-            uint256 _shareAcc = openedPools[pid].shareAcc;
-            if (openedPools[pid].totalStakedAmount == 0) return 0;
-            uint256 unmintedRewards = calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
-            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
-            uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
-            return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
-        } else {
-            return openedPools[pid].stakingInfo[user].availableRewards;
-        }
+        // if (currentBlock > lastRewardBlock) {
+        uint256 _shareAcc = openedPools[pid].shareAcc;
+        if (openedPools[pid].totalStakedAmount == 0) return 0;
+        uint256 unmintedRewards = calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
+        _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
+        uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
+        return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
+        // } else {
+        //     return openedPools[pid].stakingInfo[user].availableRewards;
+        // }
     }
 
     function getUserTotalPendingRewards(address user) public view returns(uint256) {
@@ -550,7 +550,7 @@ contract StakingTemplate is Ownable {
             if (devRewardRatio > 0) {
                 // only send rewards belong to dev, reward belong to user would send when
                 // they withdraw reward manually
-                bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
+                bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
                 bytes memory data = abi.encodeWithSignature(
                     "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
                     source,

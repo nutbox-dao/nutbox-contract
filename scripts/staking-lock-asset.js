@@ -24,7 +24,6 @@ async function main() {
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
-
     const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.provider);
     const homeChainAsset = await RegistryHub.registryHub(env.wallet.address, 0);
 
@@ -77,8 +76,17 @@ async function main() {
 
         // query balance
         const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2) + "61646d696e");
-        const depositedReward = await ERC20AssetHandler.getBalance(source);
+        let depositedReward = await ERC20AssetHandler.getBalance(source);
         console.log(`Deposited reward by ${env.wallet.address}: ${depositedReward}`);
+
+        const tx3 = await StakingFeast.adminWithdrawReward(
+            10000000,
+            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+        );
+        await waitForTx(env.provider, tx3.hash);
+        depositedReward = await ERC20AssetHandler.getBalance(source);
+        console.log(`After withdraw reward by ${env.wallet.address}: ${depositedReward}`);
+
     });
 
     process.stdin.resume();//so the program will not close instantly
