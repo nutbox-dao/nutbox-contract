@@ -445,16 +445,12 @@ contract StakingTemplate is Ownable {
 
         // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
         // the right amount that delegator can award
-        // if (currentBlock > lastRewardBlock) {
         uint256 _shareAcc = openedPools[pid].shareAcc;
         if (openedPools[pid].totalStakedAmount == 0) return 0;
         uint256 unmintedRewards = calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
         _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
         uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
         return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
-        // } else {
-        //     return openedPools[pid].stakingInfo[user].availableRewards;
-        // }
     }
 
     function getUserTotalPendingRewards(address user) public view returns(uint256) {
