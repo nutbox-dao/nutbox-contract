@@ -42,7 +42,7 @@ async function main() {
         Multicall: env.MulticallContract ? env.MulticallContract : "Not Deployed",
     };
     
-    const outfile = './multicall.json'
+    const outfile = './scripts/multicall.json'
     const jsonStr = JSON.stringify(output, undefined, 2);
     fs.writeFileSync(outfile, jsonStr, { encoding: "utf-8" });
 
