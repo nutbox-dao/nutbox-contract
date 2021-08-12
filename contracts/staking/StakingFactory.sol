@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import '../MintableERC20.sol';
 import '../common/Types.sol';
 import './StakingTemplate.sol';
 
@@ -43,8 +43,11 @@ contract StakingFactory {
 
         if (IRegistryHub(registryHub).mintable(_rewardAsset)) {
             // grant MINTER_ROLE to staking feast contract
-            bytes32 MINTER_ROLE = ERC20PresetMinterPauser(tokenAddress).MINTER_ROLE();
-            ERC20PresetMinterPauser(tokenAddress).grantRole(MINTER_ROLE, address(feastAddress));
+            bytes32 MINTER_ROLE = MintableERC20(tokenAddress).MINTER_ROLE();
+            (bool success, ) = tokenAddress.delegatecall(
+                abi.encodeWithSignature("grantRole(bytes32,address)", MINTER_ROLE, address(feastAddress))
+            );
+            require(success, 'Failed to grant mint role for staking feast');
         }
 
         feastAddress.initialize(
