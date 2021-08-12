@@ -6,13 +6,14 @@ pragma experimental ABIEncoderV2;
 import '../MintableERC20.sol';
 import '../common/Types.sol';
 import './StakingTemplate.sol';
+import '../NoDelegateCall.sol';
 
 /**
  * @dev Factory contract to create an StakingTemplate entity
  *
  * This is the entry contract that user start to create their own staking economy.
  */
-contract StakingFactory {
+contract StakingFactory is NoDelegateCall {
 
     address public registryHub;
     address public feeAddress;
@@ -33,7 +34,7 @@ contract StakingFactory {
     function createStakingFeast (
         bytes32 _rewardAsset,
         Types.Distribution[] memory _distributionEras
-    ) public {
+    ) public noDelegateCall {
         require(_distributionEras.length > 0, 'Should give at least one distribution');
         
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
