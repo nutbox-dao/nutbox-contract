@@ -42,6 +42,9 @@ function main() {
     HomeChainAssetRegistry.on('HomeChainAssetRegistered', (owner, id, location) => {
         console.log(`HomeChainAssetRegistry::HomeChainAssetRegistered(${owner}, ${id}, ${location})`);
     });
+    HomeChainAssetRegistry.on('ReadMintableResult', (msg, isMintable) => {
+        console.log(`HomeChainAssetRegistry::ReadMintableResult(${msg}, ${isMintable})`);
+    });
 
     const SteemHiveDelegateAssetRegistry = new ethers.Contract(SteemHiveDelegateAssetRegistryAddress, SteemHiveDelegateAssetRegistryJson.abi, env.provider);
     SteemHiveDelegateAssetRegistry.on('SteemHiveDelegateAssetRegisterd', (owner, id, meta) => {

@@ -78,6 +78,14 @@ async function main() {
     );
     await waitForTx(env.provider, tx0.hash);
 
+    const mintableToken = new ethers.Contract(
+        env.mintableERC20Contract,
+        MintableERC20Json.abi,
+        env.wallet
+        ) 
+    const isMintable = await mintableToken.isMintable();
+    console.log(env.mintableERC20Contract,'isMintable:', isMintable);
+
     // home chain asset registry ====== simple
     const SimpleAssetRegistry = new ethers.Contract(
         HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet
