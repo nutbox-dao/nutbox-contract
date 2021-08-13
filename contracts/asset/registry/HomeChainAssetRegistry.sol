@@ -19,8 +19,6 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
         address indexed homeLocation
     );
 
-    event ReadMintableResult(string msg, bool isMintable);
-
     constructor(address _registryHub) {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
@@ -56,12 +54,9 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
                 assetId
             );
             (bool setMintableResult,) = registryHub.call(setMintableData);
-            emit ReadMintableResult("setMintableResult", setMintableResult);
             require(setMintableResult, "failed to call set mintable asset");
         } catch (bytes memory returnData) {
-            emit ReadMintableResult("Get mintable fail", false);
         }
-
         emit HomeChainAssetRegistered(msg.sender, assetId, homeLocation);
     }
 }
