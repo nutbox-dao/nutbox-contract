@@ -61,12 +61,12 @@ async function main() {
 
     // deploy erc20 contract
     // await deployERC20(env);
-    await deployMintableERC20(env);
+    // await deployMintableERC20(env);
     await setWhitelist(env, HomeChainAssetRegistryAddress);
     await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
-    // return;
+    return;
 
     // home chain asset registry ===== mintable
     const MintableAssetRegistry = new ethers.Contract(
