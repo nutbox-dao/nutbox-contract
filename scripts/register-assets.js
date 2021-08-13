@@ -60,13 +60,13 @@ async function main() {
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
 
     // deploy erc20 contract
-    await deployERC20(env);
+    // await deployERC20(env);
     await deployMintableERC20(env);
     await setWhitelist(env, HomeChainAssetRegistryAddress);
     await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
-    return;
+    // return;
 
     // home chain asset registry ===== mintable
     const MintableAssetRegistry = new ethers.Contract(
@@ -85,6 +85,7 @@ async function main() {
         ) 
     const isMintable = await mintableToken.isMintable();
     console.log(env.mintableERC20Contract,'isMintable:', isMintable);
+    return;
 
     // home chain asset registry ====== simple
     const SimpleAssetRegistry = new ethers.Contract(

@@ -9,6 +9,7 @@ const StakingFactoryJson = require('../build/contracts/StakingFactory.json');
 const StakingTemplateJson = require('../build/contracts/StakingTemplate.json')
 const RegistryHubJson = require('../build/contracts/RegistryHub.json');
 const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const MintableERC20Json = require('../build/contracts/MintableERC20.json')
 const ERC20AssetHandlerJson = require('../build/contracts/ERC20AssetHandler.json');
 const Contracts = require('./contracts.json');
 
@@ -16,22 +17,46 @@ const RegistryHubAddress = Contracts.RegistryHub;
 const StakingFactoryAddress = Contracts.StakingFactory;
 const ERC20AssetHandlerAddress = Contracts.ERC20AssetHandler;
 
-async function main() {
-    let env = {};
-    env.url = process.env.ENDPOINT || 'http://localhost:8545';
-    env.privateKey = process.env.KEY;
-    env.provider = new ethers.providers.JsonRpcProvider(env.url);
-    env.wallet = new ethers.Wallet(env.privateKey, env.provider);
-    env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
-    env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
+async function mintableCommunity(env) {
     const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.provider);
-    const homeChainAsset = await RegistryHub.registryHub(env.wallet.address, 0);
+    const mintableAsset = await RegistryHub.registryHub(env.wallet.address, 0);
 
     const StakingFactory = new ethers.Contract(
         StakingFactoryAddress, StakingFactoryJson.abi, env.wallet
     );
     const tx = await StakingFactory.createStakingFeast(
-        homeChainAsset, // reward asset
+        mintableAsset, // reward asset
+        [
+            {
+                "amount": 300,
+                "startHeight": 9000,
+                "stopHeight": 500000
+            }
+        ],  // distribution eras
+        { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+    );
+    await waitForTx(env.provider, tx.hash);
+
+    console.log('Create a new feast');
+    StakingFactory.on('StakingFeastCreated', async (creater, stakingFeast, rewardAsset) => {
+        const ERC20AssetHandler = new ethers.Contract(ERC20AssetHandlerAddress, ERC20AssetHandlerJson.abi, env.wallet)
+        // await ERC20AssetHandler.adminAddWhitelistManager(creater, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
+        const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + rewardAsset.substr(2) + "61646d696e");
+        const tx = await ERC20AssetHandler.unlockOrMintAsset(source, rewardAsset, creater, 1000000,
+             { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
+        await waitForTx(env.provider, tx.hash)
+    })
+}
+
+async function simpleCommunity(env) {
+    const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.provider);
+    const simpleAsset = await RegistryHub.registryHub(env.wallet.address, 1);
+
+    const StakingFactory = new ethers.Contract(
+        StakingFactoryAddress, StakingFactoryJson.abi, env.wallet
+    );
+    const tx = await StakingFactory.createStakingFeast(
+        simpleAsset, // reward asset
         [
             {
                 "amount": 300,
@@ -42,42 +67,19 @@ async function main() {
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await waitForTx(env.provider, tx.hash);
+}
 
-    const ERC20AssetHandler = new ethers.Contract(ERC20AssetHandlerAddress, ERC20AssetHandlerJson.abi, env.wallet)
-
-    StakingFactory.on('StakingFeastCreated', async (creater, stakingFeast, rewardAsset) => {
-        // approve
-        const rewardHomeLocation = await RegistryHub.getHomeLocation(rewardAsset);
-        const SimpleERC20 = new ethers.Contract(rewardHomeLocation, SimpleERC20Json.abi, env.wallet);
-        const tx1 = await SimpleERC20.approve(
-            ERC20AssetHandlerAddress,
-            500000000,
-            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-        );
-        await waitForTx(env.provider, tx1.hash);
-
-        // staking feast owner deposit reward
-        const StakingFeast = new ethers.Contract(stakingFeast, StakingTemplateJson.abi, env.wallet);
-        const tx2 = await StakingFeast.adminDepositReward(
-            100000000, 
-            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-        );
-        await waitForTx(env.provider, tx2.hash);
-
-        // query balance
-        const source = ethers.utils.keccak256('0x' + stakingFeast.substr(2) + homeChainAsset.substr(2) + "61646d696e");
-        let depositedReward = await ERC20AssetHandler.getBalance(source);
-        console.log(`Deposited reward by ${env.wallet.address}: ${depositedReward}`);
-
-        const tx3 = await StakingFeast.adminWithdrawReward(
-            10000000,
-            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-        );
-        await waitForTx(env.provider, tx3.hash);
-        depositedReward = await ERC20AssetHandler.getBalance(source);
-        console.log(`After withdraw reward by ${env.wallet.address}: ${depositedReward}`);
-
-    });
+async function main() {
+    let env = {};
+    env.url = process.env.ENDPOINT || 'http://localhost:8545';
+    env.privateKey = process.env.KEY;
+    env.provider = new ethers.providers.JsonRpcProvider(env.url);
+    env.wallet = new ethers.Wallet(env.privateKey, env.provider);
+    env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
+    env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
+    
+    mintableCommunity(env);
+    // simpleCommunity(env)
 
     process.stdin.resume();//so the program will not close instantly
 
@@ -86,7 +88,6 @@ async function main() {
         if (exitCode || exitCode === 0) console.log(exitCode);
         if (options.exit) process.exit();
     }
-
     // Following copy from: https://stackoverflow.com/questions/14031763/doing-a-cleanup-action-just-before-node-js-exits/14032965#14032965
     //do something when app is closing
     process.on('exit', exitHandler.bind(null,{cleanup:true}));
