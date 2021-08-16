@@ -16,8 +16,6 @@ contract RegistryHub is IRegistryHub, Ownable {
     mapping (address => uint8) public registryCounter;
     // owner => assetId => hasRegistered
     mapping (bytes32 => bool) private registryRecord;
-    // assetId => isMintable
-    mapping (bytes32 => bool) private mintableRecord;
     // assetId => foreignLocation
     mapping (bytes32 => bytes) private idToForeignLocation;
     // assetId => homeLocation
@@ -59,15 +57,6 @@ contract RegistryHub is IRegistryHub, Ownable {
         idToRegistryContract[id] = msg.sender;
         trustlessAsset[id] = trustless;
         emit NewAsset(owner, id);
-    }
-
-    function setMintable(bytes32 id) external override {
-        require(whiteList[msg.sender], 'Permission denied: contract is not white list');
-        mintableRecord[id] = true;
-    }
-
-    function mintable(bytes32 id) external override view returns(bool) {
-        return mintableRecord[id];
     }
 
     function isTrustless(bytes32 id) external override view returns(bool) {

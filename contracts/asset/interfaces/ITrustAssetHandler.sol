@@ -9,17 +9,15 @@ interface ITrustAssetHandler {
     /**
      * @dev Lock or Burn asset
      *
-     * If the asset is mintable, we burn it from depositer
-     * If the asset is not mintable, we lock it into from depositer
+     * Lock asset into from depositer
      */
-    function lockOrBurnAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) external;
+    function lockAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) external;
 
     /**
      * @dev Unlock or Mint asset
      *
-     * If the asset is mintable, we mint amount of token to recipient
-     * If the asset is not mintable, we unlock amounty of token to recipient
+     * Unlock amount of token to recipient
      */
-    function unlockOrMintAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount) external;
+    function unlockAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount) external;
 }
 

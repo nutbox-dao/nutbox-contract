@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../MintableERC20.sol';
 import '../common/Types.sol';
 import './StakingTemplate.sol';
 import '../NoDelegateCall.sol';
@@ -41,15 +40,6 @@ contract StakingFactory is NoDelegateCall {
         require(tokenAddress != address(0), 'Reward asset is not registered');
 
         StakingTemplate feastAddress = new StakingTemplate(registryHub);
-
-        if (IRegistryHub(registryHub).mintable(_rewardAsset)) {
-            // grant MINTER_ROLE to staking feast contract
-            bytes32 MINTER_ROLE = MintableERC20(tokenAddress).MINTER_ROLE();
-            (bool success, ) = tokenAddress.delegatecall(
-                abi.encodeWithSignature("grantRole(bytes32,address)", MINTER_ROLE, address(feastAddress))
-            );
-            require(success, 'Failed to grant mint role for staking feast');
-        }
 
         feastAddress.initialize(
             msg.sender,

@@ -69,21 +69,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         whiteList[_contract] = true;
     }
 
-    function lockOrBurnAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) override external {
-        require(whiteList[msg.sender], 'Permission denied: contract is not white list');
-
-        address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
-        if (IRegistryHub(registryHub).mintable(assetId)) {
-            burnERC20(tokenAddress, depositer, amount);
-            emit BurnAsset(source, assetId, depositer, amount);
-        } else {
-            lockERC20(tokenAddress, depositer, address(this), amount);
-            depositBalance[source] = depositBalance[source].add(amount);
-            emit LockAsset(source, assetId, depositer, amount);
-        }
-    }
-
-    function lockAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) external {
+    function lockAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) override external {
         require(whiteList[msg.sender], 'Permission denied: contract is not white list');
 
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
@@ -92,22 +78,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         emit LockAsset(source, assetId, depositer, amount);
     }
 
-    function unlockOrMintAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount) override external {
-        require(whiteList[msg.sender], 'Permission denied: contract is not white list');
-
-        address tokenAddress = IRegistryHub(registryHub).getHomeLocation(assetId);
-        if (IRegistryHub(registryHub).mintable(assetId)) {
-            mintERC20(tokenAddress, address(recipient), amount);
-            emit MintAsset(source, assetId, recipient, amount);
-        } else {
-            require(depositBalance[source] >= amount, 'Insufficient deposited asset balance');
-            releaseERC20(tokenAddress, address(recipient), amount);
-            depositBalance[source] = depositBalance[source].sub(amount);
-            emit UnlockAsset(source, assetId, recipient, amount);
-        }
-    }
-
-    function unlockAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount) external {
+    function unlockAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount) override external {
         require(whiteList[msg.sender], 'Permission denied: contract is not white list');
         require(depositBalance[source] >= amount, 'Insufficient deposited asset balance');
 

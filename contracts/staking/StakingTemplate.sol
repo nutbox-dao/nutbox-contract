@@ -378,14 +378,14 @@ contract StakingTemplate is Ownable {
         // transfer rewards to user
         bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
         bytes memory data = abi.encodeWithSignature(
-            "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
+            "unlockAsset(bytes32,bytes32,address,uint256)",
             source,
             rewardAsset,
             msg.sender,
             availableRewards
         );
         (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        require(success, "failed to call unlockOrMintAsset");
+        require(success, "failed to call unlockAsset");
 
         // after tranfer successfully, update staking info
         openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
@@ -420,14 +420,14 @@ contract StakingTemplate is Ownable {
         // transfer rewards to user
         bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
         bytes memory data = abi.encodeWithSignature(
-            "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
+            "unlockAsset(bytes32,bytes32,address,uint256)",
             source,
             rewardAsset,
             msg.sender,
             totalAvailableRewards
         );
         (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        require(success, "failed to call unlockOrMintAsset");
+        require(success, "failed to call unlockAsset");
 
         // after tranfer successfully, update staking info
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
@@ -549,14 +549,14 @@ contract StakingTemplate is Ownable {
                 // they withdraw reward manually
                 bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
                 bytes memory data = abi.encodeWithSignature(
-                    "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
+                    "unlockAsset(bytes32,bytes32,address,uint256)",
                     source,
                     rewardAsset,
                     dev,
                     rewardsReadyToMinted.mul(devRewardRatio).div(10000)
                 );
                 (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-                require(success, "failed to call unlockOrMintAsset");
+                require(success, "failed to call unlockAsset");
 
                 // only rewards belong to pools can used to compute shareAcc
                 rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000);
