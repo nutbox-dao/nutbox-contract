@@ -47,6 +47,7 @@ contract StakingFactory is NoDelegateCall {
                 abi.encodeWithSignature("grantRole(bytes32,address)", MINTER_ROLE, IRegistryHub(registryHub).getERC20AssetHandler())
             );
             require(success, 'Failed to grant mint role for staking feast');
+            
             emit CreateNewERC20(address(mintableERC20), true);
             tokenCount += 1;
             return address(mintableERC20);
