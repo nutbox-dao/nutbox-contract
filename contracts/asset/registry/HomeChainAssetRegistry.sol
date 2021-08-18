@@ -5,13 +5,12 @@ pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-interface MintableERC20Contract  {
-    function isMintable() external view returns (bool isMintable);
-}
+import '../ERC20Factory.sol';
 
 contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
     address public registryHub;
+    address public erc20Factory;
 
     event HomeChainAssetRegistered(
         address indexed owner,
@@ -19,11 +18,10 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
         address indexed homeLocation
     );
 
-    event ReadMintableResult(string msg, bool isMintable);
-
-    constructor(address _registryHub) {
+    constructor(address _registryHub, address _erc20Factory) {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
+        erc20Factory = _erc20Factory;
     }
 
     function setRegistryHub(address _registryHub) public onlyOwner {
@@ -50,18 +48,14 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
         require(success, "failed to call register hub");
         
         // set mintable asset
-        try MintableERC20Contract(homeLocation).isMintable() {
-             bytes memory setMintableData = abi.encodeWithSignature(
+        if (ERC20Factory(erc20Factory).mintableList(homeLocation)){
+            bytes memory setMintableData = abi.encodeWithSignature(
                 "setMintable(bytes32)",
                 assetId
             );
             (bool setMintableResult,) = registryHub.call(setMintableData);
-            emit ReadMintableResult("setMintableResult", setMintableResult);
             require(setMintableResult, "failed to call set mintable asset");
-        } catch (bytes memory returnData) {
-            emit ReadMintableResult("Get mintable fail", false);
         }
-
         emit HomeChainAssetRegistered(msg.sender, assetId, homeLocation);
     }
 }
