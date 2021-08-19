@@ -42,6 +42,9 @@ function main() {
     HomeChainAssetRegistry.on('HomeChainAssetRegistered', (owner, id, location) => {
         console.log(`HomeChainAssetRegistry::HomeChainAssetRegistered(${owner}, ${id}, ${location})`);
     });
+    HomeChainAssetRegistry.on('ReadMintableResult', (msg, isMintable) => {
+        console.log(`HomeChainAssetRegistry::ReadMintableResult(${msg}, ${isMintable})`);
+    });
 
     const SteemHiveDelegateAssetRegistry = new ethers.Contract(SteemHiveDelegateAssetRegistryAddress, SteemHiveDelegateAssetRegistryJson.abi, env.provider);
     SteemHiveDelegateAssetRegistry.on('SteemHiveDelegateAssetRegisterd', (owner, id, meta) => {
@@ -71,10 +74,10 @@ function main() {
     ERC20AssetHandler.on('BurnAsset', (source, assetId, depositer, amount) => {
         console.log(`ERC20AssetHandler::BurnAsset(${source}, ${assetId}, ${depositer}, ${amount})`);
     });
-    ERC20AssetHandler.on('UnlockAsset', (source, assetId, depositer, amount) => {
+    ERC20AssetHandler.on('UnlockAsset', (source, assetId, recipient, amount) => {
         console.log(`ERC20AssetHandler::UnlockAsset(${source}, ${assetId}, ${recipient}, ${amount})`);
     });
-    ERC20AssetHandler.on('MintAsset', (source, assetId, depositer, amount) => {
+    ERC20AssetHandler.on('MintAsset', (source, assetId, recipient, amount) => {
         console.log(`ERC20AssetHandler::MintAsset(${source}, ${assetId}, ${recipient}, ${amount})`);
     });
 

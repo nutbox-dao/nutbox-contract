@@ -10,6 +10,8 @@ const SteemHiveDelegateAssetRegistryJson = require('../build/contracts/SteemHive
 const SubstrateCrowdloanAssetRegistryJson = require('../build/contracts/SubstrateCrowdloanAssetRegistry.json');
 const SubstrateNominateAssetRegistryJson = require('../build/contracts/SubstrateNominateAssetRegistry.json');
 const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const MintableERC20Json = require('../build/contracts/MintableERC20.json');
+const ERC20FactoryJson = require('../build/contracts/ERC20Factory.json');
 const Contracts = require('./contracts.json');
 
 const RegistryHubAddress = Contracts.RegistryHub;
@@ -17,11 +19,31 @@ const HomeChainAssetRegistryAddress = Contracts.HomeChainAssetRegistry;
 const SteemHiveDelegateAssetRegistryAddress = Contracts.SteemHiveDelegateAssetRegistry;
 const SubstrateCrowdloanAssetRegistryAddress = Contracts.SubstrateCrowdloanAssetRegistry;
 const SubstrateNominateAssetRegistryAddress = Contracts.SubstrateNominateAssetRegistry;
+const ERC20FactoryAddress = Contracts.ERC20Factory;
+
+async function deployMintableERC20(env) {
+    return new Promise(async (resolve, reject) => {
+        const ERC20Factory = new ethers.Contract(ERC20FactoryAddress, ERC20FactoryJson.abi, env.wallet);
+        const tx = await ERC20Factory.createERC20(
+            "WALNUT", "NUT", 
+            ethers.utils.parseUnits("10000.0", 18), 
+            env.wallet.address,
+            true,
+            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+        )
+        await waitForTx(env.provider, tx.hash);
+        ERC20Factory.on('CreateNewERC20', (tokenAddress, name, symbol, isMintable) => {
+            console.log(tokenAddress, name, symbol, isMintable);
+            console.log("✓ Mintable ERC20 contract deployed", tokenAddress);
+            resolve(tokenAddress)
+        })
+    })
+}
 
 async function deployERC20(env) {
-    const factory = new ethers.ContractFactory(SimpleERC20Json.abi, SimpleERC20Json.bytecode, env.wallet);
+    const factory = new ethers.Contract(SimpleERC20Json.abi, SimpleERC20Json.bytecode, env.wallet);
     const contract = await factory.deploy(
-        "WALNUT", "NUT", ethers.utils.parseUnits("10000.0", 18), env.wallet.address,
+        "PEANUT", "PNUT", ethers.utils.parseUnits("10000.0", 18), env.wallet.address,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();
@@ -48,22 +70,43 @@ async function main() {
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
 
     // deploy erc20 contract
-    await deployERC20(env);
-    await setWhitelist(env, HomeChainAssetRegistryAddress);
-    await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
-    await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
+    // await deployERC20(env);
+    // await deployMintableERC20(env);
+    // return;
+    // await setWhitelist(env, HomeChainAssetRegistryAddress);
+    // await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
+    // await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
     return;
 
-    // home chain asset registry
-    const HomeChainAssetRegistry = new ethers.Contract(
+    // home chain asset registry ===== mintable
+    const MintableAssetRegistry = new ethers.Contract(
         HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet
     );
-    const tx0 = await HomeChainAssetRegistry.registerAsset(
-        '0x', env.simpleERC20Contract, '0x',
+    const tx0 = await MintableAssetRegistry.registerAsset(
+        '0x', env.mintableERC20Contract, '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await waitForTx(env.provider, tx0.hash);
+
+    const mintableToken = new ethers.Contract(
+        env.mintableERC20Contract,
+        MintableERC20Json.abi,
+        env.wallet
+        ) 
+    const isMintable = await mintableToken.isMintable();
+    console.log(env.mintableERC20Contract,'isMintable:', isMintable);
+    return;
+
+    // home chain asset registry ====== simple
+    const SimpleAssetRegistry = new ethers.Contract(
+        HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet
+    );
+    const tx01 = await SimpleAssetRegistry.registerAsset(
+        '0x', env.simpleERC20Contract, '0x',
+        { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+    );
+    await waitForTx(env.provider, tx01.hash);
     return;
 
     // steem hive delegate asset registry

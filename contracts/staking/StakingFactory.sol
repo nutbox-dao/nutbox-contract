@@ -3,16 +3,17 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
+import '../MintableERC20.sol';
 import '../common/Types.sol';
 import './StakingTemplate.sol';
+import '../NoDelegateCall.sol';
 
 /**
  * @dev Factory contract to create an StakingTemplate entity
  *
  * This is the entry contract that user start to create their own staking economy.
  */
-contract StakingFactory {
+contract StakingFactory is NoDelegateCall {
 
     address public registryHub;
     address public feeAddress;
@@ -29,23 +30,17 @@ contract StakingFactory {
         feeAddress = _feeAddress;
     }
 
-    // only owner of reward token can call this method
+    // only owner of reward token can call this method 
     function createStakingFeast (
         bytes32 _rewardAsset,
         Types.Distribution[] memory _distributionEras
-    ) public {
+    ) public noDelegateCall {
         require(_distributionEras.length > 0, 'Should give at least one distribution');
         
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
         require(tokenAddress != address(0), 'Reward asset is not registered');
 
         StakingTemplate feastAddress = new StakingTemplate(registryHub);
-
-        if (IRegistryHub(registryHub).mintable(_rewardAsset)) {
-            // grant MINTER_ROLE to staking feast contract
-            bytes32 MINTER_ROLE = ERC20PresetMinterPauser(tokenAddress).MINTER_ROLE();
-            ERC20PresetMinterPauser(tokenAddress).grantRole(MINTER_ROLE, address(feastAddress));
-        }
 
         feastAddress.initialize(
             msg.sender,
