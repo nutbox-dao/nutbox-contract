@@ -510,10 +510,20 @@ contract StakingTemplate is Ownable {
     ) {
         require(pid < numberOfPools, "Pool does not exist!");
         return (openedPools[pid].stakingInfo[user].hasDeposited,
-        openedPools[pid].stakingInfo[user].amount,
-        openedPools[pid].stakingInfo[user].availableRewards,
-        openedPools[pid].stakingInfo[user].userDebt,
-        openedPools[pid].stakingInfo[user].bindAccount);
+                openedPools[pid].stakingInfo[user].amount,
+                openedPools[pid].stakingInfo[user].availableRewards,
+                openedPools[pid].stakingInfo[user].userDebt,
+                openedPools[pid].stakingInfo[user].bindAccount);
+    }
+
+    function checkBindAccount(uint8 pid, string memory account) public view returns(bool success, address depositor) {
+        require(pid < numberOfPools, "Pool does not exist!");
+        for (uint64 i = 0; i < openedPools[pid].stakerCount; i++){
+            string memory _bindAccount = openedPools[pid].stakingInfo[openedPools[pid].stakingList[i]].bindAccount;
+            if(keccak256(abi.encodePacked(_bindAccount)) == keccak256(abi.encodePacked(account))){
+                return(true, openedPools[pid].stakingList[i]);
+            }
+        }
     }
 
     function calculateReward(uint256 from, uint256 to) public view returns (uint256) {
