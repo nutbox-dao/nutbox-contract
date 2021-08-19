@@ -89,6 +89,8 @@ contract StakingTemplate is Ownable {
     bytes32 public rewardAsset;
     address factory;
     address registryHub;
+    // fetch address use binded account
+    mapping (uint8 => mapping (string => address)) public accountBindMap;
 
     event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
     event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
@@ -262,6 +264,7 @@ contract StakingTemplate is Ownable {
             openedPools[pid].stakingInfo[depositor].bindAccount = _bindAccount;
             openedPools[pid].stakingList.push(depositor);
             openedPools[pid].stakerCount += 1;
+            accountBindMap[pid][_bindAccount] = msg.sender;
         }
 
         _updatePools();
@@ -501,29 +504,9 @@ contract StakingTemplate is Ownable {
         return devRewardRatio;
     }
 
-    function getUserDepositInfo(uint8 pid, address user) public view returns(
-        bool hasDeposited,
-        uint256 amount,
-        uint256 availableRewards,
-        uint256 userDebt,
-        string memory bindAccount
-    ) {
+    function getUserDepositInfo(uint8 pid, address user) public view returns(UserStakingInfo memory) {
         require(pid < numberOfPools, "Pool does not exist!");
-        return (openedPools[pid].stakingInfo[user].hasDeposited,
-                openedPools[pid].stakingInfo[user].amount,
-                openedPools[pid].stakingInfo[user].availableRewards,
-                openedPools[pid].stakingInfo[user].userDebt,
-                openedPools[pid].stakingInfo[user].bindAccount);
-    }
-
-    function checkBindAccount(uint8 pid, string memory account) public view returns(bool success, address depositor) {
-        require(pid < numberOfPools, "Pool does not exist!");
-        for (uint64 i = 0; i < openedPools[pid].stakerCount; i++){
-            string memory _bindAccount = openedPools[pid].stakingInfo[openedPools[pid].stakingList[i]].bindAccount;
-            if(keccak256(abi.encodePacked(_bindAccount)) == keccak256(abi.encodePacked(account))){
-                return(true, openedPools[pid].stakingList[i]);
-            }
-        }
+        return openedPools[pid].stakingInfo[user];
     }
 
     function calculateReward(uint256 from, uint256 to) public view returns (uint256) {
