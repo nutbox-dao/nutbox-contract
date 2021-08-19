@@ -29,7 +29,7 @@ async function deployRegistryHubContract(env) {
 }
 
 async function deployERC20Factory(env) {
-    const factory = new ethers.ContractFactory(ERC20FactoryJson.abi, ERC20FactoryJson.bytecode, env.waller);
+    const factory = new ethers.ContractFactory(ERC20FactoryJson.abi, ERC20FactoryJson.bytecode, env.wallet);
     const contract = await factory.deploy(
         env.registryHubContract,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
@@ -169,7 +169,6 @@ async function main() {
     env.feeAddr = env.wallet.address;
 
     let startBalance = await env.provider.getBalance(env.wallet.address)
-    console.log('startBalance', startBalance);
 
     // deploy asset contracts
     await deployRegistryHubContract(env);
@@ -238,51 +237,51 @@ async function main() {
         ERC20Factory: env.erc20RactoryContract ?? "Not Deployed"
     };
     
-    const outfile = './contracts.json'
+    const outfile = './scripts/contracts.json'
     const jsonStr = JSON.stringify(output, undefined, 2);
     fs.writeFileSync(outfile, jsonStr, { encoding: "utf-8" });
 
     console.log(`
-    ================================================================
-    Url:        ${env.url}
-    Deployer:   ${env.wallet.address}
-    Gas Limit:   ${ethers.BigNumber.from(env.gasLimit)}
-    Gas Price:   ${ethers.BigNumber.from(env.gasPrice)}
-    Deploy Cost: ${ethers.utils.formatEther(deployCost)}
-    
-    Options
-    =======
-    Bridge Fee:     ${env.bridgeFee}
-    Bridge Expiry:  ${env.bridgeExpiry}
-    Fee Addr:       ${env.feeAddr}
-    
-    Contract Addresses
-    ================================================================
-    RegistryHub:                        ${env.registryHubContract ? env.registryHubContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    HomeChainAssetRegistry:             ${env.homeChainAssetRegistryContract ? env.homeChainAssetRegistryContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    SteemHiveDelegateAssetRegistry:     ${env.steemHiveDelegateAssetRegistryContract ? env.steemHiveDelegateAssetRegistryContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    SubstrateCrowdloanAssetRegistry:    ${env.substrateCrowdloanAssetRegistryContract ? env.substrateCrowdloanAssetRegistryContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    SubstrateNominateAssetRegistry:     ${env.substrateNominateAssetRegistryContract ? env.substrateNominateAssetRegistryContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    ERC20AssetHandler:                  ${env.erc20AssetHandlerContract ? env.erc20AssetHandlerContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    ERC721AssetHandler:                 ${env.erc721AssetHandlerContract ? env.erc721AssetHandlerContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    TrustlessAssetHandler:              ${env.trustlessAssetHandlerContract ? env.trustlessAssetHandlerContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    Executor:                           ${env.executorContract ? env.executorContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    Bridge:                             ${env.bridgeContract ? env.bridgeContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    StakingFactory:                     ${env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed"}
-    ----------------------------------------------------------------
-    ERC20Factory:                     ${env.erc20RactoryContract ?? "Not Deployed"}
-    ================================================================
-            `)
+        ================================================================
+        Url:        ${env.url}
+        Deployer:   ${env.wallet.address}
+        Gas Limit:   ${ethers.BigNumber.from(env.gasLimit)}
+        Gas Price:   ${ethers.BigNumber.from(env.gasPrice)}
+        Deploy Cost: ${ethers.utils.formatEther(deployCost)}
+        
+        Options
+        =======
+        Bridge Fee:     ${env.bridgeFee}
+        Bridge Expiry:  ${env.bridgeExpiry}
+        Fee Addr:       ${env.feeAddr}
+        
+        Contract Addresses
+        ================================================================
+        RegistryHub:                        ${env.registryHubContract ? env.registryHubContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        ERC20Factory:                     ${env.erc20RactoryContract ?? "Not Deployed"}
+        ----------------------------------------------------------------
+        HomeChainAssetRegistry:             ${env.homeChainAssetRegistryContract ? env.homeChainAssetRegistryContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        SteemHiveDelegateAssetRegistry:     ${env.steemHiveDelegateAssetRegistryContract ? env.steemHiveDelegateAssetRegistryContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        SubstrateCrowdloanAssetRegistry:    ${env.substrateCrowdloanAssetRegistryContract ? env.substrateCrowdloanAssetRegistryContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        SubstrateNominateAssetRegistry:     ${env.substrateNominateAssetRegistryContract ? env.substrateNominateAssetRegistryContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        ERC20AssetHandler:                  ${env.erc20AssetHandlerContract ? env.erc20AssetHandlerContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        ERC721AssetHandler:                 ${env.erc721AssetHandlerContract ? env.erc721AssetHandlerContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        TrustlessAssetHandler:              ${env.trustlessAssetHandlerContract ? env.trustlessAssetHandlerContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        Executor:                           ${env.executorContract ? env.executorContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        Bridge:                             ${env.bridgeContract ? env.bridgeContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        StakingFactory:                     ${env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed"}
+        ================================================================
+    `)
 }
 
 main()

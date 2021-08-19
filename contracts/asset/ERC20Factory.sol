@@ -23,7 +23,7 @@ contract ERC20Factory {
     // all ERC20 token count
     uint16 tokenCount;
 
-    event ERC20TokenCreated(address tokenAddress,bool isMintable);
+    event ERC20TokenCreated(address creator, string tokenName, string tokenSymbol, address tokenAddress,bool isMintable);
 
     constructor(address _registryHub) {
         registryHub = _registryHub;
@@ -45,13 +45,13 @@ contract ERC20Factory {
                 abi.encodeWithSignature("grantRole(bytes32,address)", MINTER_ROLE, IRegistryHub(registryHub).getERC20AssetHandler())
             );
             require(success, 'Failed to grant mint role for staking feast');
-            emit ERC20TokenCreated(address(mintableERC20), true);
+            emit ERC20TokenCreated(msg.sender, name, symbol, address(mintableERC20), true);
             tokenCount += 1;
             return address(mintableERC20);
         } else {
             SimpleERC20 simpleERC20 = new SimpleERC20(name, symbol, initialSupply, owner);
             tokenAddresses.push(address(simpleERC20));
-            emit ERC20TokenCreated(address(simpleERC20), false);
+            emit ERC20TokenCreated(msg.sender, name, symbol, address(simpleERC20), false);
             tokenCount += 1;
             return address(simpleERC20);
         } 

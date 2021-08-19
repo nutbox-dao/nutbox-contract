@@ -71,10 +71,10 @@ function main() {
     ERC20AssetHandler.on('BurnAsset', (source, assetId, depositer, amount) => {
         console.log(`ERC20AssetHandler::BurnAsset(${source}, ${assetId}, ${depositer}, ${amount})`);
     });
-    ERC20AssetHandler.on('UnlockAsset', (source, assetId, depositer, amount) => {
+    ERC20AssetHandler.on('UnlockAsset', (source, assetId, recipient, amount) => {
         console.log(`ERC20AssetHandler::UnlockAsset(${source}, ${assetId}, ${recipient}, ${amount})`);
     });
-    ERC20AssetHandler.on('MintAsset', (source, assetId, depositer, amount) => {
+    ERC20AssetHandler.on('MintAsset', (source, assetId, recipient, amount) => {
         console.log(`ERC20AssetHandler::MintAsset(${source}, ${assetId}, ${recipient}, ${amount})`);
     });
 
