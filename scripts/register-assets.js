@@ -32,7 +32,7 @@ async function deployMintableERC20(env) {
             true,
             { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
         )
-        ERC20Factory.on('CreateNewERC20', (creator, name, symbol, tokenAddress, isMintable) => {
+        ERC20Factory.on('ERC20TokenCreated', (creator, name, symbol, tokenAddress, isMintable) => {
             if(name == 'WALNUT' && isMintable){
                 console.log(tokenAddress, name, symbol, isMintable);
                 console.log("✓ Mintable ERC20 contract deployed", tokenAddress);
@@ -52,7 +52,7 @@ async function deployERC20(env) {
             false,
             { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
         )
-        ERC20Factory.on('CreateNewERC20', (creator, name, symbol, tokenAddress, isMintable) => {
+        ERC20Factory.on('ERC20TokenCreated', (creator, name, symbol, tokenAddress, isMintable) => {
             if(name == 'Peanut' && !isMintable){
                 console.log(tokenAddress, name, symbol, isMintable);
                 console.log("✓ Simple ERC20 contract deployed", tokenAddress);

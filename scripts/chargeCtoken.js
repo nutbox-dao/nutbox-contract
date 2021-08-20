@@ -17,8 +17,6 @@ async function main() {
     env.bridgeExpiry = 10;
     env.feeAddr = env.wallet.address;
 
-
-
     const StakingTemplate = new ethers.Contract('', StakingTemplateJSON.abi, env.wallet);
     const tx = await StakingTemplate.adminDepositReward(
         ethers.utils.parseUnits("1000.0", 18)
