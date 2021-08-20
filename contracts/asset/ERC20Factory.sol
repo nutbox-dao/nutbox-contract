@@ -18,10 +18,12 @@ contract ERC20Factory {
     // address => isMintable
     mapping (address => bool) public mintableList;
 
-    // all ERC20 token deployed by this factory
-    address[] tokenAddresses;
-    // all ERC20 token count
-    uint16 tokenCount;
+    // address => isNonMintable
+    mapping (address => bool) public nonMintableList;
+
+    // all tokens
+    address[] public allTokens;
+    uint64 public allTokensCount;
 
     event ERC20TokenCreated(address creator, string tokenName, string tokenSymbol, address tokenAddress,bool isMintable);
 
@@ -38,21 +40,22 @@ contract ERC20Factory {
     ) public returns(address){
         if (isMintable){
             MintableERC20 mintableERC20 = new MintableERC20(name, symbol, initialSupply, owner);
-            tokenAddresses.push(address(mintableERC20));
             mintableList[address(mintableERC20)] = true;
+            allTokens.push(address(mintableERC20));
+            allTokensCount += 1;
             bytes32 MINTER_ROLE = mintableERC20.MINTER_ROLE();
             (bool success, ) = address(mintableERC20).call(
                 abi.encodeWithSignature("grantRole(bytes32,address)", MINTER_ROLE, IRegistryHub(registryHub).getERC20AssetHandler())
             );
             require(success, 'Failed to grant mint role for staking feast');
             emit ERC20TokenCreated(msg.sender, name, symbol, address(mintableERC20), true);
-            tokenCount += 1;
             return address(mintableERC20);
         } else {
             SimpleERC20 simpleERC20 = new SimpleERC20(name, symbol, initialSupply, owner);
-            tokenAddresses.push(address(simpleERC20));
+            nonMintableList[address(simpleERC20)] = true;
+            allTokens.push(address(simpleERC20));
+            allTokensCount += 1;
             emit ERC20TokenCreated(msg.sender, name, symbol, address(simpleERC20), false);
-            tokenCount += 1;
             return address(simpleERC20);
         } 
     }
