@@ -30,7 +30,7 @@ contract StakingFactory is NoDelegateCall {
         feeAddress = _feeAddress;
     }
 
-    // only owner of reward token can call this method
+    // only owner of reward token can call this method 
     function createStakingFeast (
         bytes32 _rewardAsset,
         Types.Distribution[] memory _distributionEras
@@ -41,15 +41,6 @@ contract StakingFactory is NoDelegateCall {
         require(tokenAddress != address(0), 'Reward asset is not registered');
 
         StakingTemplate feastAddress = new StakingTemplate(registryHub);
-
-        if (IRegistryHub(registryHub).mintable(_rewardAsset)) {
-            // grant MINTER_ROLE to staking feast contract
-            bytes32 MINTER_ROLE = MintableERC20(tokenAddress).MINTER_ROLE();
-            (bool success, ) = tokenAddress.delegatecall(
-                abi.encodeWithSignature("grantRole(bytes32,address)", MINTER_ROLE, address(feastAddress))
-            );
-            require(success, 'Failed to grant mint role for staking feast');
-        }
 
         feastAddress.initialize(
             msg.sender,
