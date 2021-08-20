@@ -89,7 +89,7 @@ contract StakingTemplate is Ownable {
     bytes32 public rewardAsset;
     address factory;
     address registryHub;
-    // fetch address use binded account
+    // fetch address use bound account
     mapping (uint8 => mapping (string => address)) public accountBindMap;
 
     event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
