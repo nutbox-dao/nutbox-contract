@@ -29,6 +29,8 @@ contract StakingTemplate is Ownable {
         uint256 availableRewards;
         // User's debt that should be removed when calculating their final rewards.
         uint256 userDebt;
+        // User's foreign account
+        string bindAccount;
     }
 
     struct Pool {
@@ -87,6 +89,8 @@ contract StakingTemplate is Ownable {
     bytes32 public rewardAsset;
     address factory;
     address registryHub;
+    // fetch address use bound account
+    mapping (uint8 => mapping (string => address)) public accountBindMap;
 
     event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
     event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
@@ -229,16 +233,16 @@ contract StakingTemplate is Ownable {
         }
     }
 
-    function deposit(uint8 pid, address depositor, uint256 amount) public {
+    function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
-            internalDeposit(pid, depositor, amount);
+            internalDeposit(pid, depositor, amount, _bindAccount);
         }else{
-            internalDeposit(pid, msg.sender, amount);
+            internalDeposit(pid, msg.sender, amount, _bindAccount);
         }
     }
 
-    function internalDeposit(uint8 pid, address depositor, uint256 amount) private {
+    function internalDeposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) private {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check distribution era 0 to see whether the game has started
@@ -257,8 +261,10 @@ contract StakingTemplate is Ownable {
             openedPools[pid].stakingInfo[depositor].availableRewards = 0;
             openedPools[pid].stakingInfo[depositor].amount = 0;
             openedPools[pid].stakingInfo[depositor].userDebt = 0;
+            openedPools[pid].stakingInfo[depositor].bindAccount = _bindAccount;
             openedPools[pid].stakingList.push(depositor);
             openedPools[pid].stakerCount += 1;
+            accountBindMap[pid][_bindAccount] = msg.sender;
         }
 
         _updatePools();
@@ -344,12 +350,12 @@ contract StakingTemplate is Ownable {
         emit Withdraw(pid, depositor, withdrawAmount);
     }
 
-    function update(uint8 pid, address depositor, uint256 amount) public
+    function update(uint8 pid, address depositor, uint256 amount,string memory _bindAccount) public
     {
         uint256 prevAmount = openedPools[pid].stakingInfo[depositor].amount;
 
         if (prevAmount < amount) { // deposit
-            deposit(pid, depositor, amount.sub(prevAmount));
+            deposit(pid, depositor, amount.sub(prevAmount), _bindAccount);
         } else {   // withdraw
             withdraw(pid, depositor, prevAmount.sub(amount));
         }
@@ -496,6 +502,11 @@ contract StakingTemplate is Ownable {
 
     function getDevRewardRatio() public view returns(uint16) {
         return devRewardRatio;
+    }
+
+    function getUserDepositInfo(uint8 pid, address user) public view returns(UserStakingInfo memory) {
+        require(pid < numberOfPools, "Pool does not exist!");
+        return openedPools[pid].stakingInfo[user];
     }
 
     function calculateReward(uint256 from, uint256 to) public view returns (uint256) {
