@@ -80,14 +80,15 @@ async function main() {
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
 
-    // deploy erc20 contract
-    const mintabelERC20 = await deployMintableERC20(env);
-    const simpleERC20 = await deployERC20(env);
-
     await setWhitelist(env, HomeChainAssetRegistryAddress);
     await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
+    await setWhitelist(env, ERC20FactoryAddress);
+    
+    // deploy erc20 contract
+    const mintabelERC20 = await deployMintableERC20(env);
+    const simpleERC20 = await deployERC20(env);
 
     // mintable asset registry
     const HomeChainAssetRegistry = new ethers.Contract(
