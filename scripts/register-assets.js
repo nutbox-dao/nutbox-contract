@@ -22,6 +22,10 @@ const SubstrateNominateAssetRegistryAddress = Contracts.SubstrateNominateAssetRe
 
 const ERC20FactoryAddress = Contracts.ERC20Factory;
 
+async function isMintable(env, assetId) {
+    const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.wallet);
+    return await RegistryHub.mintable(assetId);
+}
 async function deployMintableERC20(env) {
     return new Promise(async (resolve, reject) => {
         const ERC20Factory = new ethers.Contract(ERC20FactoryAddress, ERC20FactoryJson.abi, env.wallet);
@@ -32,12 +36,29 @@ async function deployMintableERC20(env) {
             true,
             { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
         )
-        ERC20Factory.on('ERC20TokenCreated', (creator, name, symbol, tokenAddress, isMintable) => {
-            if(name == 'WALNUT' && isMintable){
-                console.log(tokenAddress, name, symbol, isMintable);
+        ERC20Factory.on('ERC20TokenCreated', async (creator, name, symbol, tokenAddress, _isMintable) => {
+            if(name == 'WALNUT' && _isMintable){
+                console.log(tokenAddress, name, symbol, _isMintable);
                 console.log("✓ Mintable ERC20 contract deployed", tokenAddress);
                 resolve(tokenAddress)
             }
+        })
+    })
+}
+
+async function registerMintableERC20(env, mintabelERC20) {
+    return new Promise(async (resolve, reject) => {
+        const HomeChainAssetRegistry = new ethers.Contract(
+            HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet
+        );
+        const tx0 = await HomeChainAssetRegistry.registerAsset(
+            '0x', mintabelERC20, '0x',
+            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+        );
+        await waitForTx(env.provider, tx0.hash);
+        HomeChainAssetRegistry.on('HomeChainAssetRegistered', async (sender, assetId, homeLocation) => {
+            console.log("HomeChainAssetRegistered", assetId, homeLocation);
+            resolve();
         })
     })
 }
@@ -70,7 +91,7 @@ async function setWhitelist(env, address) {
     );
     await waitForTx(env.provider, tx.hash);
 }
-
+ 
 async function main() {
     let env = {};
     env.url = process.env.ENDPOINT || 'http://localhost:8545';
@@ -85,22 +106,20 @@ async function main() {
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
     await setWhitelist(env, ERC20FactoryAddress);
-    
+    // return;
     // deploy erc20 contract
     const mintabelERC20 = await deployMintableERC20(env);
-    const simpleERC20 = await deployERC20(env);
+    // const simpleERC20 = await deployERC20(env);
 
     // mintable asset registry
+
+    await registerMintableERC20(env, mintabelERC20);
+    
+    // simple asset registry
     const HomeChainAssetRegistry = new ethers.Contract(
         HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet
     );
-    const tx0 = await HomeChainAssetRegistry.registerAsset(
-        '0x', mintabelERC20, '0x',
-        { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-    );
-    await waitForTx(env.provider, tx0.hash);
 
-    // simple asset registry
     const tx01 = await HomeChainAssetRegistry.registerAsset(
         '0x', simpleERC20, '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
