@@ -48,7 +48,9 @@ contract ERC20Factory {
                 abi.encodeWithSignature("grantRole(bytes32,address)", MINTER_ROLE, IRegistryHub(registryHub).getERC20AssetHandler())
             );
             require(success, 'Failed to grant mint role for staking feast');
-            bytes32 assetId = keccak256(abi.encodePacked(bytes("0x"), address(mintableERC20)));
+
+            bytes32 assetId = keccak256(abi.encodePacked(bytes(""), address(mintableERC20)));
+
             bytes memory setMintableData = abi.encodeWithSignature(
                 "setMintable(bytes32)",
                 assetId
