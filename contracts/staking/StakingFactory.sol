@@ -33,6 +33,7 @@ contract StakingFactory is NoDelegateCall {
     // only owner of reward token can call this method 
     function createStakingFeast (
         bytes32 _rewardAsset,
+        address _rewardCalculator,
         Types.Distribution[] memory _distributionEras
     ) public noDelegateCall {
         require(_distributionEras.length > 0, 'Should give at least one distribution');
@@ -45,8 +46,17 @@ contract StakingFactory is NoDelegateCall {
         feastAddress.initialize(
             msg.sender,
             _rewardAsset,
+            _rewardCalculator
+        );
+
+        // set staking feast rewarad distribution policy
+        bytes memory policy = abi.encodeWithSignature(
+            "factorySetDistributionEra(address, Types.Distribution[])",
+            feastAddress,
             _distributionEras
         );
+        (bool success0,) = _rewardCalculator.call(policy);
+        require(success0, "failed to set distribution policy");
 
         // add feast into whitelist of ERC20AssetHandler
         bytes memory data = abi.encodeWithSignature(

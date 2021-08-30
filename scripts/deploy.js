@@ -17,6 +17,7 @@ const ExectorJson = require('../build/contracts/Executor.json');
 const BridgeJson = require('../build/contracts/Bridge.json');
 const ERC20FactoryJson = require('../build/contracts/ERC20Factory.json');
 const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json');
 
 async function deployRegistryHubContract(env) {
     let factory = new ethers.ContractFactory(RegistryHubJson.abi, RegistryHubJson.bytecode, env.wallet);
@@ -154,6 +155,14 @@ async function deployERC20(env) {
     console.log("✓ Simple ERC20 contract deployed");
 }
 
+async function deployLinearCalculator(env) {
+    const factory = new ethers.ContractFactory(LinearCalculatorJson.abi, LinearCalculatorJson.bytecode, env.wallet);
+    const contract = await factory.deploy("", "", { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
+    await contract.deployed();
+    env.linearCalculatorContract = contract.address;
+    console.log("✓ LinearCalculator contract deployed");
+}
+
 async function main() {
     let env = {};
     env.url = process.env.ENDPOINT || 'http://localhost:8545';
@@ -198,6 +207,13 @@ async function main() {
 
     // deploy staking factory contract
     await deployStakingFactoryContract(env);
+    // deploy staking reward calculators
+    await deployLinearCalculator(env);
+    // set StakingFactory into calculators
+    const linearCalculator = new ethers.Contract(env.linearCalculatorContract, LinearCalculatorJson.abi, env.wallet);
+    await linearCalculator.adminSetStakingFactory(env.stakingFactoryContract);
+    console.log('Set StakingFactory into LinearCalculator');
+
 
     // set StakingFactory as whitelist manager of ERC20AssetHandler
     const erc20AssetHandler = new ethers.Contract(env.erc20AssetHandlerContract, ERC20AssetHandlerJson.abi, env.wallet);
@@ -234,6 +250,7 @@ async function main() {
         Executor:  env.executorContract ? env.executorContract : "Not Deployed",
         Bridge: env.bridgeContract ? env.bridgeContract : "Not Deployed",
         StakingFactory: env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed",
+        LinearCalculator: env.linearCalculatorContract ? env.linearCalculatorContract: "Not Deployed",
         ERC20Factory: env.erc20RactoryContract ?? "Not Deployed"
     };
     
@@ -280,6 +297,8 @@ async function main() {
         Bridge:                             ${env.bridgeContract ? env.bridgeContract : "Not Deployed"}
         ----------------------------------------------------------------
         StakingFactory:                     ${env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        LinearCalculator:                   ${env.linearCalculatorContract ? env.linearCalculatorContract : "Not Deployed"}
         ================================================================
     `)
 }
