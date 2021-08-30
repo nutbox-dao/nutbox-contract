@@ -75,7 +75,7 @@ contract StakingTemplate is Ownable {
         uint256 totalStakedAmount;
     }
 
-    uint8 constant MAX_POOLS = 10;
+    uint8 constant MAX_POOLS = 21;
     uint8 constant MAX_DISTRIBUTIONS = 6;
 
     address admin;
