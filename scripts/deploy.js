@@ -157,7 +157,7 @@ async function deployERC20(env) {
 
 async function deployLinearCalculator(env) {
     const factory = new ethers.ContractFactory(LinearCalculatorJson.abi, LinearCalculatorJson.bytecode, env.wallet);
-    const contract = await factory.deploy("", "", { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
+    const contract = await factory.deploy({ gasPrice: env.gasPrice, gasLimit: env.gasLimit});
     await contract.deployed();
     env.linearCalculatorContract = contract.address;
     console.log("✓ LinearCalculator contract deployed");
@@ -240,6 +240,7 @@ async function main() {
     // dump to local file
     const output = {
         RegistryHub: env.registryHubContract ? env.registryHubContract : "Not Deployed",
+        ERC20Factory: env.erc20RactoryContract ?? "Not Deployed",
         HomeChainAssetRegistry: env.homeChainAssetRegistryContract ? env.homeChainAssetRegistryContract : "Not Deployed",
         SteemHiveDelegateAssetRegistry: env.steemHiveDelegateAssetRegistryContract ? env.steemHiveDelegateAssetRegistryContract : "Not Deployed",
         SubstrateCrowdloanAssetRegistry: env.substrateCrowdloanAssetRegistryContract ? env.substrateCrowdloanAssetRegistryContract : "Not Deployed",
@@ -250,8 +251,7 @@ async function main() {
         Executor:  env.executorContract ? env.executorContract : "Not Deployed",
         Bridge: env.bridgeContract ? env.bridgeContract : "Not Deployed",
         StakingFactory: env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed",
-        LinearCalculator: env.linearCalculatorContract ? env.linearCalculatorContract: "Not Deployed",
-        ERC20Factory: env.erc20RactoryContract ?? "Not Deployed"
+        LinearCalculator: env.linearCalculatorContract ? env.linearCalculatorContract: "Not Deployed"
     };
     
     const outfile = './scripts/contracts.json'

@@ -29,6 +29,14 @@ async function isMintable(env, assetId) {
 async function deployMintableERC20(env) {
     return new Promise(async (resolve, reject) => {
         const ERC20Factory = new ethers.Contract(ERC20FactoryAddress, ERC20FactoryJson.abi, env.wallet);
+        ERC20Factory.on('ERC20TokenCreated', async (creator, name, symbol, tokenAddress, _isMintable) => {
+            if(name == 'WALNUT' && _isMintable){
+                console.log(tokenAddress, name, symbol, _isMintable);
+                console.log("✓ Mintable ERC20 contract deployed", tokenAddress);
+                resolve(tokenAddress)
+                ERC20Factory.removeAllListeners('ERC20TokenCreated')
+            }
+        })
         const tx = await ERC20Factory.createERC20(
             "WALNUT", "NUT", 
             ethers.utils.parseUnits("10000.0", 18), 
@@ -36,13 +44,6 @@ async function deployMintableERC20(env) {
             true,
             { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
         )
-        ERC20Factory.on('ERC20TokenCreated', async (creator, name, symbol, tokenAddress, _isMintable) => {
-            if(name == 'WALNUT' && _isMintable){
-                console.log(tokenAddress, name, symbol, _isMintable);
-                console.log("✓ Mintable ERC20 contract deployed", tokenAddress);
-                resolve(tokenAddress)
-            }
-        })
     })
 }
 
@@ -114,6 +115,7 @@ async function main() {
     // mintable asset registry
 
     await registerMintableERC20(env, mintabelERC20);
+    return;
     
     // simple asset registry
     const HomeChainAssetRegistry = new ethers.Contract(
