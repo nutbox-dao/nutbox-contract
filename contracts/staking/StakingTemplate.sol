@@ -87,7 +87,7 @@ contract StakingTemplate is Ownable {
     bytes32 public rewardAsset;
     address factory;
     address registryHub;
-    address rewardCalculator;
+    address public rewardCalculator;
     // fetch address use bound account
     mapping (uint8 => mapping (string => address)) public accountBindMap;
 
