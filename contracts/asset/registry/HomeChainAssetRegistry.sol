@@ -46,16 +46,6 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
         (bool success,) = registryHub.call(data);
         require(success, "failed to call register hub");
-        
-        // set mintable asset
-        if (ERC20Factory(erc20Factory).mintableList(homeLocation)){
-            bytes memory setMintableData = abi.encodeWithSignature(
-                "setMintable(bytes32)",
-                assetId
-            );
-            (bool setMintableResult,) = registryHub.call(setMintableData);
-            require(setMintableResult, "failed to call set mintable asset");
-        }
         emit HomeChainAssetRegistered(msg.sender, assetId, homeLocation);
     }
 }

@@ -17,6 +17,7 @@ const ExectorJson = require('../build/contracts/Executor.json');
 const BridgeJson = require('../build/contracts/Bridge.json');
 const ERC20FactoryJson = require('../build/contracts/ERC20Factory.json');
 const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
+const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json');
 
 async function deployRegistryHubContract(env) {
     let factory = new ethers.ContractFactory(RegistryHubJson.abi, RegistryHubJson.bytecode, env.wallet);
@@ -25,7 +26,7 @@ async function deployRegistryHubContract(env) {
     );
     await contract.deployed();
     env.registryHubContract = contract.address;
-    console.log("✓ RegistryHub contract deployed");
+    console.log("✓ RegistryHub contract deployed", contract.address);
 }
 
 async function deployERC20Factory(env) {
@@ -36,7 +37,7 @@ async function deployERC20Factory(env) {
     )
     await contract.deployed();
     env.erc20RactoryContract = contract.address;
-    console.log('✓ ERC20FActory contract depoloyed');
+    console.log('✓ ERC20FActory contract depoloyed', contract.address);
 }
 
 async function deployHomeChainAssetRegistryContract(env) {
@@ -48,7 +49,7 @@ async function deployHomeChainAssetRegistryContract(env) {
     );
     await contract.deployed();
     env.homeChainAssetRegistryContract = contract.address;
-    console.log("✓ HomeChainAssetRegistry contract deployed");
+    console.log("✓ HomeChainAssetRegistry contract deployed", contract.address);
 }
 
 async function deploySteemHiveDelegateAssetRegistryContract(env) {
@@ -59,7 +60,7 @@ async function deploySteemHiveDelegateAssetRegistryContract(env) {
     );
     await contract.deployed();
     env.steemHiveDelegateAssetRegistryContract = contract.address;
-    console.log("✓ SteemHiveDelegateAssetRegistry contract deployed");
+    console.log("✓ SteemHiveDelegateAssetRegistry contract deployed", contract.address);
 }
 
 async function deploySubstrateCrowdloanAssetRegistryContract(env) {
@@ -70,7 +71,7 @@ async function deploySubstrateCrowdloanAssetRegistryContract(env) {
     );
     await contract.deployed();
     env.substrateCrowdloanAssetRegistryContract = contract.address;
-    console.log("✓ SubstrateCrowdloanAssetRegistry contract deployed");
+    console.log("✓ SubstrateCrowdloanAssetRegistry contract deployed", contract.address);
 }
 
 async function deploySubstrateNominateAssetRegistryContract(env) {
@@ -81,7 +82,7 @@ async function deploySubstrateNominateAssetRegistryContract(env) {
     );
     await contract.deployed();
     env.substrateNominateAssetRegistryContract = contract.address;
-    console.log("✓ SubstrateNominateAssetRegistry contract deployed");
+    console.log("✓ SubstrateNominateAssetRegistry contract deployed", contract.address);
 }
 
 async function deployExecutorContract(env) {
@@ -92,7 +93,7 @@ async function deployExecutorContract(env) {
     );
     await contract.deployed();
     env.executorContract = contract.address;
-    console.log("✓ Proposal Exector contract deployed");
+    console.log("✓ Proposal Exector contract deployed", contract.address);
 }
 
 async function deployBridgeContract(env) {
@@ -107,7 +108,7 @@ async function deployBridgeContract(env) {
     );
     await contract.deployed();
     env.bridgeContract = contract.address;
-    console.log("✓ Bridge contract deployed");
+    console.log("✓ Bridge contract deployed", contract.address);
 }
 
 async function deployERC20AssetHandlerContract(env) {
@@ -119,7 +120,7 @@ async function deployERC20AssetHandlerContract(env) {
     );
     await contract.deployed();
     env.erc20AssetHandlerContract = contract.address;
-    console.log("✓ ERC20AssetHandler contract deployed");
+    console.log("✓ ERC20AssetHandler contract deployed", contract.address);
 }
 
 async function deployTrustlessAssetHandlerContract(env) {
@@ -131,7 +132,7 @@ async function deployTrustlessAssetHandlerContract(env) {
     );
     await contract.deployed();
     env.trustlessAssetHandlerContract = contract.address;
-    console.log("✓ TrustlessAssetHandler contract deployed");
+    console.log("✓ TrustlessAssetHandler contract deployed", contract.address);
 }
 
 async function deployStakingFactoryContract(env) {
@@ -143,7 +144,7 @@ async function deployStakingFactoryContract(env) {
     );
     await contract.deployed();
     env.stakingFactoryContract = contract.address;
-    console.log("✓ StakingFactory contract deployed");
+    console.log("✓ StakingFactory contract deployed", contract.address);
 }
 
 async function deployERC20(env) {
@@ -151,7 +152,15 @@ async function deployERC20(env) {
     const contract = await factory.deploy("", "", { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
     await contract.deployed();
     env.simpleERC20Contract = contract.address;
-    console.log("✓ Simple ERC20 contract deployed");
+    console.log("✓ Simple ERC20 contract deployed", contract.address);
+}
+
+async function deployLinearCalculator(env) {
+    const factory = new ethers.ContractFactory(LinearCalculatorJson.abi, LinearCalculatorJson.bytecode, env.wallet);
+    const contract = await factory.deploy({ gasPrice: env.gasPrice, gasLimit: env.gasLimit});
+    await contract.deployed();
+    env.linearCalculatorContract = contract.address;
+    console.log("✓ LinearCalculator contract deployed", contract.address);
 }
 
 async function main() {
@@ -171,6 +180,18 @@ async function main() {
     let startBalance = await env.provider.getBalance(env.wallet.address)
 
     // deploy asset contracts
+    // env.registryHubContract = '0x4c99C3FaFAe0B83920fC4eb3370CB0a6541DA847'
+    // env.erc20RactoryContract = '0x97bCDCA82c845bAb4d8D7Cf2B0f7F56D29348e15'
+    // env.homeChainAssetRegistryContract = '0xB7fF6a7725b4d979bd95Be37bA631C56A5f35dCe'
+    // env.steemHiveDelegateAssetRegistryContract = '0x411BcCae82e6DA69D6E29ef44C3fCa2f3ff2bB33'
+    // env.substrateCrowdloanAssetRegistryContract = '0x5B353D9e16A9d1a70Ecf89655810AB5B7E34984E'
+    // env.substrateNominateAssetRegistryContract = '0xb693Daa5879aeBfbC45433d1d4cdae78d5e7c657'
+    // env.executorContract = '0x8a4c371AEC232A69Eb41863e109f558F50B6682d'
+    // env.bridgeContract = '0xd07E6F1bb68F745694a58aBdFb3B5152B5f11F06'
+    // env.erc20AssetHandlerContract = '0x050222CA9BE1921AA332b5bF228D4af947407F24'
+    // env.trustlessAssetHandlerContract = '0x2C366DAF7eA176b9ef782499bA45787B04765391'
+    // env.stakingFactoryContract = '0x37d256Dbac122a83f40E766073aF71334105dDc0'
+    // env.linearCalculatorContract = '0x33de6235522d64bFc4736f8A302B91EB44330585'
     await deployRegistryHubContract(env);
     await deployERC20Factory(env);
     await deployHomeChainAssetRegistryContract(env);
@@ -198,6 +219,12 @@ async function main() {
 
     // deploy staking factory contract
     await deployStakingFactoryContract(env);
+    // deploy staking reward calculators
+    await deployLinearCalculator(env);
+    // set StakingFactory into calculators
+    const linearCalculator = new ethers.Contract(env.linearCalculatorContract, LinearCalculatorJson.abi, env.wallet);
+    await linearCalculator.adminSetStakingFactory(env.stakingFactoryContract);
+    console.log('Set StakingFactory into LinearCalculator');
 
     // set StakingFactory as whitelist manager of ERC20AssetHandler
     const erc20AssetHandler = new ethers.Contract(env.erc20AssetHandlerContract, ERC20AssetHandlerJson.abi, env.wallet);
@@ -224,6 +251,7 @@ async function main() {
     // dump to local file
     const output = {
         RegistryHub: env.registryHubContract ? env.registryHubContract : "Not Deployed",
+        ERC20Factory: env.erc20RactoryContract ?? "Not Deployed",
         HomeChainAssetRegistry: env.homeChainAssetRegistryContract ? env.homeChainAssetRegistryContract : "Not Deployed",
         SteemHiveDelegateAssetRegistry: env.steemHiveDelegateAssetRegistryContract ? env.steemHiveDelegateAssetRegistryContract : "Not Deployed",
         SubstrateCrowdloanAssetRegistry: env.substrateCrowdloanAssetRegistryContract ? env.substrateCrowdloanAssetRegistryContract : "Not Deployed",
@@ -234,7 +262,7 @@ async function main() {
         Executor:  env.executorContract ? env.executorContract : "Not Deployed",
         Bridge: env.bridgeContract ? env.bridgeContract : "Not Deployed",
         StakingFactory: env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed",
-        ERC20Factory: env.erc20RactoryContract ?? "Not Deployed"
+        LinearCalculator: env.linearCalculatorContract ? env.linearCalculatorContract: "Not Deployed"
     };
     
     const outfile = './scripts/contracts.json'
@@ -280,6 +308,8 @@ async function main() {
         Bridge:                             ${env.bridgeContract ? env.bridgeContract : "Not Deployed"}
         ----------------------------------------------------------------
         StakingFactory:                     ${env.stakingFactoryContract ? env.stakingFactoryContract : "Not Deployed"}
+        ----------------------------------------------------------------
+        LinearCalculator:                   ${env.linearCalculatorContract ? env.linearCalculatorContract : "Not Deployed"}
         ================================================================
     `)
 }

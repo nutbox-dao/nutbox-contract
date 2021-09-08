@@ -11,11 +11,13 @@ const RegistryHubJson = require('../build/contracts/RegistryHub.json');
 const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
 const MintableERC20Json = require('../build/contracts/MintableERC20.json')
 const ERC20AssetHandlerJson = require('../build/contracts/ERC20AssetHandler.json');
+const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json');
 const Contracts = require('./contracts.json');
 
 const RegistryHubAddress = Contracts.RegistryHub;
 const StakingFactoryAddress = Contracts.StakingFactory;
 const ERC20AssetHandlerAddress = Contracts.ERC20AssetHandler;
+const LinearCalculatorAddress = Contracts.LinearCalculator;
 
 async function mintableCommunity(env) {
     const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.provider);
@@ -26,6 +28,7 @@ async function mintableCommunity(env) {
     );
     const tx = await StakingFactory.createStakingFeast(
         mintableAsset, // reward asset
+        LinearCalculatorAddress,// 
         [
             {
                 "amount": 300,
@@ -57,6 +60,7 @@ async function simpleCommunity(env) {
     );
     const tx = await StakingFactory.createStakingFeast(
         simpleAsset, // reward asset
+        LinearCalculatorAddress,
         [
             {
                 "amount": 300,
