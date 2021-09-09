@@ -64,22 +64,41 @@ async function registerMintableERC20(env, mintabelERC20) {
     })
 }
 
-async function deployERC20(env) {
+async function deployERC20(env, name, symbols) {
     return new Promise(async (resolve, reject) => {
         const ERC20Factory = new ethers.Contract(ERC20FactoryAddress, ERC20FactoryJson.abi, env.wallet);
+        ERC20Factory.on('ERC20TokenCreated', (creator, _name, _symbol, _tokenAddress, isMintable) => {
+            if(name == _name && !isMintable){
+                console.log(_tokenAddress, _name, _symbol, isMintable);
+                console.log("✓ Simple ERC20 contract deployed", _tokenAddress);
+                resolve(_tokenAddress)
+                ERC20Factory.removeAllListeners('ERC20TokenCreated')
+            }
+        })
         const tx = await ERC20Factory.createERC20(
-            "Peanut", "PNUT", 
-            ethers.utils.parseUnits("10000.0", 18), 
+            name, symbols, 
+            ethers.utils.parseUnits("1000000000.0", 18), 
             env.wallet.address,
             false,
             { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
         )
-        ERC20Factory.on('ERC20TokenCreated', (creator, name, symbol, tokenAddress, isMintable) => {
-            if(name == 'Peanut' && !isMintable){
-                console.log(tokenAddress, name, symbol, isMintable);
-                console.log("✓ Simple ERC20 contract deployed", tokenAddress);
-                resolve(tokenAddress)
-            }
+    })
+}
+
+async function registerERC20(env, erc20) {
+    return new Promise(async (resolve, reject) => {
+        const HomeChainAssetRegistry = new ethers.Contract(
+            HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet
+        );
+        const tx0 = await HomeChainAssetRegistry.registerAsset(
+            '0x', erc20, '0x',
+            { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+        );
+        await waitForTx(env.provider, tx0.hash);
+        HomeChainAssetRegistry.on('HomeChainAssetRegistered', async (sender, assetId, homeLocation) => {
+            console.log("HomeChainAssetRegistered", assetId, homeLocation);
+            resolve();
+            HomeChainAssetRegistry.removeAllListeners('HomeChainAssetRegistered')
         })
     })
 }
