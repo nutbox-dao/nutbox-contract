@@ -14,4 +14,9 @@ interface ICalculator {
             uint256 from,
             uint256 to
         ) external view returns(uint256);
+
+        function setDistributionEra (
+            address staking,
+            Types.Distribution[] memory _distributionEras
+        ) external returns(bool);
 }

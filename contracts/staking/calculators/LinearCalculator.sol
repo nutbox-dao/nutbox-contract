@@ -36,8 +36,9 @@ contract LinearCalculator is ICalculator, Ownable {
         factory = _factory;
     }
 
-    function factorySetDistributionEra(address staking, Types.Distribution[] memory _distributionEras) onlyFactory public {
+    function setDistributionEra(address staking, Types.Distribution[] memory _distributionEras) onlyFactory public override returns(bool) {
         _applyDistributionEras(staking, _distributionEras);
+        return true;
     }
 
     function calculateReward(address staking, uint256 from, uint256 to) public view override returns(uint256) {

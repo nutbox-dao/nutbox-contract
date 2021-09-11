@@ -7,7 +7,7 @@ import '../MintableERC20.sol';
 import '../common/Types.sol';
 import './StakingTemplate.sol';
 import '../NoDelegateCall.sol';
-import './calculators/LinearCalculator.sol';
+import './calculators/ICalculator.sol';
 
 /**
  * @dev Factory contract to create an StakingTemplate entity
@@ -51,7 +51,7 @@ contract StakingFactory is NoDelegateCall {
         );
 
         // set staking feast rewarad distribution policy
-        LinearCalculator(_rewardCalculator).factorySetDistributionEra(address(feastAddress), _distributionEras);
+        ICalculator(_rewardCalculator).setDistributionEra(address(feastAddress), _distributionEras);
 
         // add feast into whitelist of ERC20AssetHandler
         bytes memory data = abi.encodeWithSignature(
