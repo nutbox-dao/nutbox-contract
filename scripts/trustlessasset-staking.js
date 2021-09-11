@@ -19,6 +19,7 @@ const StakingFactoryAddress = Contracts.StakingFactory;
 const ERC20AssetHandlerAddress = Contracts.ERC20AssetHandler;
 const TrustlessAssetHandlerAddress = Contracts.TrustlessAssetHandler;
 const BridgeAddress = Contracts.Bridge;
+const LinearCalculatorAddress = Contracts.LinearCalculator;
 
 async function main() {
     let env = {};
@@ -39,21 +40,19 @@ async function main() {
     );
     const tx = await StakingFactory.createStakingFeast(
         homeChainAsset, // reward asset
+        LinearCalculatorAddress, // reward calculator
         [
             {
-                "hasPassed": false,
                 "amount": 300,
                 "startHeight": 1301,
                 "stopHeight": 1400
             },
             {
-                "hasPassed": false,
                 "amount": 200,
                 "startHeight": 1401,
                 "stopHeight": 1500
             },
             {
-                "hasPassed": false,
                 "amount": 100,
                 "startHeight": 1501,
                 "stopHeight": 1600

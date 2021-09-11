@@ -126,26 +126,14 @@ async function main() {
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
     await setWhitelist(env, ERC20FactoryAddress);
-    // return;
-    // deploy erc20 contract
-    const mintabelERC20 = await deployMintableERC20(env);
-    // const simpleERC20 = await deployERC20(env);
 
     // mintable asset registry
-
+    const mintabelERC20 = await deployMintableERC20(env);
     await registerMintableERC20(env, mintabelERC20);
-    return;
     
-    // simple asset registry
-    const HomeChainAssetRegistry = new ethers.Contract(
-        HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.wallet
-    );
-
-    const tx01 = await HomeChainAssetRegistry.registerAsset(
-        '0x', simpleERC20, '0x',
-        { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-    );
-    await waitForTx(env.provider, tx01.hash);
+    // deploy erc20 contract
+    // const simpleERC20 = await deployERC20(env);
+    // await registerERC20(env, simpleERC20);
 
     // steem hive delegate asset registry
     const SteemHiveDelegateAssetRegistry = new ethers.Contract(
