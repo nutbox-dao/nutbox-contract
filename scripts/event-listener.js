@@ -82,8 +82,8 @@ function main() {
     TrustlessAssetHandler.on('AttachedPool', (assetId, stakingFeast, pid) => {
         console.log(`TrustlessAssetHandler::AttachedPool(${assetId}, ${stakingFeast}, ${pid})`);
     });
-    TrustlessAssetHandler.on('BalanceUpdated', (source, assetId, account, amount) => {
-        console.log(`TrustlessAssetHandler::BalanceUpdated(${source}, ${assetId}, ${account}, ${amount})`);
+    TrustlessAssetHandler.on('BalanceUpdated', (source, assetId, account, amount, bindAccount) => {
+        console.log(`TrustlessAssetHandler::BalanceUpdated(${source}, ${assetId}, ${account}, ${amount}, ${bindAccount})`);
     });
 
     const Bridge = new ethers.Contract(BridgeAddress, BridgeJson.abi, env.provider);
@@ -114,14 +114,8 @@ function main() {
         StakingFeast.on('WithdrawRewards', (nutboxAccount, amount) => {
             console.log(`StakingFeast[${stakingFeast}]::WithdrawRewards(${nutboxAccount}, ${amount})`);
         });
-        StakingFeast.on('NewDistributionEra', (amount, startHeight, stopHeight) => {
-            console.log(`StakingFeast[${stakingFeast}]::NewDistributionEra(${amount}, ${startHeight}, ${stopHeight})`);
-        });
         StakingFeast.on('PoolUpdated', (pid, reward, shareAcc) => {
             console.log(`StakingFeast[${stakingFeast}]::PoolUpdated(${pid}, ${reward}, ${shareAcc})`);
-        });
-        StakingFeast.on('RewardComputed', (from, to, reward) => {
-            console.log(`StakingFeast[${stakingFeast}]::RewardComputed(${from}, ${to}, ${reward})`);
         });
     });
 

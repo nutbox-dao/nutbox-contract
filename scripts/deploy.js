@@ -168,6 +168,7 @@ async function main() {
     env.url = process.env.ENDPOINT || 'http://localhost:8545';
     env.privateKey = process.env.KEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
+    console.log(`private: ${env.privateKey}, url: ${env.url}`);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));

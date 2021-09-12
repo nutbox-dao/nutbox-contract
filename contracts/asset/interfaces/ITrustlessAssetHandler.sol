@@ -11,6 +11,6 @@ interface ITrustlessAssetHandler {
      *
      * If the asset has binded a staking pool, the pool would be updated at the same time
      */
-    function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount) external;
+    function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount, bytes32 bindAccount) external;
     function getBalance(bytes32 source, address account) external returns(uint256);
 }

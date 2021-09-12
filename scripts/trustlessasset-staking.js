@@ -81,7 +81,8 @@ async function main() {
             ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 1).substr(2) + // assetType: 0
             substrateCrowdloanAsset.substr(2) + // assetId
             env.wallet.address.substr(2) + // recipientBytes
-            ethers.utils.hexZeroPad(ethers.BigNumber.from(1000000000).toHexString(), 32).substr(2); // amount
+            ethers.utils.hexZeroPad(ethers.BigNumber.from(1000000000).toHexString(), 32).substr(2) + // amount
+            ethers.utils.keccak256(Buffer.from('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP')).substr(2);    // bindAccount
         
         // generate extrinsicHash
         const extrinsicHash = ethers.utils.keccak256(extrinsic);

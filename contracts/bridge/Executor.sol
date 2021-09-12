@@ -48,6 +48,7 @@ contract Executor is AccessControl, IExecutor {
             bytes32 assetId = extrinsic.toBytes32(2);
             bytes memory recipientBytes = extrinsic.slice(34, 20);
             uint256 amount = extrinsic.toUint256(54);
+            bytes32 bindAccount = extrinsic.toBytes32(86);
             bytes32 source = keccak256(abi.encodePacked(bridge, assetId));
             bytes20 recipient;
             assembly {
@@ -57,11 +58,12 @@ contract Executor is AccessControl, IExecutor {
             if (assetType == 0) {    // trustless asset
                 require(IRegistryHub(registryHub).isTrustless(assetId), 'Asset type mismatch');
                 bytes memory data = abi.encodeWithSignature(
-                    "updateBalance(bytes32,bytes32,address,uint256)",
+                    "updateBalance(bytes32,bytes32,address,uint256,bytes32)",
                     source,
                     assetId,
                     address(recipient),
-                    amount
+                    amount,
+                    bindAccount
                 );
                 (bool success,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
                 require(success, "failed to call updateBalance");
