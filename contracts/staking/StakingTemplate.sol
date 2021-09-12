@@ -250,7 +250,7 @@ contract StakingTemplate is Ownable {
             openedPools[pid].stakingInfo[depositor].bindAccount = _bindAccount;
             openedPools[pid].stakingList.push(depositor);
             openedPools[pid].stakerCount += 1;
-            accountBindMap[pid][_bindAccount] = msg.sender;
+            accountBindMap[pid][_bindAccount] = depositor;
         }
 
         _updatePools();
