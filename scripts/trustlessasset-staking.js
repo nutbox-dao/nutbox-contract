@@ -44,23 +44,14 @@ async function main() {
         [
             {
                 "amount": 300,
-                "startHeight": 1301,
-                "stopHeight": 1400
-            },
-            {
-                "amount": 200,
-                "startHeight": 1401,
-                "stopHeight": 1500
-            },
-            {
-                "amount": 100,
-                "startHeight": 1501,
-                "stopHeight": 1600
+                "startHeight": 7000,
+                "stopHeight": 6000000
             }
         ],  // distribution eras
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await waitForTx(env.provider, tx.hash);
+    console.log('Create a new feast');
 
     StakingFactory.on('StakingFeastCreated', async (creater, stakingFeast, rewardAsset) => {
 
@@ -68,7 +59,8 @@ async function main() {
         const StakingFeast = new ethers.Contract(stakingFeast, StakingTemplateJson.abi, env.wallet);
         const tx = await StakingFeast.addPool(
             substrateCrowdloanAsset,
-            [100],
+            'Crowdloan',
+            [10000],
             { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
         );
         await waitForTx(env.provider, tx.hash);
