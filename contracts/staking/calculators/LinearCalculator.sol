@@ -68,6 +68,10 @@ contract LinearCalculator is ICalculator, Ownable {
         }
         return rewards;
     }
+    
+    function getCurrentRewardPerBlock(address staking) public view override return (uint256) {
+        return getCurrentDistributionEra(staking).amount;
+    }
 
     function getCurrentDistributionEra(address staking) public view returns (Types.Distribution memory) {
         Types.Distribution[] memory eras = distributionErasMap[staking];
