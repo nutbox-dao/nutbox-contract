@@ -69,7 +69,7 @@ contract LinearCalculator is ICalculator, Ownable {
         return rewards;
     }
     
-    function getCurrentRewardPerBlock(address staking) public view override return (uint256) {
+    function getCurrentRewardPerBlock(address staking) public view override returns (uint256) {
         return getCurrentDistributionEra(staking).amount;
     }
 

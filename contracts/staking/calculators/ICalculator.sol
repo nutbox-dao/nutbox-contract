@@ -20,5 +20,5 @@ interface ICalculator {
             Types.Distribution[] memory _distributionEras
         ) external returns(bool);
 
-        function getCurrentRewardPerBlock (address staking) external return(uint256);
+        function getCurrentRewardPerBlock (address staking) external returns(uint256);
 }
