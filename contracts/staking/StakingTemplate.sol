@@ -251,6 +251,8 @@ contract StakingTemplate is Ownable {
             openedPools[pid].stakingList.push(depositor);
             openedPools[pid].stakerCount += 1;
             accountBindMap[pid][_bindAccount] = depositor;
+        } else {
+            require(openedPools[pid].stakingInfo[depositor].bindAccount == _bindAccount, 'Bound account dismatch');
         }
 
         _updatePools();
