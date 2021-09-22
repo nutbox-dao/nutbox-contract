@@ -6,7 +6,7 @@ const BridgeJson= require('../build/contracts/Bridge.json');
 const Contracts = require('./contracts.json');
 
 const BridgeAddress = Contracts.Bridge;
-const RELAYER = '0x86a6b23bfaa35e3605bda8c091d3ca52b7e985f8';
+const RELAYER = process.env.RELAYER
 
 async function main() {
     let env = {};
@@ -21,6 +21,8 @@ async function main() {
     const tx1 = await Bridge.adminAddRelayer(RELAYER, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
     await waitForTx(env.provider, tx1.hash);
     console.log(`Set ${RELAYER} as relayer successfully.`);
+    const tx2 = await Bridge.adminSetThreshold(1, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
+    await waitForTx(env.provider, tx2.hash);
 }
 
 main()
