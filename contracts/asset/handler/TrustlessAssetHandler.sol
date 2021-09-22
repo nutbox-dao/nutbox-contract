@@ -31,7 +31,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     event WhitelistManagerAdded(address manager);
     event WhitelistManagerRemoved(address manager);
     event AttachedPool(bytes32 assetId, address stakingFeast, uint8 pid);
-    event BalanceUpdated(bytes32 source, bytes32 assetId, address account, uint256 amount, bytes32 bindAccount);
+    event BalanceUpdated(bytes32 source, bytes32 assetId, address account, uint256 amount, string bindAccount);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -88,7 +88,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         emit AttachedPool(assetId, stakingFeast, pid);
     }
 
-    function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount, bytes32 bindAccount) override external onlyExecutor {
+    function updateBalance(bytes32 source, bytes32 assetId, address account, uint256 amount, string memory bindAccount) override external onlyExecutor {
         // check if the asset is trustless
         require(IRegistryHub(registryHub).isTrustless(assetId), 'Asset is not trustless');
         depositBalance[source][account] = amount;
@@ -96,7 +96,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         // if attached staking pool, update pool
         if (attachedPool[assetId].stakingFeast != address(0)) {
             bytes memory data = abi.encodeWithSignature(
-                "update(uint8,address,uint256,bytes32)",
+                "update(uint8,address,uint256,string)",
                 attachedPool[assetId].pid,
                 account,
                 amount,

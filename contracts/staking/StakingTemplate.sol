@@ -31,7 +31,7 @@ contract StakingTemplate is Ownable {
         // User's debt that should be removed when calculating their final rewards.
         uint256 userDebt;
         // User's foreign account identity
-        bytes32 bindAccount;
+        string bindAccount;
     }
 
     struct Pool {
@@ -89,7 +89,7 @@ contract StakingTemplate is Ownable {
     address registryHub;
     address public rewardCalculator;
     // fetch address use bound account
-    mapping (uint8 => mapping (bytes32 => address)) public accountBindMap;
+    mapping (uint8 => mapping (string => address)) public accountBindMap;
 
     event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
     event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
@@ -221,7 +221,7 @@ contract StakingTemplate is Ownable {
         return openedPools[pid].poolRatio;
     }
 
-    function deposit(uint8 pid, address depositor, uint256 amount, bytes32 _bindAccount) public {
+    function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
             internalDeposit(pid, depositor, amount, _bindAccount);
@@ -230,7 +230,7 @@ contract StakingTemplate is Ownable {
         }
     }
 
-    function internalDeposit(uint8 pid, address depositor, uint256 amount, bytes32 _bindAccount) private {
+    function internalDeposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) private {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
         // check amount
@@ -252,7 +252,7 @@ contract StakingTemplate is Ownable {
             openedPools[pid].stakerCount += 1;
             accountBindMap[pid][_bindAccount] = depositor;
         } else {
-            require(openedPools[pid].stakingInfo[depositor].bindAccount == _bindAccount, 'Bound account dismatch');
+            require(keccak256(abi.encodePacked(openedPools[pid].stakingInfo[depositor].bindAccount)) == keccak256(abi.encodePacked(_bindAccount)), 'Bound account dismatch');
         }
 
         _updatePools();
@@ -336,7 +336,7 @@ contract StakingTemplate is Ownable {
         emit Withdraw(pid, depositor, withdrawAmount);
     }
 
-    function update(uint8 pid, address depositor, uint256 amount, bytes32 _bindAccount) public
+    function update(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public
     {
         uint256 prevAmount = openedPools[pid].stakingInfo[depositor].amount;
 
