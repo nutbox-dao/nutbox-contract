@@ -9,6 +9,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '../common/Types.sol';
 import '../asset/interfaces/IRegistryHub.sol';
 import '../asset/handler/ERC20AssetHandler.sol';
+import './calculators/ICalculator.sol';
 
 /**
  * @dev Template contract of Nutbox staking module.
@@ -29,6 +30,8 @@ contract StakingTemplate is Ownable {
         uint256 availableRewards;
         // User's debt that should be removed when calculating their final rewards.
         uint256 userDebt;
+        // User's foreign account
+        string bindAccount;
     }
 
     struct Pool {
@@ -73,27 +76,25 @@ contract StakingTemplate is Ownable {
         uint256 totalStakedAmount;
     }
 
-    uint8 constant MAX_POOLS = 10;
-    uint8 constant MAX_DISTRIBUTIONS = 6;
+    uint8 constant MAX_POOLS = 21;
 
     address admin;
     address dev;
     uint16 devRewardRatio;    // actually fee is reward.mult(devRewardRatio).div(10000)
     uint8 public numberOfPools;
-    uint8 public numberOfDistributionEras;
     Pool[MAX_POOLS] public openedPools;
-    Types.Distribution[MAX_DISTRIBUTIONS] public distributionEras;
     uint256 public lastRewardBlock;
     bytes32 public rewardAsset;
     address factory;
     address registryHub;
+    address public rewardCalculator;
+    // fetch address use bound account
+    mapping (uint8 => mapping (string => address)) public accountBindMap;
 
     event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
     event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
     event WithdrawRewards(address nutboxAccount, uint256 amount);
-    event NewDistributionEra(uint256 amount, uint256 startHeight, uint256 stopHeight);
     event PoolUpdated(uint8 pid, uint256 reward, uint256 shareAcc);
-    event RewardComputed(uint256 from, uint256 to, uint256 reward);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Account is not the admin");
@@ -117,17 +118,16 @@ contract StakingTemplate is Ownable {
     function initialize (
         address _admin,
         bytes32 _rewardAsset,
-        Types.Distribution[] memory _distributionEras
+        address _rewardCalculator
     ) public {
         require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
 
         admin = _admin;
         dev = _admin;
         numberOfPools = 0;
-        numberOfDistributionEras = 0;
         lastRewardBlock = 0;
         rewardAsset = _rewardAsset;
-        _applyDistributionEras(_distributionEras);
+        rewardCalculator = _rewardCalculator;
     }
 
     function adminDepositReward(uint256 amount) public onlyAdmin {
@@ -221,28 +221,18 @@ contract StakingTemplate is Ownable {
         return openedPools[pid].poolRatio;
     }
 
-    function getCurrentDistributionEra() public view returns (Types.Distribution memory) {
-        for(uint8 i = 0; i < numberOfDistributionEras; i++) {
-            if (block.number >= distributionEras[i].startHeight && block.number <= distributionEras[i].stopHeight) {
-                return distributionEras[i];
-            }
-        }
-    }
-
-    function deposit(uint8 pid, address depositor, uint256 amount) public {
+    function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
-            internalDeposit(pid, depositor, amount);
+            internalDeposit(pid, depositor, amount, _bindAccount);
         }else{
-            internalDeposit(pid, msg.sender, amount);
+            internalDeposit(pid, msg.sender, amount, _bindAccount);
         }
     }
 
-    function internalDeposit(uint8 pid, address depositor, uint256 amount) private {
+    function internalDeposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) private {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
-        // check distribution era 0 to see whether the game has started
-        if(distributionEras[0].startHeight > block.number) return;
         // check amount
         if (amount == 0) return;
 
@@ -257,8 +247,10 @@ contract StakingTemplate is Ownable {
             openedPools[pid].stakingInfo[depositor].availableRewards = 0;
             openedPools[pid].stakingInfo[depositor].amount = 0;
             openedPools[pid].stakingInfo[depositor].userDebt = 0;
+            openedPools[pid].stakingInfo[depositor].bindAccount = _bindAccount;
             openedPools[pid].stakingList.push(depositor);
             openedPools[pid].stakerCount += 1;
+            accountBindMap[pid][_bindAccount] = msg.sender;
         }
 
         _updatePools();
@@ -303,8 +295,6 @@ contract StakingTemplate is Ownable {
     function internalWithdraw(uint8 pid, address depositor, uint256 amount) private {
         // check pid
         require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
-        // check distribution era 0 to see whether the game has started
-        if(distributionEras[0].startHeight > block.number) return;
         // check withdraw amount
         if (amount == 0) return;
         // check deposited amount
@@ -344,12 +334,12 @@ contract StakingTemplate is Ownable {
         emit Withdraw(pid, depositor, withdrawAmount);
     }
 
-    function update(uint8 pid, address depositor, uint256 amount) public
+    function update(uint8 pid, address depositor, uint256 amount,string memory _bindAccount) public
     {
         uint256 prevAmount = openedPools[pid].stakingInfo[depositor].amount;
 
         if (prevAmount < amount) { // deposit
-            deposit(pid, depositor, amount.sub(prevAmount));
+            deposit(pid, depositor, amount.sub(prevAmount), _bindAccount);
         } else {   // withdraw
             withdraw(pid, depositor, prevAmount.sub(amount));
         }
@@ -447,7 +437,7 @@ contract StakingTemplate is Ownable {
         // the right amount that delegator can award
         uint256 _shareAcc = openedPools[pid].shareAcc;
         if (openedPools[pid].totalStakedAmount == 0) return 0;
-        uint256 unmintedRewards = calculateReward(lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
+        uint256 unmintedRewards = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
         _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
         uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
         return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
@@ -497,31 +487,9 @@ contract StakingTemplate is Ownable {
         return devRewardRatio;
     }
 
-    function calculateReward(uint256 from, uint256 to) public view returns (uint256) {
-        uint256 rewardedBlock = from - 1;
-        uint256 rewards = 0;
-
-        if (distributionEras.length == 0) {
-            return rewards;
-        }
-        if (rewardedBlock < distributionEras[0].startHeight){
-            rewardedBlock = distributionEras[0].startHeight - 1;
-        }
-
-        for (uint8 i = 0; i < distributionEras.length; i++) {
-            if (rewardedBlock > distributionEras[i].stopHeight){
-                continue;
-            }
-
-            if (to <= distributionEras[i].stopHeight) {
-                rewards = rewards.add(to.sub(rewardedBlock).mul(distributionEras[i].amount));
-                return rewards;
-            } else {
-                rewards = rewards.add(distributionEras[i].stopHeight.sub(rewardedBlock).mul(distributionEras[i].amount));
-                rewardedBlock = distributionEras[i].stopHeight;
-            }
-        }
-        return rewards;
+    function getUserDepositInfo(uint8 pid, address user) public view returns(UserStakingInfo memory) {
+        require(pid < numberOfPools, "Pool does not exist!");
+        return openedPools[pid].stakingInfo[user];
     }
 
     function _updatePools() private {
@@ -538,8 +506,7 @@ contract StakingTemplate is Ownable {
         if (currentBlock <= lastRewardBlock) return;
 
         // calculate reward Rewards under current blocks
-        rewardsReadyToMinted = calculateReward(lastRewardBlock + 1, currentBlock);
-        emit RewardComputed(lastRewardBlock + 1, currentBlock, rewardsReadyToMinted);
+        rewardsReadyToMinted = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, currentBlock);
 
         // save all rewards to contract temporary
         if (rewardsReadyToMinted > 0) {
@@ -591,35 +558,6 @@ contract StakingTemplate is Ownable {
         // update pool ratio index
         for(uint8 i = 0; i < numberOfPools; i++) {
             openedPools[i].poolRatio = ratios[i];
-        }
-    }
-
-    /**
-     * @dev Check and set distribution policy
-     * _distributionEras must less than or equal to MAX_DISTRIBUTIONS and all distribution should meet following condidtion: 
-     * 1) amount should greater than 0
-     * 2) first distrubtion startHeight should greater than current block height
-     * 3) startHeight shold less than stopHeight
-     */
-    function _applyDistributionEras(Types.Distribution[] memory _distributionEras) private {
-        require(_distributionEras.length <= MAX_DISTRIBUTIONS, 'Too many distribution policy');
-
-        // prechek
-        for(uint8 i = 0; i < _distributionEras.length; i++) {
-            // check 1)
-            require(_distributionEras[i].amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');
-            // check 2)
-            if (i == 0) {
-                require(_distributionEras[i].startHeight > block.number, 'Invalid start height of distribution');
-            }
-            // check 3)
-            require(_distributionEras[i].startHeight < _distributionEras[i].stopHeight, 'Invalid stop height of distribution');
-        }
-
-        // set distribution policy
-        for(uint8 i = 0; i < _distributionEras.length; i++) {
-            distributionEras[i] = _distributionEras[i];
-            numberOfDistributionEras++;
         }
     }
 }

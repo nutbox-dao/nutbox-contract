@@ -7,6 +7,7 @@ import '../MintableERC20.sol';
 import '../common/Types.sol';
 import './StakingTemplate.sol';
 import '../NoDelegateCall.sol';
+import './calculators/LinearCalculator.sol';
 
 /**
  * @dev Factory contract to create an StakingTemplate entity
@@ -33,6 +34,7 @@ contract StakingFactory is NoDelegateCall {
     // only owner of reward token can call this method 
     function createStakingFeast (
         bytes32 _rewardAsset,
+        address _rewardCalculator,
         Types.Distribution[] memory _distributionEras
     ) public noDelegateCall {
         require(_distributionEras.length > 0, 'Should give at least one distribution');
@@ -45,13 +47,16 @@ contract StakingFactory is NoDelegateCall {
         feastAddress.initialize(
             msg.sender,
             _rewardAsset,
-            _distributionEras
+            _rewardCalculator
         );
+
+        // set staking feast rewarad distribution policy
+        LinearCalculator(_rewardCalculator).factorySetDistributionEra(address(feastAddress), _distributionEras);
 
         // add feast into whitelist of ERC20AssetHandler
         bytes memory data = abi.encodeWithSignature(
             "setWhitelist(address)",
-            feastAddress
+            address(feastAddress)
         );
         (bool success1,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
         require(success1, "failed to call ERC20AssetHandler.setWhitelist");
