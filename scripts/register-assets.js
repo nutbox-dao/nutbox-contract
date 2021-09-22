@@ -126,7 +126,6 @@ async function main() {
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
     await setWhitelist(env, ERC20FactoryAddress);
-    return;
 
     // mintable asset registry
     const mintabelERC20 = await deployMintableERC20(env);
@@ -165,8 +164,8 @@ async function main() {
         '0x' + 
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substr(2) +     // chainId: polkadot
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2004), 4).substr(2) +  // paraId: 2004
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(4), 4).substr(2) +     // trieIndex: 4
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(8), 32).substr(2),     // communityAccount         
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 4).substr(2) +     // trieIndex: 4
+        ethers.utils.keccak256(Buffer.from('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP')).substr(2),     // communityAccount
         '0x0000000000000000000000000000000000000000',
         '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}

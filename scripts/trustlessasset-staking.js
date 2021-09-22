@@ -3,7 +3,7 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
-const { waitForTx } = require('./utils.js');
+const { waitForTx, utf8ToHex } = require('./utils.js');
 
 const StakingFactoryJson = require('../build/contracts/StakingFactory.json');
 const StakingTemplateJson = require('../build/contracts/StakingTemplate.json')
@@ -75,6 +75,7 @@ async function main() {
         const tx2 = await Bridge.adminSetThreshold(1, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
         await waitForTx(env.provider, tx2.hash);
 
+        const bindAccount = 'an example of dynamic length bind account';
         // generate extrinsic
         const extrinsic = '0x' + 
             ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 1).substr(2) + // extrinsicType: 0
@@ -82,7 +83,8 @@ async function main() {
             substrateCrowdloanAsset.substr(2) + // assetId
             env.wallet.address.substr(2) + // recipientBytes
             ethers.utils.hexZeroPad(ethers.BigNumber.from(1000000000).toHexString(), 32).substr(2) + // amount
-            ethers.utils.keccak256(Buffer.from('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP')).substr(2);    // bindAccount
+            ethers.utils.hexZeroPad(ethers.BigNumber.from(bindAccount.length).toHexString(), 32).substr(2) + // bindAccount length
+            utf8ToHex(bindAccount);    // bindAccount
         
         // generate extrinsicHash
         const extrinsicHash = ethers.utils.keccak256(extrinsic);
