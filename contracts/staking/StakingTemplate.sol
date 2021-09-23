@@ -91,6 +91,7 @@ contract StakingTemplate is Ownable {
     // fetch address use bound account
     mapping (uint8 => mapping (string => address)) public accountBindMap;
 
+    event Addpool(bytes32 pair, string poolName);
     event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
     event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
     event WithdrawRewards(address nutboxAccount, uint256 amount);
@@ -192,7 +193,7 @@ contract StakingTemplate is Ownable {
         numberOfPools += 1;
         // _applyPoolsRatio never failed
         _applyPoolsRatio(ratios);
-
+        emit Addpool(pair, poolName);
         return numberOfPools;
     }
 
