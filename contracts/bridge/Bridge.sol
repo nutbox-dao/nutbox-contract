@@ -51,6 +51,11 @@ contract Bridge is AccessControl, IBridge {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    function adminSetExecutor(address _executor) external onlyAdmin {
+        require(_executor != address(0), 'Invalid executor address');
+        executor = _executor;
+    }
+
     function adminAddRelayer(address relayer) external onlyAdmin {
         require(relayerRegistry[relayer] == false, 'Address already marked as relayer');
         relayerRegistry[relayer] = true;

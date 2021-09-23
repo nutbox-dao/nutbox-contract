@@ -13,7 +13,7 @@ const SteemHiveDelegateAssetRegistryJson = require('../build/contracts/SteemHive
 const SubstrateCrowdloanAssetRegistryJson = require('../build/contracts/SubstrateCrowdloanAssetRegistry.json');
 const SubstrateNominateAssetRegistryJson = require('../build/contracts/SubstrateNominateAssetRegistry.json');
 const StakingFactoryJson = require('../build/contracts/StakingFactory.json');
-const ExectorJson = require('../build/contracts/Executor.json');
+const ExecutorJson = require('../build/contracts/Executor.json');
 const BridgeJson = require('../build/contracts/Bridge.json');
 const ERC20FactoryJson = require('../build/contracts/ERC20Factory.json');
 const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
@@ -86,14 +86,14 @@ async function deploySubstrateNominateAssetRegistryContract(env) {
 }
 
 async function deployExecutorContract(env) {
-    let factory = new ethers.ContractFactory(ExectorJson.abi, ExectorJson.bytecode, env.wallet);
+    let factory = new ethers.ContractFactory(ExecutorJson.abi, ExecutorJson.bytecode, env.wallet);
     let contract = await factory.deploy(
         env.registryHubContract,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();
     env.executorContract = contract.address;
-    console.log("✓ Proposal Exector contract deployed", contract.address);
+    console.log("✓ Proposal Executor contract deployed", contract.address);
 }
 
 async function deployBridgeContract(env) {
@@ -213,8 +213,8 @@ async function main() {
     await registryHub.setAssetHandlers(env.erc20AssetHandlerContract, '0x0000000000000000000000000000000000000000', env.trustlessAssetHandlerContract);
     console.log('RegistryHub has set asset handlers');
 
-    // exector set bridge
-    const executor = new ethers.Contract(env.executorContract, ExectorJson.abi, env.wallet);
+    // Executor set bridge
+    const executor = new ethers.Contract(env.executorContract, ExecutorJson.abi, env.wallet);
     await executor.adminSetBridge(env.bridgeContract);
     console.log('Executor has set bridge');
 

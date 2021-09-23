@@ -8,13 +8,13 @@ import '../common/libraries/BytesLib.sol';
 import './interfaces/IExecutor.sol';
 import '../asset/interfaces/IRegistryHub.sol';
 
-contract Executor is AccessControl, IExecutor {
+contract ExecutorV2 is AccessControl, IExecutor {
 
     using BytesLib for bytes;
 
     address registryHub;
     address bridge;
-    string version = "executor:version 1.0";
+    string version = "executor:version 2.0";
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");

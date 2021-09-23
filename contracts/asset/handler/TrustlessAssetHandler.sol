@@ -59,6 +59,11 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         _setRoleAdmin(WHITELIST_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
+    function setExecutor(address _executor) public onlyAdmin {
+        require(_executor != address(0), 'Invalid executor hub address');
+        executor = _executor;
+    }
+
     function setRegistryHub(address _registryHub) public onlyAdmin {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
