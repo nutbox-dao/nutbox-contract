@@ -95,7 +95,6 @@ contract StakingTemplate is Ownable {
     event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
     event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
     event WithdrawRewards(address nutboxAccount, uint256 amount);
-    event PoolUpdated(uint8 pid, uint256 reward, uint256 shareAcc);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Account is not the admin");
@@ -538,7 +537,6 @@ contract StakingTemplate is Ownable {
             if(openedPools[pid].totalStakedAmount == 0) continue;
             uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(10000);
             openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
-            emit PoolUpdated(pid, poolRewards.div(1e12), openedPools[pid].shareAcc);
         }
 
         lastRewardBlock = currentBlock;
