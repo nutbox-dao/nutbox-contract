@@ -114,9 +114,6 @@ function main() {
         StakingFeast.on('WithdrawRewards', (nutboxAccount, amount) => {
             console.log(`StakingFeast[${stakingFeast}]::WithdrawRewards(${nutboxAccount}, ${amount})`);
         });
-        StakingFeast.on('PoolUpdated', (pid, reward, shareAcc) => {
-            console.log(`StakingFeast[${stakingFeast}]::PoolUpdated(${pid}, ${reward}, ${shareAcc})`);
-        });
     });
 
     process.stdin.resume();//so the program will not close instantly
