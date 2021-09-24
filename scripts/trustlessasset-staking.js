@@ -41,13 +41,11 @@ async function main() {
     const tx = await StakingFactory.createStakingFeast(
         homeChainAsset, // reward asset
         LinearCalculatorAddress, // reward calculator
-        [
-            {
-                "amount": 300,
-                "startHeight": 7000,
-                "stopHeight": 6000000
-            }
-        ],  // distribution eras
+        '0x' +
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 1).substr(2) + // era length: 1
+        ethers.utils.hexZeroPad(ethers.BigNumber.from(7000).toHexString(), 32).substr(2) +      // era: startHeight
+        ethers.utils.hexZeroPad(ethers.BigNumber.from(6000000).toHexString(), 32).substr(2) +   // era: stopHeight
+        ethers.utils.hexZeroPad(ethers.BigNumber.from(300).toHexString(), 32).substr(2),        // era: amount
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await waitForTx(env.provider, tx.hash);

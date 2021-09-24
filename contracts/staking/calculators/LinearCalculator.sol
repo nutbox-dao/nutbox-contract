@@ -7,10 +7,26 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import './ICalculator.sol';
 import '../../common/Types.sol';
+import '../../common/libraries/BytesLib.sol';
 
+/**
+ * LinearCalculator is a distribution mechanism that people can set a reward on specific blocks height.
+ *
+ * Spec:
+ *     length: uint8, distribution eras length
+ *     eras[0]
+ *     eras[1]
+ *     ...
+ *     eras[n]
+ *     Era:
+ *         uint256: startHeight,
+ *         uint256: stopHeight,
+ *         uint256: amount
+ */
 contract LinearCalculator is ICalculator, Ownable {
 
     using SafeMath for uint256;
+    using BytesLib for bytes;
 
     uint8 constant MAX_DISTRIBUTIONS = 6;
     address admin;
@@ -36,8 +52,8 @@ contract LinearCalculator is ICalculator, Ownable {
         factory = _factory;
     }
 
-    function setDistributionEra(address staking, Types.Distribution[] memory _distributionEras) onlyFactory public override returns(bool) {
-        _applyDistributionEras(staking, _distributionEras);
+    function setDistributionEra(address staking, bytes calldata policy) onlyFactory public override returns(bool) {
+        _applyDistributionEras(staking, policy);
         return true;
     }
 
@@ -84,29 +100,37 @@ contract LinearCalculator is ICalculator, Ownable {
 
     /**
      * @dev Check and set distribution policy
-     * _distributionEras must less than or equal to MAX_DISTRIBUTIONS and all distribution should meet following condidtion: 
+     * All distribution should meet following condidtion: 
      * 1) amount should greater than 0
      * 2) first distrubtion startHeight should greater than current block height
      * 3) startHeight shold less than stopHeight
      */
-    function _applyDistributionEras(address staking, Types.Distribution[] memory _distributionEras) private {
-        require(_distributionEras.length <= MAX_DISTRIBUTIONS, 'Too many distribution policy');
+    function _applyDistributionEras(address staking, bytes calldata policy) private {
+        uint8 erasLength = policy.toUint8(0);
+        require(erasLength >= 1, 'At least one distribution era is needed');
 
-        // prechek
-        for(uint8 i = 0; i < _distributionEras.length; i++) {
+        uint8 index = 1;
+        for(uint8 i = 0; i < erasLength; i++) {
+            uint256 start = policy.toUint256(index);
+            index = index + 32;
+            uint256 stop = policy.toUint256(index);
+            index = index + 32;
+            uint256 amount = policy.toUint256(index);
+
             // check 1)
-            require(_distributionEras[i].amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');
+            require(amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');
             // check 2)
             if (i == 0) {
-                require(_distributionEras[i].startHeight > block.number, 'Invalid start height of distribution');
+                require(start > block.number, 'Invalid start height of distribution');
             }
             // check 3)
-            require(_distributionEras[i].startHeight < _distributionEras[i].stopHeight, 'Invalid stop height of distribution');
-        }
-
-        // set distribution policy
-        for(uint8 i = 0; i < _distributionEras.length; i++) {
-            distributionErasMap[staking].push(_distributionEras[i]);
+            require(start < stop, 'Invalid stop height of distribution');
+            // set distribution policy
+            distributionErasMap[staking].push(Types.Distribution ({
+                startHeight: start,
+                stopHeight: stop,
+                amount: amount
+            }));
             distributionCountMap[staking] = distributionCountMap[staking] + 1;
         }
     }

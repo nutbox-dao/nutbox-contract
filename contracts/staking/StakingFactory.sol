@@ -35,10 +35,8 @@ contract StakingFactory is NoDelegateCall {
     function createStakingFeast (
         bytes32 _rewardAsset,
         address _rewardCalculator,
-        Types.Distribution[] memory _distributionEras
+        bytes calldata policy
     ) public noDelegateCall {
-        require(_distributionEras.length > 0, 'Should give at least one distribution');
-        
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
         require(tokenAddress != address(0), 'Reward asset is not registered');
 
@@ -51,7 +49,7 @@ contract StakingFactory is NoDelegateCall {
         );
 
         // set staking feast rewarad distribution policy
-        ICalculator(_rewardCalculator).setDistributionEra(address(feastAddress), _distributionEras);
+        ICalculator(_rewardCalculator).setDistributionEra(address(feastAddress), policy);
 
         // add feast into whitelist of ERC20AssetHandler
         bytes memory data = abi.encodeWithSignature(
