@@ -116,6 +116,7 @@ contract LinearCalculator is ICalculator, Ownable {
             uint256 stop = policy.toUint256(index);
             index = index + 32;
             uint256 amount = policy.toUint256(index);
+            index = index + 32;
 
             // check 1)
             require(amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');
