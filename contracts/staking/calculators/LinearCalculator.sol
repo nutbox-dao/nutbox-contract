@@ -109,7 +109,7 @@ contract LinearCalculator is ICalculator, Ownable {
         uint8 erasLength = policy.toUint8(0);
         require(erasLength >= 1, 'At least one distribution era is needed');
 
-        uint8 index = 1;
+        uint64 index = 1;
         for(uint8 i = 0; i < erasLength; i++) {
             uint256 start = policy.toUint256(index);
             index = index + 32;
