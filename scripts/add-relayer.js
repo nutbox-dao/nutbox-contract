@@ -23,6 +23,7 @@ async function main() {
     console.log(`Set ${RELAYER} as relayer successfully.`);
     const tx2 = await Bridge.adminSetThreshold(1, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});
     await waitForTx(env.provider, tx2.hash);
+    console.log(`Set relayer threshold to 1 successfully.`);
 }
 
 main()
