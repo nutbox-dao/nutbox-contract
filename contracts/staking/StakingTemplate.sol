@@ -57,6 +57,15 @@ contract StakingTemplate is Ownable {
         // When pool was added, we treat it actived.
         bool hasActived;
 
+        // When pool was stopped, staking into this pool will be denied
+        bool hasStopped;
+
+        // Only assets been withdrawn back to user, pool can be removed
+        bool canRemoved;
+
+        // Just set flag not removed from storage
+        bool hasRemoved;
+
         // poolRatio is a configuration argument that the staking pool deployer give.
         // Case NutboxStakingTemplate contract support mult-pool staking, every pool's
         // reward of current block are distributed by this options.
@@ -82,7 +91,7 @@ contract StakingTemplate is Ownable {
     address dev;
     uint16 devRewardRatio;    // actually fee is reward.mult(devRewardRatio).div(10000)
     uint8 public numberOfPools;
-    Pool[MAX_POOLS] public openedPools;
+    Pool[] public openedPools;
     uint256 public lastRewardBlock;
     bytes32 public rewardAsset;
     address factory;
@@ -185,6 +194,9 @@ contract StakingTemplate is Ownable {
         openedPools[numberOfPools].pid = numberOfPools;
         openedPools[numberOfPools].poolName = poolName;
         openedPools[numberOfPools].hasActived = true;
+        openedPools[numberOfPools].hasStopped = false;
+        openedPools[numberOfPools].canRemoved = true;
+        openedPools[numberOfPools].hasRemoved = false;
         openedPools[numberOfPools].stakingPair = pair;
         openedPools[numberOfPools].shareAcc = 0;
         openedPools[numberOfPools].totalStakedAmount = 0;
@@ -194,6 +206,74 @@ contract StakingTemplate is Ownable {
         _applyPoolsRatio(ratios);
         emit Addpool(pair, poolName);
         return numberOfPools;
+    }
+
+    function removePool(uint8 pid) public onlyAdmin {
+        require(openedPools[pid].pid == pid, 'Pool id dismatch');
+        require(openedPools[pid].hasStopped, 'Pool has not been stopped');
+        require(openedPools[pid].canRemoved, 'Pool can not be removed');
+
+        openedPools[numberOfPools].hasRemoved = true;
+    }
+
+    // Admin should call this methods multiple times until all users get refunded,
+    // then pool.canRemoved set to true, means pool can be removed safely.
+    function tryWithdraw(uint8 pid) public onlyAdmin {
+        require(openedPools[pid].pid == pid, 'Pool id dismatch');
+        require(openedPools[pid].hasStopped, 'Pool has not been stopped');
+        require(openedPools[pid].stakingList.length > 0, 'No need to refund');
+
+        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+            return;
+        }
+
+        // Maybe need to change step to 50 on ethereum mainnet
+        uint8 max_times = 100;
+        uint8 refund_times = 0;
+        uint256 current_length = openedPools[pid].stakingList.length;
+        while (current_length > 0) {
+            address depositer = openedPools[pid].stakingList[current_length - 1];
+            uint256 amount = openedPools[pid].stakingInfo[depositer].amount;
+            if (amount > 0) {
+                bytes32 source = keccak256(abi.encodePacked(address(this), openedPools[pid].stakingPair));
+                bytes memory data = abi.encodeWithSignature(
+                    "unlockAsset(bytes32,bytes32,address,uint256)",
+                    source,
+                    openedPools[pid].stakingPair,
+                    depositer,
+                    amount
+                );
+                (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+                require(success, "failed to call unlockAsset");
+            }
+            delete openedPools[pid].stakingList[current_length - 1];
+            current_length = current_length - 1;
+            refund_times = refund_times + 1;
+            if (refund_times == max_times) break;
+        }
+
+        if (current_length == 0) openedPools[pid].canRemoved = true;
+    }
+
+    // Stop pool, then admin should call tryWithdraw() to send back assets that user staked into this pool.
+    function stopPool(uint8 pid) public onlyAdmin {
+        require(openedPools[pid].pid == pid, 'Pool id dismatch');
+        require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
+        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+            // no need to withdraw staking assets to users if this is an trustless asset staking pool
+            openedPools[pid].canRemoved = true;
+        }
+        openedPools[pid].hasStopped = true;
+    }
+
+    function startPool(uint8 pid) public onlyAdmin {
+        require(openedPools[pid].pid == pid, 'Pool id dismatch');
+        require(openedPools[pid].hasStopped, 'Pool has not been stopped');
+        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+            // no need to withdraw staking assets to users if this is an trustless asset staking pool
+            openedPools[pid].canRemoved = false;
+        }
+        openedPools[pid].hasStopped = false;
     }
 
     function setPoolRatios(uint16[] memory ratios) public onlyAdmin {
@@ -222,6 +302,8 @@ contract StakingTemplate is Ownable {
     }
 
     function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
+        require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
+
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
             internalDeposit(pid, depositor, amount, _bindAccount);
@@ -239,6 +321,7 @@ contract StakingTemplate is Ownable {
         // we set lastRewardBlock as current block number, then our game starts!
         if (lastRewardBlock == 0) {
             lastRewardBlock = block.number;
+            openedPools[pid].canRemoved = false;
         }
 
         // Add to staking list if account hasn't deposited before
@@ -286,6 +369,8 @@ contract StakingTemplate is Ownable {
     }
 
     function withdraw(uint8 pid, address depositor, uint256 amount) public {
+        require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
+
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
             internalWithdraw(pid, depositor, amount);
