@@ -3,7 +3,7 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
-const { waitForTx } = require('./utils.js');
+const { waitForTx, utf8ToHex } = require('./utils.js');
 const RegistryHubJson = require('../build/contracts/RegistryHub.json');
 const HomeChainAssetRegistryJson = require('../build/contracts/HomeChainAssetRegistry.json');
 const SteemHiveDelegateAssetRegistryJson = require('../build/contracts/SteemHiveDelegateAssetRegistry.json');
@@ -132,8 +132,8 @@ async function main() {
     await registerMintableERC20(env, mintabelERC20);
     
     // deploy erc20 contract
-    // const simpleERC20 = await deployERC20(env);
-    // await registerERC20(env, simpleERC20);
+    const simpleERC20 = await deployERC20(env);
+    await registerERC20(env, simpleERC20);
 
     // steem hive delegate asset registry
     const SteemHiveDelegateAssetRegistry = new ethers.Contract(
@@ -165,7 +165,8 @@ async function main() {
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substr(2) +     // chainId: polkadot
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2004), 4).substr(2) +  // paraId: 2004
         ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 4).substr(2) +     // trieIndex: 4
-        ethers.utils.keccak256(Buffer.from('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP')).substr(2),     // communityAccount
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(47), 4).substr(2) +    // account length
+        utf8ToHex('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP'),     // communityAccount
         '0x0000000000000000000000000000000000000000',
         '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
@@ -184,7 +185,8 @@ async function main() {
     const tx3 = await SubstrateNominateAssetRegistry.registerAsset(
         '0x' + 
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substr(2) +     // chainId: polkadot
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(8), 32).substr(2),     // validatorAccount        
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(47), 4).substr(2) +     // validatorAccount length
+        utf8ToHex('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP'),     // validatorAccount        
         '0x0000000000000000000000000000000000000000',
         '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
