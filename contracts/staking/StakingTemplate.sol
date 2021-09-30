@@ -91,7 +91,7 @@ contract StakingTemplate is Ownable {
     address dev;
     uint16 devRewardRatio;    // actually fee is reward.mult(devRewardRatio).div(10000)
     uint8 public numberOfPools;
-    Pool[] public openedPools;
+    Pool[MAX_POOLS] public openedPools;
     uint256 public lastRewardBlock;
     bytes32 public rewardAsset;
     address factory;
