@@ -61,7 +61,7 @@ contract StakingTemplate is Ownable {
         bool hasStopped;
 
         // Only assets been withdrawn back to user, pool can be removed
-        bool canRemoved;
+        bool canRemove;
 
         // Just set flag not removed from storage
         bool hasRemoved;
@@ -195,7 +195,7 @@ contract StakingTemplate is Ownable {
         openedPools[numberOfPools].poolName = poolName;
         openedPools[numberOfPools].hasActived = true;
         openedPools[numberOfPools].hasStopped = false;
-        openedPools[numberOfPools].canRemoved = true;
+        openedPools[numberOfPools].canRemove = true;
         openedPools[numberOfPools].hasRemoved = false;
         openedPools[numberOfPools].stakingPair = pair;
         openedPools[numberOfPools].shareAcc = 0;
@@ -211,13 +211,13 @@ contract StakingTemplate is Ownable {
     function removePool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
-        require(openedPools[pid].canRemoved, 'Pool can not be removed');
+        require(openedPools[pid].canRemove, 'Pool can not be removed');
 
         openedPools[numberOfPools].hasRemoved = true;
     }
 
     // Admin should call this methods multiple times until all users get refunded,
-    // then pool.canRemoved set to true, means pool can be removed safely.
+    // then pool.canRemove set to true, means pool can be removed safely.
     function tryWithdraw(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
@@ -252,16 +252,16 @@ contract StakingTemplate is Ownable {
             if (refund_times == max_times) break;
         }
 
-        if (current_length == 0) openedPools[pid].canRemoved = true;
+        if (current_length == 0) openedPools[pid].canRemove = true;
     }
 
     // Stop pool, then admin should call tryWithdraw() to send back assets that user staked into this pool.
     function stopPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
-        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+        if (openedPools[pid].stakingList.length == 0 || IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             // no need to withdraw staking assets to users if this is an trustless asset staking pool
-            openedPools[pid].canRemoved = true;
+            openedPools[pid].canRemove = true;
         }
         openedPools[pid].hasStopped = true;
     }
@@ -271,7 +271,7 @@ contract StakingTemplate is Ownable {
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             // no need to withdraw staking assets to users if this is an trustless asset staking pool
-            openedPools[pid].canRemoved = false;
+            openedPools[pid].canRemove = false;
         }
         openedPools[pid].hasStopped = false;
     }
@@ -321,7 +321,7 @@ contract StakingTemplate is Ownable {
         // we set lastRewardBlock as current block number, then our game starts!
         if (lastRewardBlock == 0) {
             lastRewardBlock = block.number;
-            openedPools[pid].canRemoved = false;
+            openedPools[pid].canRemove = false;
         }
 
         // Add to staking list if account hasn't deposited before
