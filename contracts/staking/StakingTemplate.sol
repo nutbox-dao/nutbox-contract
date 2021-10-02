@@ -226,32 +226,41 @@ contract StakingTemplate is Ownable {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             return;
         }
-
         // Maybe need to change step to 50 on ethereum mainnet
+        Pool storage pool = openedPools[pid];
         uint8 max_times = 100;
         uint8 refund_times = 0;
-        uint256 current_length = openedPools[pid].stakingList.length;
+        uint256 current_length = pool.stakingList.length;
+        _updatePools();
         while (current_length > 0) {
-            address depositer = openedPools[pid].stakingList[current_length - 1];
-            uint256 amount = openedPools[pid].stakingInfo[depositer].amount;
+            address depositor = pool.stakingList[current_length - 1];
+            uint256 amount = pool.stakingInfo[depositor].amount;
             if (amount > 0) {
-                bytes32 source = keccak256(abi.encodePacked(address(this), openedPools[pid].stakingPair));
+                // refund staking
+                bytes32 source = keccak256(abi.encodePacked(address(this), pool.stakingPair));
                 bytes memory data = abi.encodeWithSignature(
                     "unlockAsset(bytes32,bytes32,address,uint256)",
                     source,
-                    openedPools[pid].stakingPair,
-                    depositer,
+                    pool.stakingPair,
+                    depositor,
                     amount
                 );
                 (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
                 require(success, "failed to call unlockAsset");
+
+                // update pool data
+                uint256 pending = pool.stakingInfo[depositor].amount.mul(pool.shareAcc).div(1e12).sub(pool.stakingInfo[depositor].userDebt);
+                if(pending > 0) {
+                    openedPools[pid].stakingInfo[depositor].availableRewards = pool.stakingInfo[depositor].availableRewards.add(pending);
+                }
+                openedPools[pid].totalStakedAmount = pool.totalStakedAmount.sub(amount);
+                openedPools[pid].stakingInfo[depositor].userDebt = amount.mul(pool.shareAcc).div(1e12);
+                openedPools[pid].stakingInfo[depositor].amount = 0;
+                refund_times = refund_times + 1;
             }
-            delete openedPools[pid].stakingList[current_length - 1];
             current_length = current_length - 1;
-            refund_times = refund_times + 1;
             if (refund_times == max_times) break;
         }
-
         if (current_length == 0) openedPools[pid].canRemove = true;
     }
 
@@ -259,10 +268,20 @@ contract StakingTemplate is Ownable {
     function stopPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
-        if (openedPools[pid].stakingList.length == 0 || IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             // no need to withdraw staking assets to users if this is an trustless asset staking pool
             openedPools[pid].canRemove = true;
         }
+        bool canRemove = true;
+        for (uint256 i; i < openedPools[pid].stakingList.length; i++){
+            address depositor = openedPools[pid].stakingList[i];
+            uint256 amount = openedPools[pid].stakingInfo[depositor].amount;
+            if (amount > 0) {
+                canRemove = false;
+                break;
+            }
+        }
+        openedPools[pid].canRemove = canRemove;
         openedPools[pid].hasStopped = true;
     }
 
@@ -523,7 +542,7 @@ contract StakingTemplate is Ownable {
         // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
         // the right amount that delegator can award
         uint256 _shareAcc = openedPools[pid].shareAcc;
-        if (openedPools[pid].totalStakedAmount == 0) return 0;
+        if (openedPools[pid].stakingInfo[user].amount == 0) return openedPools[pid].stakingInfo[user].availableRewards;
         uint256 unmintedRewards = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
         _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
         uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
