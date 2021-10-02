@@ -213,7 +213,7 @@ contract StakingTemplate is Ownable {
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
         require(openedPools[pid].canRemove, 'Pool can not be removed');
 
-        openedPools[numberOfPools].hasRemoved = true;
+        openedPools[pid].hasRemoved = true;
     }
 
     // Admin should call this methods multiple times until all users get refunded,
