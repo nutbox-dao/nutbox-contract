@@ -237,7 +237,7 @@ contract StakingTemplate is Ownable {
             uint256 amount = pool.stakingInfo[depositor].amount;
             if (amount > 0) {
                 // refund staking
-                bytes32 source = keccak256(abi.encodePacked(address(this), pool.stakingPair));
+                bytes32 source = keccak256(abi.encodePacked(address(this), pid, pool.stakingPair));
                 bytes memory data = abi.encodeWithSignature(
                     "unlockAsset(bytes32,bytes32,address,uint256)",
                     source,
@@ -254,7 +254,7 @@ contract StakingTemplate is Ownable {
                     openedPools[pid].stakingInfo[depositor].availableRewards = pool.stakingInfo[depositor].availableRewards.add(pending);
                 }
                 openedPools[pid].totalStakedAmount = pool.totalStakedAmount.sub(amount);
-                openedPools[pid].stakingInfo[depositor].userDebt = amount.mul(pool.shareAcc).div(1e12);
+                openedPools[pid].stakingInfo[depositor].userDebt = 0;
                 openedPools[pid].stakingInfo[depositor].amount = 0;
                 refund_times = refund_times + 1;
             }
@@ -367,7 +367,7 @@ contract StakingTemplate is Ownable {
         }
 
         if (!IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            bytes32 source = keccak256(abi.encodePacked(address(this), openedPools[pid].stakingPair));
+            bytes32 source = keccak256(abi.encodePacked(address(this), pid, openedPools[pid].stakingPair));
             bytes memory data = abi.encodeWithSignature(
                 "lockAsset(bytes32,bytes32,address,uint256)",
                 source,
@@ -420,7 +420,7 @@ contract StakingTemplate is Ownable {
             withdrawAmount = amount;
 
         if (!IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            bytes32 source = keccak256(abi.encodePacked(address(this), openedPools[pid].stakingPair));
+            bytes32 source = keccak256(abi.encodePacked(address(this), pid, openedPools[pid].stakingPair));
             bytes memory data = abi.encodeWithSignature(
                 "unlockAsset(bytes32,bytes32,address,uint256)",
                 source,
