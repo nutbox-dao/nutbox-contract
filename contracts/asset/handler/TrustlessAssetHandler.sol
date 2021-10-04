@@ -14,6 +14,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     struct PoolInfo {
         address stakingFeast;
         uint8 pid;
+        bytes32 assetId;
     }
 
     address public registryHub;
@@ -23,7 +24,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     mapping (address => bool) private whiteList;
     // source => account => amount
     mapping (bytes32 => mapping (address => uint256)) private depositBalance;
-    // assetId => PoolInfo
+    // source => PoolInfo
     mapping (bytes32 => PoolInfo) private attachedPool;
 
     bytes32 public constant WHITELIST_MANAGER_ROLE = keccak256("WHITELIST_MANAGER_ROLE");
@@ -88,8 +89,11 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
 
     function attachPool(bytes32 assetId, address stakingFeast, uint8 pid) external {
         require(whiteList[msg.sender], 'Permission denied: contract not in whitelist');
-        attachedPool[assetId].stakingFeast = stakingFeast;
-        attachedPool[assetId].pid = pid;
+        bytes32 source = keccak256(abi.encodePacked(stakingFeast, pid, assetId));
+        attachedPool[source].stakingFeast = stakingFeast;
+        attachedPool[source].pid = pid;
+        attachedPool[source].assetId = assetId;
+
         emit AttachedPool(assetId, stakingFeast, pid);
     }
 
@@ -99,15 +103,15 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         depositBalance[source][account] = amount;
 
         // if attached staking pool, update pool
-        if (attachedPool[assetId].stakingFeast != address(0)) {
+        if (attachedPool[source].stakingFeast != address(0)) {
             bytes memory data = abi.encodeWithSignature(
                 "update(uint8,address,uint256,string)",
-                attachedPool[assetId].pid,
+                attachedPool[source].pid,
                 account,
                 amount,
                 bindAccount
             );
-            (bool success,) = attachedPool[assetId].stakingFeast.call(data);
+            (bool success,) = attachedPool[source].stakingFeast.call(data);
             require(success, "failed to call stakingFeast::update");
             emit BalanceUpdated(source, assetId, account, amount, bindAccount);
         }

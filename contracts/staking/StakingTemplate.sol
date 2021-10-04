@@ -226,6 +226,7 @@ contract StakingTemplate is Ownable {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             return;
         }
+        bool isTrustless = IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair);
         // Maybe need to change step to 50 on ethereum mainnet
         Pool storage pool = openedPools[pid];
         uint8 max_times = 100;
@@ -236,17 +237,19 @@ contract StakingTemplate is Ownable {
             address depositor = pool.stakingList[current_length - 1];
             uint256 amount = pool.stakingInfo[depositor].amount;
             if (amount > 0) {
-                // refund staking
-                bytes32 source = keccak256(abi.encodePacked(address(this), pid, pool.stakingPair));
-                bytes memory data = abi.encodeWithSignature(
-                    "unlockAsset(bytes32,bytes32,address,uint256)",
-                    source,
-                    pool.stakingPair,
-                    depositor,
-                    amount
-                );
-                (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-                require(success, "failed to call unlockAsset");
+                // refund staking if it's home chain asset
+                if (!isTrustless){
+                    bytes32 source = keccak256(abi.encodePacked(address(this), pid, pool.stakingPair));
+                    bytes memory data = abi.encodeWithSignature(
+                        "unlockAsset(bytes32,bytes32,address,uint256)",
+                        source,
+                        pool.stakingPair,
+                        depositor,
+                        amount
+                    );
+                    (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+                    require(success, "failed to call unlockAsset");
+                }
 
                 // update pool data
                 uint256 pending = pool.stakingInfo[depositor].amount.mul(pool.shareAcc).div(1e12).sub(pool.stakingInfo[depositor].userDebt);
@@ -268,30 +271,23 @@ contract StakingTemplate is Ownable {
     function stopPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
-        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            // no need to withdraw staking assets to users if this is an trustless asset staking pool
-            openedPools[pid].canRemove = true;
-        }
-        bool canRemove = true;
+        bool _canRemove = true;
         for (uint256 i; i < openedPools[pid].stakingList.length; i++){
             address depositor = openedPools[pid].stakingList[i];
             uint256 amount = openedPools[pid].stakingInfo[depositor].amount;
             if (amount > 0) {
-                canRemove = false;
+                _canRemove = false;
                 break;
             }
         }
-        openedPools[pid].canRemove = canRemove;
+        openedPools[pid].canRemove = _canRemove;
         openedPools[pid].hasStopped = true;
     }
 
     function startPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
-        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            // no need to withdraw staking assets to users if this is an trustless asset staking pool
-            openedPools[pid].canRemove = false;
-        }
+        openedPools[pid].canRemove = false;
         openedPools[pid].hasStopped = false;
     }
 
