@@ -16,5 +16,6 @@ interface IRegistryHub {
     
     function getERC20AssetHandler() external returns(address);
     function getERC721AssetHandler() external returns(address);
+    function getERC1155AssetHandler() external returns(address);
     function getTrustlessAssetHandler() external returns(address);
 }

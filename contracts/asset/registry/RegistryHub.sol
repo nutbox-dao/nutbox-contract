@@ -29,6 +29,7 @@ contract RegistryHub is IRegistryHub, Ownable {
 
     address erc20AssetHandler;
     address erc721AssetHandler;
+    address erc1155AssetHandler;
     address trustlessAssetHandler;
 
     event NewAsset(address owner, bytes32 id);
@@ -36,9 +37,10 @@ contract RegistryHub is IRegistryHub, Ownable {
     constructor() {
     }
 
-    function setAssetHandlers(address _erc20AssetHandler, address _erc721AssetHandler, address _trustlessAssetHandler) public onlyOwner {
+    function setAssetHandlers(address _erc20AssetHandler, address _erc721AssetHandler, address _erc1155AssetHandler, address _trustlessAssetHandler) public onlyOwner {
         erc20AssetHandler = _erc20AssetHandler;
         erc721AssetHandler = _erc721AssetHandler;
+        erc1155AssetHandler = _erc1155AssetHandler;
         trustlessAssetHandler = _trustlessAssetHandler;
     }
 
@@ -92,6 +94,10 @@ contract RegistryHub is IRegistryHub, Ownable {
 
     function getERC721AssetHandler() external override view returns(address) {
         return erc721AssetHandler;
+    }
+
+    function getERC1155AssetHandler() external override view returns(address) {
+        return erc1155AssetHandler;
     }
 
     function getTrustlessAssetHandler() external override view returns(address) {

@@ -208,7 +208,10 @@ async function main() {
 
     // registryHub set asset handlers
     const registryHub = new ethers.Contract(env.registryHubContract, RegistryHubJson.abi, env.wallet);
-    await registryHub.setAssetHandlers(env.erc20AssetHandlerContract, '0x0000000000000000000000000000000000000000', env.trustlessAssetHandlerContract);
+    // for test only
+    let erc721AssetHandler = env.erc20AssetHandlerContract;
+    let erc1155AssetHandler = env.erc20AssetHandlerContract;
+    await registryHub.setAssetHandlers(env.erc20AssetHandlerContract, erc721AssetHandler, erc1155AssetHandler, env.trustlessAssetHandlerContract);
     console.log('RegistryHub has set asset handlers');
 
     // Executor set bridge
