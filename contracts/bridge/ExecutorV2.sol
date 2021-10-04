@@ -47,11 +47,18 @@ contract ExecutorV2 is AccessControl, IExecutor {
         if(extrinsicType == 0) {    // asset
             uint8 assetType = extrinsic.toUint8(1);
             bytes32 assetId = extrinsic.toBytes32(2);
-            bytes memory recipientBytes = extrinsic.slice(34, 20);
-            uint256 amount = extrinsic.toUint256(54);
-            uint256 accountLen = extrinsic.toUint256(86);
-            string memory bindAccount = string(extrinsic.slice(118, accountLen));
-            bytes32 source = keccak256(abi.encodePacked(bridge, assetId));
+            bytes memory stakingFeastBytes = extrinsic.slice(34, 20);
+            uint8 pid = extrinsic.toUint8(54);
+            bytes memory recipientBytes = extrinsic.slice(55, 20);
+            uint256 amount = extrinsic.toUint256(75);
+            uint32 accountLen = extrinsic.toUint32(107);
+            string memory bindAccount = string(extrinsic.slice(111, accountLen));
+            bytes20 stakingFeast;
+            assembly {
+                stakingFeast := mload(add(stakingFeastBytes, 0x20))
+            }
+
+            bytes32 source = keccak256(abi.encodePacked(address(stakingFeast), pid, assetId));
             bytes20 recipient;
             assembly {
                 recipient := mload(add(recipientBytes, 0x20))

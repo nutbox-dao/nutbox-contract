@@ -255,6 +255,7 @@ contract StakingTemplate is Ownable {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             return;
         }
+        bool isTrustless = IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair);
         // Maybe need to change step to 50 on ethereum mainnet
         Pool storage pool = openedPools[pid];
         uint8 max_times = 100;
@@ -264,17 +265,19 @@ contract StakingTemplate is Ownable {
             address depositor = pool.stakingList[current_length - 1];
             uint256 amount = pool.stakingInfo[depositor].amount;
             if (amount > 0) {
-                // refund staking
-                bytes32 source = keccak256(abi.encodePacked(address(this), pid, pool.stakingPair));
-                bytes memory data = abi.encodeWithSignature(
-                    "unlockAsset(bytes32,bytes32,address,uint256)",
-                    source,
-                    pool.stakingPair,
-                    depositor,
-                    amount
-                );
-                (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-                require(success, "failed to call unlockAsset");
+                // refund staking if it's home chain asset
+                if (!isTrustless){
+                    bytes32 source = keccak256(abi.encodePacked(address(this), pid, pool.stakingPair));
+                    bytes memory data = abi.encodeWithSignature(
+                        "unlockAsset(bytes32,bytes32,address,uint256)",
+                        source,
+                        pool.stakingPair,
+                        depositor,
+                        amount
+                    );
+                    (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+                    require(success, "failed to call unlockAsset");
+                }
 
                 // update pool data
                 uint256 pending = pool.stakingInfo[depositor].amount.mul(pool.shareAcc).div(1e12).sub(pool.stakingInfo[depositor].userDebt);
