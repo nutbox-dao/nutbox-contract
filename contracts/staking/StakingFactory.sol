@@ -18,7 +18,6 @@ import './calculators/ICalculator.sol';
 contract StakingFactory is NoDelegateCall, AccessControl {
 
     address public registryHub;
-    address public feeAddress;
     bytes32 public NUT;
     uint256 public stakedNUT;
 
@@ -34,9 +33,8 @@ contract StakingFactory is NoDelegateCall, AccessControl {
         _;
     }
 
-    constructor(address _registryHub, address _feeAddress) {
+    constructor(address _registryHub) {
         registryHub = _registryHub;
-        feeAddress = _feeAddress;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -82,11 +80,6 @@ contract StakingFactory is NoDelegateCall, AccessControl {
         stakingFeastCounter[msg.sender] = stakingFeastCounter[msg.sender] + 1;
 
         emit StakingFeastCreated(msg.sender, address(feastAddress), _rewardAsset);
-    }
-
-    function setFeeAddress(address _feeAddress) public {
-        require(msg.sender == feeAddress, 'Permission denied to set fee address');
-        feeAddress = _feeAddress;
     }
 
     function adminRenonceAdmin(address _newAdmin) external onlyAdmin {

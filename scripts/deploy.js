@@ -139,7 +139,6 @@ async function deployStakingFactoryContract(env) {
     let factory = new ethers.ContractFactory(StakingFactoryJson.abi, StakingFactoryJson.bytecode, env.wallet);
     let contract = await factory.deploy(
         env.registryHubContract,
-        env.feeAddr,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();
@@ -176,7 +175,6 @@ async function main() {
     // hardcode
     env.bridgeFee = 0;
     env.bridgeExpiry = 10;
-    env.feeAddr = env.wallet.address;
 
     let startBalance = await env.provider.getBalance(env.wallet.address)
 
@@ -282,7 +280,6 @@ async function main() {
         =======
         Bridge Fee:     ${env.bridgeFee}
         Bridge Expiry:  ${env.bridgeExpiry}
-        Fee Addr:       ${env.feeAddr}
         
         Contract Addresses
         ================================================================
