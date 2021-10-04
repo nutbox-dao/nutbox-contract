@@ -268,20 +268,11 @@ contract StakingTemplate is Ownable {
     function stopPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
-        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
+        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair) 
+            || openedPools[pid].totalStakedAmount == 0) {
             // no need to withdraw staking assets to users if this is an trustless asset staking pool
             openedPools[pid].canRemove = true;
         }
-        bool canRemove = true;
-        for (uint256 i; i < openedPools[pid].stakingList.length; i++){
-            address depositor = openedPools[pid].stakingList[i];
-            uint256 amount = openedPools[pid].stakingInfo[depositor].amount;
-            if (amount > 0) {
-                canRemove = false;
-                break;
-            }
-        }
-        openedPools[pid].canRemove = canRemove;
         openedPools[pid].hasStopped = true;
     }
 
