@@ -251,7 +251,7 @@ contract StakingTemplate is Ownable {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
         require(openedPools[pid].stakingList.length > 0, 'No need to refund');
-        
+
         bool isTrustless = IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair);
         // Maybe need to change step to 50 on ethereum mainnet
         Pool storage pool = openedPools[pid];
@@ -307,6 +307,7 @@ contract StakingTemplate is Ownable {
     function startPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
+        require(!openedPools[pid].hasRemoved, "Cann't start removed pool");
 
         openedPools[pid].canRemove = false;
         openedPools[pid].hasStopped = false;
