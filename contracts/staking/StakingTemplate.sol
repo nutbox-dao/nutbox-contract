@@ -296,6 +296,9 @@ contract StakingTemplate is Ownable {
     function stopPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
+        require(openedPools[pid].poolRatio == 0, 'Must set pool ratio to 0 first');
+
+        _updatePools();
 
         if (openedPools[pid].totalStakedAmount == 0) {
             // no need to withdraw staking assets to users if this is an trustless asset staking pool
@@ -308,6 +311,8 @@ contract StakingTemplate is Ownable {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
         require(!openedPools[pid].hasRemoved, "Cann't start removed pool");
+
+        _updatePools();
 
         openedPools[pid].canRemove = false;
         openedPools[pid].hasStopped = false;
@@ -406,8 +411,6 @@ contract StakingTemplate is Ownable {
     }
 
     function withdraw(uint8 pid, address depositor, uint256 amount) public {
-        require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
-
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
             internalWithdraw(pid, depositor, amount);
@@ -487,7 +490,7 @@ contract StakingTemplate is Ownable {
             openedPools[pid].stakingInfo[msg.sender].availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards.add(pending);
         }
         // add all pools available rewards
-        availableRewards = availableRewards.add(openedPools[pid].stakingInfo[msg.sender].availableRewards);
+        availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards;
 
         // transfer rewards to user
         bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
@@ -561,11 +564,12 @@ contract StakingTemplate is Ownable {
         // the right amount that delegator can award
         uint256 _shareAcc = openedPools[pid].shareAcc;
         if (openedPools[pid].stakingInfo[user].amount == 0) return openedPools[pid].stakingInfo[user].availableRewards;
-        uint256 unmintedRewards = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
-        _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
+        if (!openedPools[pid].hasStopped){
+            uint256 unmintedRewards = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, currentBlock).mul(10000 - devRewardRatio).div(10000);
+            _shareAcc = _shareAcc.add(unmintedRewards.mul(1e12).mul(openedPools[pid].poolRatio).div(10000).div(openedPools[pid].totalStakedAmount));
+        }
         uint256 pending = openedPools[pid].stakingInfo[user].amount.mul(_shareAcc).div(1e12).sub(openedPools[pid].stakingInfo[user].userDebt);
         return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
-
     }
 
     function getUserTotalPendingRewards(address user) public view returns(uint256) {
@@ -656,7 +660,7 @@ contract StakingTemplate is Ownable {
 
         // update shareAcc of all pools
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
-            if(openedPools[pid].totalStakedAmount == 0) continue;
+            if(openedPools[pid].totalStakedAmount == 0 || openedPools[pid].hasStopped || openedPools[pid].poolRatio == 0) continue;
             uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(openedPools[pid].poolRatio).div(10000);
             openedPools[pid].shareAcc = openedPools[pid].shareAcc.add(poolRewards.div(openedPools[pid].totalStakedAmount));
         }
