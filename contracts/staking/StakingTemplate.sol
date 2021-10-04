@@ -151,7 +151,7 @@ contract StakingTemplate is Ownable {
         bytes memory data = abi.encodeWithSignature(
             "lockAsset(bytes32,bytes32,address,uint256)",
             source,
-            NUT,
+            rewardAsset,
             msg.sender,
             amount
         );
@@ -251,10 +251,7 @@ contract StakingTemplate is Ownable {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
         require(openedPools[pid].stakingList.length > 0, 'No need to refund');
-
-        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            return;
-        }
+        
         bool isTrustless = IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair);
         // Maybe need to change step to 50 on ethereum mainnet
         Pool storage pool = openedPools[pid];
@@ -300,10 +297,7 @@ contract StakingTemplate is Ownable {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
 
-        _updatePools();
-
-        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair) 
-            || openedPools[pid].totalStakedAmount == 0) {
+        if (openedPools[pid].totalStakedAmount == 0) {
             // no need to withdraw staking assets to users if this is an trustless asset staking pool
             openedPools[pid].canRemove = true;
         }
@@ -314,12 +308,7 @@ contract StakingTemplate is Ownable {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
 
-        _updatePools();
-
-        if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            // no need to withdraw staking assets to users if this is an trustless asset staking pool
-            openedPools[pid].canRemove = false;
-        }
+        openedPools[pid].canRemove = false;
         openedPools[pid].hasStopped = false;
     }
 
