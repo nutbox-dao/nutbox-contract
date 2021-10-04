@@ -231,7 +231,6 @@ contract StakingTemplate is Ownable {
         uint8 max_times = 100;
         uint8 refund_times = 0;
         uint256 current_length = pool.stakingList.length;
-        _updatePools();
         while (current_length > 0) {
             address depositor = pool.stakingList[current_length - 1];
             uint256 amount = pool.stakingInfo[depositor].amount;
@@ -268,6 +267,9 @@ contract StakingTemplate is Ownable {
     function stopPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
+
+        _updatePools();
+
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair) 
             || openedPools[pid].totalStakedAmount == 0) {
             // no need to withdraw staking assets to users if this is an trustless asset staking pool
@@ -279,6 +281,9 @@ contract StakingTemplate is Ownable {
     function startPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(openedPools[pid].hasStopped, 'Pool has not been stopped');
+
+        _updatePools();
+
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
             // no need to withdraw staking assets to users if this is an trustless asset staking pool
             openedPools[pid].canRemove = false;
