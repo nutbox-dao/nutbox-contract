@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
+import '@openzeppelin/contracts/access/AccessControl.sol';
 import '../MintableERC20.sol';
 import '../common/Types.sol';
 import './StakingTemplate.sol';
@@ -14,10 +15,12 @@ import './calculators/ICalculator.sol';
  *
  * This is the entry contract that user start to create their own staking economy.
  */
-contract StakingFactory is NoDelegateCall {
+contract StakingFactory is NoDelegateCall, AccessControl {
 
     address public registryHub;
     address public feeAddress;
+    bytes32 public NUT;
+    uint256 public stakedNUT;
 
     // owner => stakingFeastList
     mapping (address => address[]) public stakingFeastRecord;
@@ -26,9 +29,16 @@ contract StakingFactory is NoDelegateCall {
 
     event StakingFeastCreated(address indexed creater, address stakingFeast, bytes32 rewardAsset);
 
+    modifier onlyAdmin() {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
+        _;
+    }
+
     constructor(address _registryHub, address _feeAddress) {
         registryHub = _registryHub;
         feeAddress = _feeAddress;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     // only owner of reward token can call this method 
@@ -45,6 +55,8 @@ contract StakingFactory is NoDelegateCall {
         feastAddress.initialize(
             msg.sender,
             _rewardAsset,
+            NUT,
+            stakedNUT,
             _rewardCalculator
         );
 
@@ -75,6 +87,16 @@ contract StakingFactory is NoDelegateCall {
     function setFeeAddress(address _feeAddress) public {
         require(msg.sender == feeAddress, 'Permission denied to set fee address');
         feeAddress = _feeAddress;
+    }
+
+    function adminRenonceAdmin(address _newAdmin) external onlyAdmin {
+        grantRole(DEFAULT_ADMIN_ROLE, _newAdmin);
+        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function setNUTStaking(bytes32 _nut, uint256 _stakedAmount) public onlyAdmin {
+        NUT = _nut;
+        stakedNUT = _stakedAmount;
     }
 
 }

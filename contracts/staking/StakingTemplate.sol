@@ -97,6 +97,9 @@ contract StakingTemplate is Ownable {
     address factory;
     address registryHub;
     address public rewardCalculator;
+    bytes32 public NUT;
+    uint256 public stakedNUT;
+
     // fetch address use bound account
     mapping (uint8 => mapping (string => address)) public accountBindMap;
 
@@ -127,6 +130,8 @@ contract StakingTemplate is Ownable {
     function initialize (
         address _admin,
         bytes32 _rewardAsset,
+        bytes32 _nut,
+        uint256 _stakedNut,
         address _rewardCalculator
     ) public {
         require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
@@ -137,6 +142,8 @@ contract StakingTemplate is Ownable {
         lastRewardBlock = 0;
         rewardAsset = _rewardAsset;
         rewardCalculator = _rewardCalculator;
+        NUT = _nut;
+        stakedNUT = _stakedNut;
     }
 
     function adminDepositReward(uint256 amount) public onlyAdmin {
@@ -144,7 +151,7 @@ contract StakingTemplate is Ownable {
         bytes memory data = abi.encodeWithSignature(
             "lockAsset(bytes32,bytes32,address,uint256)",
             source,
-            rewardAsset,
+            NUT,
             msg.sender,
             amount
         );
@@ -177,6 +184,17 @@ contract StakingTemplate is Ownable {
 
         // precheck ratios summary
         _checkRatioSum(ratios);
+
+        bytes32 source = keccak256(abi.encodePacked(address(this), numberOfPools, bytes("NUT")));
+        bytes memory data = abi.encodeWithSignature(
+            "lockAsset(bytes32,bytes32,address,uint256)",
+            source,
+            NUT,
+            msg.sender,
+            stakedNUT
+        );
+        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+        require(success, "failed to call lockAsset");
 
         _updatePools();
 
@@ -214,6 +232,17 @@ contract StakingTemplate is Ownable {
         require(openedPools[pid].canRemove, 'Pool can not be removed');
 
         openedPools[pid].hasRemoved = true;
+
+        bytes32 source = keccak256(abi.encodePacked(address(this), pid, bytes("NUT")));
+        bytes memory data = abi.encodeWithSignature(
+            "unlockAsset(bytes32,bytes32,address,uint256)",
+            source,
+            NUT,
+            msg.sender,
+            stakedNUT
+        );
+        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+        require(success, "failed to call unlockAsset");
     }
 
     // Admin should call this methods multiple times until all users get refunded,
