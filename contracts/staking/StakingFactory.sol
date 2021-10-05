@@ -53,8 +53,6 @@ contract StakingFactory is NoDelegateCall, AccessControl {
         feastAddress.initialize(
             msg.sender,
             _rewardAsset,
-            NUT,
-            stakedNUT,
             _rewardCalculator
         );
 
