@@ -26,6 +26,9 @@ contract RegistryHub is IRegistryHub, Ownable {
     mapping (bytes32 => address) private idToRegistryContract;
     // assetid => trustless
     mapping (bytes32 => bool) private trustlessAsset;
+    // when create new pool, need user stake some NUT
+    bytes32 NUT;
+    uint256 stakedNUT;
 
     address erc20AssetHandler;
     address erc721AssetHandler;
@@ -47,6 +50,11 @@ contract RegistryHub is IRegistryHub, Ownable {
     function setWhiteList(address _contract) public onlyOwner {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
+    }
+
+    function setNUTStaking(bytes32 _nut, uint256 _stakedAmount) public onlyOwner {
+        NUT = _nut;
+        stakedNUT = _stakedAmount;
     }
 
     function add(address owner, bytes32 id, address homeLocation, bytes memory foreignLocation, bool trustless) external override {
@@ -103,4 +111,13 @@ contract RegistryHub is IRegistryHub, Ownable {
     function getTrustlessAssetHandler() external override view returns(address) {
         return trustlessAssetHandler;
     }
+
+    function getNUT() external override view returns(bytes32) {
+        return NUT;
+    }
+
+    function getStakedNUT() external override view returns(uint256) {
+        return stakedNUT;
+    }
+
 }

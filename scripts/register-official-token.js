@@ -9,10 +9,12 @@ const ethers = require('ethers');
 const { waitForTx } = require('./utils.js');
 const HomeChainAssetRegistryJson = require('../build/contracts/HomeChainAssetRegistry.json');
 const ERC20FactoryJson = require('../build/contracts/ERC20Factory.json');
+const RegistryHubJson = require('../build/contracts/RegistryHub.json')
 const Contracts = require('./contracts.json');
 
 const HomeChainAssetRegistryAddress = Contracts.HomeChainAssetRegistry;
 const ERC20FactoryAddress = Contracts.ERC20Factory;
+const RegistryHubAddress = Contracts.RegistryHub;
 
 async function deployERC20(env, name, symbols) {
     return new Promise(async (resolve, reject) => {
@@ -44,7 +46,7 @@ async function registerERC20(env, erc20) {
             if (erc20 === homeLocation){
                 console.log("HomeChainAssetRegistered", assetId, homeLocation);
                 HomeChainAssetRegistry.removeAllListeners('HomeChainAssetRegistered')
-                resolve();
+                resolve(assetId);
             }
         })
         const tx0 = await HomeChainAssetRegistry.registerAsset(
@@ -64,10 +66,16 @@ async function main() {
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
 
     // const WETH = await deployERC20(env, 'WETH', 'WETH');
-    // const NUT = await deployERC20(env, 'NUT', 'NUT');
+    // const NUT = await deployERC20(env, 'Walnut', 'NUT');
 
-    await registerERC20(env, '0x46a5954257dFDdC69DFfC530485f23CADFF63A44');
-    await registerERC20(env, '0x20E12eEcd08DEaCe043d4f565db60718602BA300');
+    // await registerERC20(env, '0x46a5954257dFDdC69DFfC530485f23CADFF63A44');
+    const nutAssetId = await registerERC20(env, '0x4E42eB91E2A27817cDB8C8094eB495a1322BbA01');
+
+
+    // set nut staking
+    const registryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.wallet);
+    console.log('NUT asset ID', nutAssetId);
+    await registryHub.setNUTStaking(nutAssetId, ethers.utils.parseUnits("1.0", 18));
 }
 
 main()

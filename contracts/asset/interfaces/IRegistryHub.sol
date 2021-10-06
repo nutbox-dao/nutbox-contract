@@ -18,4 +18,6 @@ interface IRegistryHub {
     function getERC721AssetHandler() external returns(address);
     function getERC1155AssetHandler() external returns(address);
     function getTrustlessAssetHandler() external returns(address);
+    function getNUT() external returns(bytes32);
+    function getStakedNUT() external returns(uint256);
 }

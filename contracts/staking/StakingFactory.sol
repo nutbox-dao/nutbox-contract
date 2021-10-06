@@ -18,8 +18,6 @@ import './calculators/ICalculator.sol';
 contract StakingFactory is NoDelegateCall, AccessControl {
 
     address public registryHub;
-    bytes32 public NUT;
-    uint256 public stakedNUT;
 
     // owner => stakingFeastList
     mapping (address => address[]) public stakingFeastRecord;
@@ -90,10 +88,4 @@ contract StakingFactory is NoDelegateCall, AccessControl {
         grantRole(DEFAULT_ADMIN_ROLE, _newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
-
-    function setNUTStaking(bytes32 _nut, uint256 _stakedAmount) public onlyAdmin {
-        NUT = _nut;
-        stakedNUT = _stakedAmount;
-    }
-
 }

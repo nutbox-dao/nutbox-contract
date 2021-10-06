@@ -10,7 +10,6 @@ import '../common/Types.sol';
 import '../asset/interfaces/IRegistryHub.sol';
 import '../asset/handler/ERC20AssetHandler.sol';
 import './calculators/ICalculator.sol';
-import './StakingFactory.sol';
 
 /**
  * @dev Template contract of Nutbox staking module.
@@ -183,19 +182,20 @@ contract StakingTemplate is Ownable {
         // precheck ratios summary
         _checkRatioSum(ratios);
 
-        bytes32 NUT = StakingFactory(factory).NUT();
-        uint256 stakedNUT = StakingFactory(factory).stakedNUT();
-
-        bytes32 source = keccak256(abi.encodePacked(address(this), numberOfPools, bytes("NUT")));
-        bytes memory data = abi.encodeWithSignature(
-            "lockAsset(bytes32,bytes32,address,uint256)",
-            source,
-            NUT,
-            msg.sender,
-            stakedNUT
-        );
-        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        require(success, "failed to call lockAsset");
+        bytes32 NUT = IRegistryHub(registryHub).getNUT();
+        uint256 stakedNUT = IRegistryHub(registryHub).getStakedNUT();
+        if (stakedNUT != 0) {
+            bytes32 source = keccak256(abi.encodePacked(address(this), numberOfPools, bytes("NUT")));
+            bytes memory data = abi.encodeWithSignature(
+                "lockAsset(bytes32,bytes32,address,uint256)",
+                source,
+                NUT,
+                msg.sender,
+                stakedNUT
+            );
+            (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+            require(success, "failed to call lockAsset");
+        }
 
         _updatePools();
 
@@ -236,20 +236,21 @@ contract StakingTemplate is Ownable {
 
         openedPools[pid].hasRemoved = true;
 
-        bytes32 NUT = openedPools[pid].NUT;
         uint256 stakedNUT = openedPools[pid].stakedNUT;
-
-        bytes32 source = keccak256(abi.encodePacked(address(this), pid, bytes("NUT")));
-        bytes memory data = abi.encodeWithSignature(
-            "unlockAsset(bytes32,bytes32,address,uint256)",
-            source,
-            NUT,
-            msg.sender,
-            stakedNUT
-        );
-        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        openedPools[pid].stakedNUT = 0;
-        require(success, "failed to call unlockAsset");
+        if (stakedNUT != 0){
+            bytes32 NUT = openedPools[pid].NUT;
+            bytes32 source = keccak256(abi.encodePacked(address(this), pid, bytes("NUT")));
+            bytes memory data = abi.encodeWithSignature(
+                "unlockAsset(bytes32,bytes32,address,uint256)",
+                source,
+                NUT,
+                msg.sender,
+                stakedNUT
+            );
+            (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
+            openedPools[pid].stakedNUT = 0;
+            require(success, "failed to call unlockAsset");
+        }
     }
 
     // Admin should call this methods multiple times until all users get refunded,
