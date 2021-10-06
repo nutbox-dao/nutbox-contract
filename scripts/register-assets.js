@@ -126,7 +126,7 @@ async function main() {
     await setWhitelist(env, SubstrateCrowdloanAssetRegistryAddress);
     await setWhitelist(env, SubstrateNominateAssetRegistryAddress);
     await setWhitelist(env, ERC20FactoryAddress);
-
+return;
     // mintable asset registry
     const mintabelERC20 = await deployMintableERC20(env);
     await registerMintableERC20(env, mintabelERC20);

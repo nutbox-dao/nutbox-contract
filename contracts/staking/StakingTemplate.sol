@@ -304,7 +304,15 @@ contract StakingTemplate is Ownable {
     function stopPool(uint8 pid) public onlyAdmin {
         require(openedPools[pid].pid == pid, 'Pool id dismatch');
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
-        require(openedPools[pid].poolRatio == 0, 'Must set pool ratio to 0 first');
+        uint8 opendPoolCount = 0;
+        for(uint8 i = 0; i < numberOfPools; i++) {
+            if (!openedPools[i].hasStopped){
+                opendPoolCount += 1;
+            }
+        }
+        if (opendPoolCount > 1){
+            require(openedPools[pid].poolRatio == 0, 'Must set pool ratio to 0 first');
+        }
 
         _updatePools();
 
@@ -313,6 +321,7 @@ contract StakingTemplate is Ownable {
             openedPools[pid].canRemove = true;
         }
         openedPools[pid].hasStopped = true;
+        openedPools[pid].poolRatio = 0;
     }
 
     function startPool(uint8 pid) public onlyAdmin {
@@ -676,9 +685,10 @@ contract StakingTemplate is Ownable {
         lastRewardBlock = currentBlock;
     }
 
-    function _checkRatioSum(uint16[] memory ratios) private pure {
+    function _checkRatioSum(uint16[] memory ratios) private view {
         uint16 ratioSum = 0;
-        for(uint16 i = 0; i < ratios.length; i++) {
+        for(uint8 i = 0; i < ratios.length; i++) {
+            if (openedPools[i].hasStopped) continue;
             ratioSum += ratios[i];
         }
         require(ratioSum == 10000, 'Ratio summary not equal to 10000');
