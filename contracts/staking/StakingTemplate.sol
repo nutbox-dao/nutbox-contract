@@ -88,7 +88,7 @@ contract StakingTemplate is Ownable {
         uint256 totalStakedAmount;
     }
 
-    uint8 constant MAX_POOLS = 21;
+    uint8 constant MAX_POOLS = 30;
 
     address admin;
     address dev;
@@ -324,16 +324,16 @@ contract StakingTemplate is Ownable {
         openedPools[pid].poolRatio = 0;
     }
 
-    function startPool(uint8 pid) public onlyAdmin {
-        require(openedPools[pid].pid == pid, 'Pool id dismatch');
-        require(openedPools[pid].hasStopped, 'Pool has not been stopped');
-        require(!openedPools[pid].hasRemoved, "Cann't start removed pool");
+    // function startPool(uint8 pid) public onlyAdmin {
+    //     require(openedPools[pid].pid == pid, 'Pool id dismatch');
+    //     require(openedPools[pid].hasStopped, 'Pool has not been stopped');
+    //     require(!openedPools[pid].hasRemoved, "Cann't start removed pool");
 
-        _updatePools();
+    //     _updatePools();
 
-        openedPools[pid].canRemove = false;
-        openedPools[pid].hasStopped = false;
-    }
+    //     openedPools[pid].canRemove = false;
+    //     openedPools[pid].hasStopped = false;
+    // }
 
     function setPoolRatios(uint16[] memory ratios) public onlyAdmin {
         require(numberOfPools >  0, 'No pool exist');
@@ -347,18 +347,18 @@ contract StakingTemplate is Ownable {
         _applyPoolsRatio(ratios);
     }
 
-    function getPoolRatios() public view returns (uint16[MAX_POOLS] memory) {
-        uint16[MAX_POOLS] memory ratios;
-        for(uint16 i = 0; i < numberOfPools; i++) {
-            ratios[i] = openedPools[i].poolRatio;
-        }
-        return ratios;
-    }
+    // function getPoolRatios() public view returns (uint16[MAX_POOLS] memory) {
+    //     uint16[MAX_POOLS] memory ratios;
+    //     for(uint16 i = 0; i < numberOfPools; i++) {
+    //         ratios[i] = openedPools[i].poolRatio;
+    //     }
+    //     return ratios;
+    // }
 
-    function getSinglePoolRatio(uint8 pid) public view returns (uint16) {
-        require(pid < MAX_POOLS, 'Invalid pid');
-        return openedPools[pid].poolRatio;
-    }
+    // function getSinglePoolRatio(uint8 pid) public view returns (uint16) {
+    //     require(pid < MAX_POOLS, 'Invalid pid');
+    //     return openedPools[pid].poolRatio;
+    // }
 
     function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
         require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
@@ -597,13 +597,13 @@ contract StakingTemplate is Ownable {
         return rewards;
     }
 
-    function getUserStakedAmount(uint8 pid, address user) public view returns(uint256) {
-        return openedPools[pid].stakingInfo[user].amount;
-    }
+    // function getUserStakedAmount(uint8 pid, address user) public view returns(uint256) {
+    //     return openedPools[pid].stakingInfo[user].amount;
+    // }
 
-    function getPoolTotalStakedAmount(uint8 pid) public view returns(uint256) {
-        return openedPools[pid].totalStakedAmount;
-    }
+    // function getPoolTotalStakedAmount(uint8 pid) public view returns(uint256) {
+    //     return openedPools[pid].totalStakedAmount;
+    // }
 
     function setAdmin(address _admin) public onlyAdmin {
         admin = _admin;

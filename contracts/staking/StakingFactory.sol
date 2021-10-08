@@ -69,14 +69,6 @@ contract StakingFactory is NoDelegateCall, AccessControl {
         (bool success2,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
         require(success2, "failed to call TrustlessAssetHandler.setWhitelist");
 
-        // add feast into whitelist of ERC721AssetHandler
-        (bool success3,) = IRegistryHub(registryHub).getERC721AssetHandler().call(data);
-        require(success3, "failed to call ERC721AssetHandler.setWhitelist");
-
-        // add feast into whitelist of ERC1155AssetHandler
-        (bool success4,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
-        require(success4, "failed to call TrustlessAssetHandler.setWhitelist");
-
         // save record
         stakingFeastRecord[msg.sender].push(address(feastAddress));
         stakingFeastCounter[msg.sender] = stakingFeastCounter[msg.sender] + 1;
