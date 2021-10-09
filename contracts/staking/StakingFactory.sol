@@ -3,11 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '@openzeppelin/contracts/access/AccessControl.sol';
-import '../MintableERC20.sol';
-import '../common/Types.sol';
 import './StakingTemplate.sol';
-import '../NoDelegateCall.sol';
 import './calculators/ICalculator.sol';
 
 /**
@@ -15,7 +11,7 @@ import './calculators/ICalculator.sol';
  *
  * This is the entry contract that user start to create their own staking economy.
  */
-contract StakingFactory is NoDelegateCall, AccessControl {
+contract StakingFactory {
 
     address public registryHub;
 
@@ -26,15 +22,8 @@ contract StakingFactory is NoDelegateCall, AccessControl {
 
     event StakingFeastCreated(address indexed creater, address stakingFeast, bytes32 rewardAsset);
 
-    modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
-        _;
-    }
-
     constructor(address _registryHub) {
         registryHub = _registryHub;
-
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     // only owner of reward token can call this method 
@@ -42,9 +31,9 @@ contract StakingFactory is NoDelegateCall, AccessControl {
         bytes32 _rewardAsset,
         address _rewardCalculator,
         bytes calldata policy
-    ) public noDelegateCall {
+    ) public {
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
-        require(tokenAddress != address(0), 'Reward asset is not registered');
+        require(tokenAddress != address(0), 'RANR'); // reward asset not registerd
 
         StakingTemplate feastAddress = new StakingTemplate(registryHub);
 
@@ -63,21 +52,20 @@ contract StakingFactory is NoDelegateCall, AccessControl {
             address(feastAddress)
         );
         (bool success1,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        require(success1, "failed to call ERC20AssetHandler.setWhitelist");
+        require(success1, "FERC20");
 
         // add feast into whitelist of TrustlessAssetHandler
         (bool success2,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
-        require(success2, "failed to call TrustlessAssetHandler.setWhitelist");
+        require(success2, "Ftrustless");
+
+        // add feast into whitelist of ERC721AssetHandler
+        (bool success3,) = IRegistryHub(registryHub).getERC721AssetHandler().call(data);
+        require(success3, "FERC721");
 
         // save record
         stakingFeastRecord[msg.sender].push(address(feastAddress));
         stakingFeastCounter[msg.sender] = stakingFeastCounter[msg.sender] + 1;
 
         emit StakingFeastCreated(msg.sender, address(feastAddress), _rewardAsset);
-    }
-
-    function adminRenonceAdmin(address _newAdmin) external onlyAdmin {
-        grantRole(DEFAULT_ADMIN_ROLE, _newAdmin);
-        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }
