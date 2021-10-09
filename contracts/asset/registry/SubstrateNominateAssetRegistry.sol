@@ -14,6 +14,7 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
     struct Metadata {
         uint8 chainId;
         bytes32 validatorAccount;
+        bytes properties;
     }
 
     struct Properties {
@@ -56,7 +57,8 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
 
         Metadata memory meta = Metadata({
             chainId: chainId,
-            validatorAccount: validatorAccount
+            validatorAccount: validatorAccount,
+            properties: properties
         });
 
         // check homeLocation

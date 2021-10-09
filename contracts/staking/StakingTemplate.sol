@@ -88,13 +88,11 @@ contract StakingTemplate is Ownable {
         uint256 totalStakedAmount;
     }
 
-    uint8 constant MAX_POOLS = 21;
-
     address admin;
     address dev;
     uint16 devRewardRatio;    // actually fee is reward.mult(devRewardRatio).div(10000)
     uint8 public numberOfPools;
-    Pool[MAX_POOLS] public openedPools;
+    Pool[30] public openedPools;
     uint256 public lastRewardBlock;
     bytes32 public rewardAsset;
     address factory;
@@ -110,7 +108,7 @@ contract StakingTemplate is Ownable {
     event WithdrawRewards(address nutboxAccount, uint256 amount);
 
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Account is not the admin");
+        require(msg.sender == admin, "NA"); // not admin
         _;
     }
 
@@ -133,7 +131,7 @@ contract StakingTemplate is Ownable {
         bytes32 _rewardAsset,
         address _rewardCalculator
     ) public {
-        require(msg.sender == factory, 'Only Nutbox factory contract can create staking feast'); // sufficient check
+        require(msg.sender == factory, 'WP'); // wrong permission
 
         admin = _admin;
         dev = _admin;
@@ -144,40 +142,19 @@ contract StakingTemplate is Ownable {
     }
 
     function adminDepositReward(uint256 amount) public onlyAdmin {
-        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
-        bytes memory data = abi.encodeWithSignature(
-            "lockAsset(bytes32,bytes32,address,uint256)",
-            source,
+       _lockAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))),
             rewardAsset,
             msg.sender,
-            amount
-        );
-        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        require(success, "failed to call lockAsset");
+            amount);
     }
 
     function adminWithdrawReward(uint256 amount) public onlyAdmin {
-        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
-        bytes memory data = abi.encodeWithSignature(
-            "unlockAsset(bytes32,bytes32,address,uint256)",
-            source,
-            rewardAsset,
-            msg.sender,
-            amount
-        );
-        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        require(success, "failed to call unlockAsset");
+        _lockAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))), rewardAsset, msg.sender, amount);
     }
 
-    // function getCurrentDeposit() public view returns(uint256) {
-    //     bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset));
-    //     address erc20Handler = IRegistryHub(registryHub).getERC20AssetHandler();
-    //     return ERC20AssetHandler(erc20Handler).getBalance(source);
-    // }
-
-    function addPool(bytes32 pair, string memory poolName, uint16[] memory ratios) public onlyAdmin returns (uint8) {
-        require(numberOfPools < MAX_POOLS, 'Exceed MAX_POOLS, can not add pool any more');
-        require((numberOfPools + 1) == ratios.length, 'Wrong ratio count');
+    function addPool(bytes32 pair, string memory poolName, uint16[] memory ratios) public onlyAdmin{
+        require(numberOfPools < 30, 'LPL');
+        require((numberOfPools + 1) == ratios.length, 'WRC'); // wrong pool ratio count
 
         // precheck ratios summary
         _checkRatioSum(ratios);
@@ -185,16 +162,7 @@ contract StakingTemplate is Ownable {
         bytes32 NUT = IRegistryHub(registryHub).getNUT();
         uint256 stakedNUT = IRegistryHub(registryHub).getStakedNUT();
         if (stakedNUT != 0) {
-            bytes32 source = keccak256(abi.encodePacked(address(this), numberOfPools, bytes("NUT")));
-            bytes memory data = abi.encodeWithSignature(
-                "lockAsset(bytes32,bytes32,address,uint256)",
-                source,
-                NUT,
-                msg.sender,
-                stakedNUT
-            );
-            (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-            require(success, "failed to call lockAsset");
+            _lockAsset(keccak256(abi.encodePacked(address(this), numberOfPools, bytes("NUT"))), NUT, msg.sender, stakedNUT);
         }
 
         _updatePools();
@@ -207,7 +175,7 @@ contract StakingTemplate is Ownable {
                 numberOfPools
             );
             (bool success,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
-            require(success, "failed to call attachPool");
+            require(success, "FAP");
         }
 
         openedPools[numberOfPools].pid = numberOfPools;
@@ -226,44 +194,32 @@ contract StakingTemplate is Ownable {
         // _applyPoolsRatio never failed
         _applyPoolsRatio(ratios);
         emit Addpool(pair, poolName);
-        return numberOfPools;
     }
 
     function removePool(uint8 pid) public onlyAdmin {
-        require(openedPools[pid].pid == pid, 'Pool id dismatch');
-        require(openedPools[pid].hasStopped, 'Pool has not been stopped');
-        require(openedPools[pid].canRemove, 'Pool can not be removed');
+        require(openedPools[pid].pid == pid, 'WP'); // wrong pid
+        require(openedPools[pid].hasStopped, 'PNS'); //Pool has not been stopped
+        require(openedPools[pid].canRemove, 'PNR'); // Pool can not be removed'
 
         openedPools[pid].hasRemoved = true;
 
-        uint256 stakedNUT = openedPools[pid].stakedNUT;
-        if (stakedNUT != 0){
+        if (openedPools[pid].stakedNUT != 0){
             bytes32 NUT = openedPools[pid].NUT;
-            bytes32 source = keccak256(abi.encodePacked(address(this), pid, bytes("NUT")));
-            bytes memory data = abi.encodeWithSignature(
-                "unlockAsset(bytes32,bytes32,address,uint256)",
-                source,
-                NUT,
-                msg.sender,
-                stakedNUT
-            );
-            (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-            openedPools[pid].stakedNUT = 0;
-            require(success, "failed to call unlockAsset");
+            _unlockAsset(keccak256(abi.encodePacked(address(this), pid, bytes("NUT"))),
+             NUT, msg.sender, openedPools[pid].stakedNUT);
         }
     }
 
     // Admin should call this methods multiple times until all users get refunded,
     // then pool.canRemove set to true, means pool can be removed safely.
     function tryWithdraw(uint8 pid) public onlyAdmin {
-        require(openedPools[pid].pid == pid, 'Pool id dismatch');
-        require(openedPools[pid].hasStopped, 'Pool has not been stopped');
-        require(openedPools[pid].stakingList.length > 0, 'No need to refund');
+        require(openedPools[pid].pid == pid, 'WP'); // wrong pid
+        require(openedPools[pid].hasStopped, 'PNS');
+        require(openedPools[pid].stakingList.length > 0, 'PNR');
 
         bool isTrustless = IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair);
         // Maybe need to change step to 50 on ethereum mainnet
         Pool storage pool = openedPools[pid];
-        uint8 max_times = 100;
         uint8 refund_times = 0;
         uint256 current_length = pool.stakingList.length;
         while (current_length > 0) {
@@ -272,16 +228,7 @@ contract StakingTemplate is Ownable {
             if (amount > 0) {
                 // refund staking if it's home chain asset
                 if (!isTrustless){
-                    bytes32 source = keccak256(abi.encodePacked(address(this), pid, pool.stakingPair));
-                    bytes memory data = abi.encodeWithSignature(
-                        "unlockAsset(bytes32,bytes32,address,uint256)",
-                        source,
-                        pool.stakingPair,
-                        depositor,
-                        amount
-                    );
-                    (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-                    require(success, "failed to call unlockAsset");
+                    _unlockAsset(keccak256(abi.encodePacked(address(this), pid, pool.stakingPair)), pool.stakingPair, depositor, amount);
                 }
 
                 // update pool data
@@ -295,15 +242,15 @@ contract StakingTemplate is Ownable {
                 refund_times = refund_times + 1;
             }
             current_length = current_length - 1;
-            if (refund_times == max_times) break;
+            if (refund_times == 100) break;
         }
         if (current_length == 0) openedPools[pid].canRemove = true;
     }
 
     // Stop pool, then admin should call tryWithdraw() to send back assets that user staked into this pool.
     function stopPool(uint8 pid) public onlyAdmin {
-        require(openedPools[pid].pid == pid, 'Pool id dismatch');
-        require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
+        require(openedPools[pid].pid == pid, 'WP');
+        require(!openedPools[pid].hasStopped, 'PHS'); // pool has stopped
         uint8 opendPoolCount = 0;
         for(uint8 i = 0; i < numberOfPools; i++) {
             if (!openedPools[i].hasStopped){
@@ -311,7 +258,7 @@ contract StakingTemplate is Ownable {
             }
         }
         if (opendPoolCount > 1){
-            require(openedPools[pid].poolRatio == 0, 'Must set pool ratio to 0 first');
+            require(openedPools[pid].poolRatio == 0, 'PR0'); // set pool ratio to 0 first
         }
 
         _updatePools();
@@ -324,20 +271,9 @@ contract StakingTemplate is Ownable {
         openedPools[pid].poolRatio = 0;
     }
 
-    function startPool(uint8 pid) public onlyAdmin {
-        require(openedPools[pid].pid == pid, 'Pool id dismatch');
-        require(openedPools[pid].hasStopped, 'Pool has not been stopped');
-        require(!openedPools[pid].hasRemoved, "Cann't start removed pool");
-
-        _updatePools();
-
-        openedPools[pid].canRemove = false;
-        openedPools[pid].hasStopped = false;
-    }
-
     function setPoolRatios(uint16[] memory ratios) public onlyAdmin {
-        require(numberOfPools >  0, 'No pool exist');
-        require((numberOfPools) == ratios.length, 'Wrong ratio count');
+        require(numberOfPools >  0, 'NPE'); // No pool exist
+        require((numberOfPools) == ratios.length, 'WRC'); // wrong ratio counts
 
         // precheck ratios summary
         _checkRatioSum(ratios);
@@ -347,24 +283,11 @@ contract StakingTemplate is Ownable {
         _applyPoolsRatio(ratios);
     }
 
-    function getPoolRatios() public view returns (uint16[MAX_POOLS] memory) {
-        uint16[MAX_POOLS] memory ratios;
-        for(uint16 i = 0; i < numberOfPools; i++) {
-            ratios[i] = openedPools[i].poolRatio;
-        }
-        return ratios;
-    }
-
-    function getSinglePoolRatio(uint8 pid) public view returns (uint16) {
-        require(pid < MAX_POOLS, 'Invalid pid');
-        return openedPools[pid].poolRatio;
-    }
-
     function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
-        require(!openedPools[pid].hasStopped, 'Pool already has been stopped');
+        require(!openedPools[pid].hasStopped, 'PHS');
 
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
+            require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'WS');//Sender is not trustless asset handler
             internalDeposit(pid, depositor, amount, _bindAccount);
         }else{
             internalDeposit(pid, msg.sender, amount, _bindAccount);
@@ -373,7 +296,7 @@ contract StakingTemplate is Ownable {
 
     function internalDeposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) private {
         // check pid
-        require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
+        require(numberOfPools > 0 && numberOfPools > pid, 'PNE'); // pool not exist
         // check amount
         if (amount == 0) return;
 
@@ -407,16 +330,8 @@ contract StakingTemplate is Ownable {
         }
 
         if (!IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            bytes32 source = keccak256(abi.encodePacked(address(this), pid, openedPools[pid].stakingPair));
-            bytes memory data = abi.encodeWithSignature(
-                "lockAsset(bytes32,bytes32,address,uint256)",
-                source,
-                openedPools[pid].stakingPair,
-                depositor,
-                amount
-            );
-            (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-            require(success, "failed to call lockAsset");
+            _lockAsset(keccak256(abi.encodePacked(address(this), pid, openedPools[pid].stakingPair)),
+             openedPools[pid].stakingPair, depositor, amount);
         }
 
         openedPools[pid].stakingInfo[depositor].amount = openedPools[pid].stakingInfo[depositor].amount.add(amount);
@@ -429,7 +344,7 @@ contract StakingTemplate is Ownable {
 
     function withdraw(uint8 pid, address depositor, uint256 amount) public {
         if (IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'Sender is not trustless asset handler');
+            require(IRegistryHub(registryHub).getTrustlessAssetHandler() == msg.sender, 'WS');
             internalWithdraw(pid, depositor, amount);
         }else{
             internalWithdraw(pid, msg.sender, amount);
@@ -438,7 +353,7 @@ contract StakingTemplate is Ownable {
 
     function internalWithdraw(uint8 pid, address depositor, uint256 amount) private {
         // check pid
-        require(numberOfPools > 0 && numberOfPools > pid, 'Pool does not exist');
+        require(numberOfPools > 0 && numberOfPools > pid, 'PNE');
         // check withdraw amount
         if (amount == 0) return;
         // check deposited amount
@@ -458,16 +373,8 @@ contract StakingTemplate is Ownable {
             withdrawAmount = amount;
 
         if (!IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair)) {
-            bytes32 source = keccak256(abi.encodePacked(address(this), pid, openedPools[pid].stakingPair));
-            bytes memory data = abi.encodeWithSignature(
-                "unlockAsset(bytes32,bytes32,address,uint256)",
-                source,
-                openedPools[pid].stakingPair,
-                depositor,
-                withdrawAmount
-            );
-            (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-            require(success, "failed to call unlockAsset");
+            _unlockAsset(keccak256(abi.encodePacked(address(this), pid, openedPools[pid].stakingPair)),
+             openedPools[pid].stakingPair, depositor, withdrawAmount);
         }
 
         openedPools[pid].stakingInfo[depositor].amount = openedPools[pid].stakingInfo[depositor].amount.sub(withdrawAmount);
@@ -510,16 +417,8 @@ contract StakingTemplate is Ownable {
         availableRewards = openedPools[pid].stakingInfo[msg.sender].availableRewards;
 
         // transfer rewards to user
-        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
-        bytes memory data = abi.encodeWithSignature(
-            "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
-            source,
-            rewardAsset,
-            msg.sender,
-            availableRewards
-        );
-        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        require(success, "failed to call unlockOrMintAsset");
+        ERC20AssetHandler(IRegistryHub(registryHub).getERC20AssetHandler()).unlockOrMintAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))),
+        rewardAsset, msg.sender, availableRewards);
 
         // after tranfer successfully, update staking info
         openedPools[pid].stakingInfo[msg.sender].userDebt = openedPools[pid].stakingInfo[msg.sender].amount.mul(openedPools[pid].shareAcc).div(1e12);
@@ -552,16 +451,8 @@ contract StakingTemplate is Ownable {
         }
 
         // transfer rewards to user
-        bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
-        bytes memory data = abi.encodeWithSignature(
-            "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
-            source,
-            rewardAsset,
-            msg.sender,
-            totalAvailableRewards
-        );
-        (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-        require(success, "failed to call unlockOrMintAsset");
+        ERC20AssetHandler(IRegistryHub(registryHub).getERC20AssetHandler()).unlockOrMintAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))),
+        rewardAsset, msg.sender, totalAvailableRewards);
 
         // after tranfer successfully, update staking info
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
@@ -601,10 +492,6 @@ contract StakingTemplate is Ownable {
         return openedPools[pid].stakingInfo[user].amount;
     }
 
-    function getPoolTotalStakedAmount(uint8 pid) public view returns(uint256) {
-        return openedPools[pid].totalStakedAmount;
-    }
-
     function setAdmin(address _admin) public onlyAdmin {
         admin = _admin;
     }
@@ -622,7 +509,7 @@ contract StakingTemplate is Ownable {
     }
 
     function setDevRewardRatio(uint16 _ratio) public onlyAdmin {
-        require(_ratio <= 10000, 'can not set ratio greater than 10000');
+        require(_ratio <= 10000, 'LPR'); // Pool ratio is exccedd 10000
 
         _updatePools();
         
@@ -634,7 +521,7 @@ contract StakingTemplate is Ownable {
     }
 
     function getUserDepositInfo(uint8 pid, address user) public view returns(UserStakingInfo memory) {
-        require(pid < numberOfPools, "Pool does not exist!");
+        require(pid < numberOfPools, "PNE");
         return openedPools[pid].stakingInfo[user];
     }
 
@@ -659,16 +546,8 @@ contract StakingTemplate is Ownable {
             if (devRewardRatio > 0) {
                 // only send rewards belong to dev, reward belong to user would send when
                 // they withdraw reward manually
-                bytes32 source = keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin")));
-                bytes memory data = abi.encodeWithSignature(
-                    "unlockOrMintAsset(bytes32,bytes32,address,uint256)",
-                    source,
-                    rewardAsset,
-                    dev,
-                    rewardsReadyToMinted.mul(devRewardRatio).div(10000)
-                );
-                (bool success,) = IRegistryHub(registryHub).getERC20AssetHandler().call(data);
-                require(success, "failed to call unlockOrMintAsset");
+                ERC20AssetHandler(IRegistryHub(registryHub).getERC20AssetHandler()).unlockOrMintAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))),
+                rewardAsset,dev,rewardsReadyToMinted.mul(devRewardRatio).div(10000));
 
                 // only rewards belong to pools can used to compute shareAcc
                 rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - devRewardRatio).div(10000);
@@ -691,19 +570,33 @@ contract StakingTemplate is Ownable {
             if (openedPools[i].hasStopped) continue;
             ratioSum += ratios[i];
         }
-        require(ratioSum == 10000, 'Ratio summary not equal to 10000');
+        require(ratioSum == 10000, 'WPS');//Ratio summary not equal to 10000
     }
 
     /**
      * @dev Iterate every pool to update their ratio. 
      * Every ratio is an integer between [0, 10000], the summuary of all pool's ration should 
      * equal to 10000.
-     * Because pools always less than MAX_POOLS, so the loop is in control
+     * Because pools always less than 30, so the loop is in control
      */
     function _applyPoolsRatio(uint16[] memory ratios) private {
         // update pool ratio index
         for(uint8 i = 0; i < numberOfPools; i++) {
             openedPools[i].poolRatio = ratios[i];
         }
+    }
+
+    function _lockAsset(bytes32 source, bytes32 assetId, address depositor, uint256 amount) private {
+         ERC20AssetHandler(IRegistryHub(registryHub).getERC20AssetHandler()).lockAsset(source,
+            assetId,
+            depositor,
+            amount);
+    }
+
+    function _unlockAsset(bytes32 source, bytes32 assetId, address depositor, uint256 amount) private {
+        ERC20AssetHandler(IRegistryHub(registryHub).getERC20AssetHandler()).unlockAsset(source,
+            assetId,
+            depositor,
+            amount);
     }
 }

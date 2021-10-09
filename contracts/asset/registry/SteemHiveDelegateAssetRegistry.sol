@@ -15,6 +15,7 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
         uint8 chainId;
         string assetType;
         bytes agentAccount;
+        bytes properties;
     }
 
     struct Properties {
@@ -61,7 +62,8 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
         Metadata memory meta = Metadata({
             chainId: chainId,
             assetType: assetType,
-            agentAccount: agentAccount
+            agentAccount: agentAccount,
+            properties: properties
         });
 
         // check homeLocation
