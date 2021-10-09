@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
-import '../../common/libraries/BytesLib.sol';
+import 'solidity-bytes-utils/contracts/BytesLib.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {

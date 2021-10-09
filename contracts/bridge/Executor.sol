@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '@openzeppelin/contracts/access/AccessControl.sol';
-import '../common/libraries/BytesLib.sol';
+import 'solidity-bytes-utils/contracts/BytesLib.sol';
 import './interfaces/IExecutor.sol';
 import '../asset/interfaces/IRegistryHub.sol';
 

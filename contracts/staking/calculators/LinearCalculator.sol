@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import './ICalculator.sol';
 import '../../common/Types.sol';
-import '../../common/libraries/BytesLib.sol';
+import 'solidity-bytes-utils/contracts/BytesLib.sol';
 
 /**
  * LinearCalculator is a distribution mechanism that people can set a reward on specific blocks height.
