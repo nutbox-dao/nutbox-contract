@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
-import '../../common/libraries/BytesLib.sol';
+import 'solidity-bytes-utils/contracts/BytesLib.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
@@ -46,13 +46,13 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
     //                                                      8-107 are reserved for FRAME based standalone chains
     //      validatorAccount    bytes32     bytes[1, end]
     function registerAsset(bytes memory foreignLocation, address homeLocation, bytes memory properties) external override {
-        require(foreignLocation.length == 52, 'SubstrateNominateAssetRegistry: invalid foreignLocation format');
+        require(foreignLocation.length == 37, 'SubstrateNominateAssetRegistry: invalid foreignLocation format');
 
         // check foreignLocation
         uint8 chainId = foreignLocation.toUint8(0);
         require(chainId >= 2 && chainId <= 107, 'SubstrateNominateAssetRegistry: invalid chain id');
         uint32 validatorAccountLen = foreignLocation.toUint32(1);
-        require(validatorAccountLen == 47, 'Wrong substrate account address');
+        require(validatorAccountLen == 32, 'Wrong substrate account address');
         bytes32 validatorAccount = foreignLocation.toBytes32(5);
 
         Metadata memory meta = Metadata({
