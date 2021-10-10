@@ -30,7 +30,6 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
     }
 
     function registerAsset(bytes memory foreignLocation, address homeLocation, bytes memory properties) external override {
-
         require(foreignLocation.length == 0, 'HomeChainAssetRegistry: invalid foreignLocation format');
         require(homeLocation != address(0), 'HomeChainAssetRegistry: homeLocation should not be 0');
 

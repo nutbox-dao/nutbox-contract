@@ -49,14 +49,14 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
     //      communityAccountLenght  uint32  bytes[9, 12]
     //      communityAccount    bytes32     bytes[13, end]
     function registerAsset(bytes memory foreignLocation, address homeLocation, bytes memory properties) external override {
-        require(foreignLocation.length == 60, 'SubstrateCrowdloanAssetRegistry: invalid foreignLocation format');
+        require(foreignLocation.length == 45, 'SubstrateCrowdloanAssetRegistry: invalid foreignLocation format');
         // check foreignLocation
         uint8 chainId = foreignLocation.toUint8(0);
         require(chainId >= 2 && chainId <= 7, 'SubstrateCrowdloanAssetRegistry: invalid chain id');
         uint32 paraId = foreignLocation.toUint32(1);
         uint32 trieIndex = foreignLocation.toUint32(5);
         uint32 communityAccountLen = foreignLocation.toUint32(9);
-        require(communityAccountLen == 47, 'Wrong substrate account address');
+        require(communityAccountLen == 32, 'Wrong substrate account address');
         bytes32 communityAccount = foreignLocation.toBytes32(13);
 
         Metadata memory meta = Metadata({
