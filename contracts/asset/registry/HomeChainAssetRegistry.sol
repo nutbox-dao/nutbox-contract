@@ -12,11 +12,18 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
     address public registryHub;
     address public erc20Factory;
 
+    struct Metadata {
+        address homeLocation;
+        bytes properties;
+    }
+
     event HomeChainAssetRegistered(
         address indexed owner,
         bytes32 indexed id,
         address indexed homeLocation
     );
+
+    mapping (bytes32 => Metadata) public idToMetadata;
 
     constructor(address _registryHub, address _erc20Factory) {
         require(_registryHub != address(0), 'Invalid registry hub address');
@@ -45,6 +52,13 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
         (bool success,) = registryHub.call(data);
         require(success, "failed to call register hub");
+
+        Metadata memory meta = Metadata({
+            homeLocation: homeLocation,
+            properties: properties
+        });
+        idToMetadata[assetId] = meta;
+
         emit HomeChainAssetRegistered(msg.sender, assetId, homeLocation);
     }
 }

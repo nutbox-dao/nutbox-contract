@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
-import '../../common/libraries/BytesLib.sol';
+import 'solidity-bytes-utils/contracts/BytesLib.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
@@ -16,6 +16,7 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
         uint32 paraId;
         uint32 trieIndex;
         bytes32 communityAccount;
+        bytes properties;
     }
 
     struct Properties {
@@ -63,7 +64,8 @@ contract SubstrateCrowdloanAssetRegistry is IAssetRegistry, Ownable {
             chainId: chainId,
             paraId: paraId,
             trieIndex: trieIndex,
-            communityAccount: communityAccount
+            communityAccount: communityAccount,
+            properties: properties
         });
 
         // check homeLocation

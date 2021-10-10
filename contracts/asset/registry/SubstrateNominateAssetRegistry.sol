@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
-import '../../common/libraries/BytesLib.sol';
+import 'solidity-bytes-utils/contracts/BytesLib.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
@@ -14,6 +14,7 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
     struct Metadata {
         uint8 chainId;
         bytes32 validatorAccount;
+        bytes properties;
     }
 
     struct Properties {
@@ -56,7 +57,8 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
 
         Metadata memory meta = Metadata({
             chainId: chainId,
-            validatorAccount: validatorAccount
+            validatorAccount: validatorAccount,
+            properties: properties
         });
 
         // check homeLocation

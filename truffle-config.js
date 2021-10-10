@@ -94,6 +94,10 @@ module.exports = {
     }
   },
 
+  plugins: [
+    'truffle-contract-size'
+  ],
+
   // Truffle DB is currently disabled by default; to enable it, change enabled: false to enabled: true
   //
   // Note: if you migrated your contracts prior to enabling this field in your Truffle project and want

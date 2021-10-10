@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
-import '../../common/libraries/BytesLib.sol';
+import 'solidity-bytes-utils/contracts/BytesLib.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
@@ -15,6 +15,7 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
         uint8 chainId;
         string assetType;
         bytes agentAccount;
+        bytes properties;
     }
 
     struct Properties {
@@ -61,7 +62,8 @@ contract SteemHiveDelegateAssetRegistry is IAssetRegistry, Ownable {
         Metadata memory meta = Metadata({
             chainId: chainId,
             assetType: assetType,
-            agentAccount: agentAccount
+            agentAccount: agentAccount,
+            properties: properties
         });
 
         // check homeLocation
