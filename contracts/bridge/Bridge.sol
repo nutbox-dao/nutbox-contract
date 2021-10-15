@@ -59,6 +59,7 @@ contract Bridge is AccessControl, IBridge {
     function adminAddRelayer(address relayer) external onlyAdmin {
         require(relayerRegistry[relayer] == false, 'Address already marked as relayer');
         relayerRegistry[relayer] = true;
+        relayerCount++;
     }
 
     function adminRemoveRelayer(address relayer) external onlyAdmin {

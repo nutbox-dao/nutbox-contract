@@ -149,7 +149,7 @@ contract StakingTemplate is Ownable {
     }
 
     function adminWithdrawReward(uint256 amount) public onlyAdmin {
-        _lockAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))), rewardAsset, msg.sender, amount);
+        _unlockAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))), rewardAsset, msg.sender, amount);
     }
 
     function addPool(bytes32 pair, string memory poolName, uint16[] memory ratios) public onlyAdmin{
