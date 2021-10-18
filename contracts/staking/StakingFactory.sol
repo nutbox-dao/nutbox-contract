@@ -21,8 +21,8 @@ contract StakingFactory {
     mapping (address => uint8) public stakingFeastCounter;
 
     // Store all stakingFeast address that user created
-    uint64 allStakingFeastCount;
-    address[] allStakingFeast;    
+    uint64 public allStakingFeastCount;
+    address[] public allStakingFeast;   
 
     event StakingFeastCreated(address indexed creater, address indexed stakingFeast, bytes32 rewardAsset);
 
