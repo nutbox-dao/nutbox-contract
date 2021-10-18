@@ -20,6 +20,10 @@ contract StakingFactory {
     // owner => counter
     mapping (address => uint8) public stakingFeastCounter;
 
+    // Store all stakingFeast address that user created
+    uint64 allStakingFeastCount;
+    address[] allStakingFeast;    
+
     event StakingFeastCreated(address indexed creater, address stakingFeast, bytes32 rewardAsset);
 
     constructor(address _registryHub) {
@@ -65,6 +69,8 @@ contract StakingFactory {
         // save record
         stakingFeastRecord[msg.sender].push(address(feastAddress));
         stakingFeastCounter[msg.sender] = stakingFeastCounter[msg.sender] + 1;
+        allStakingFeast.push(address(feastAddress));
+        allStakingFeastCount += 1;
 
         emit StakingFeastCreated(msg.sender, address(feastAddress), _rewardAsset);
     }
