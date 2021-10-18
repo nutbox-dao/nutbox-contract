@@ -27,6 +27,8 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
     event BurnAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount);
     event UnlockAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount);
     event MintAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount);
+    event SetRegistryHub(address registryHub);
+    event SetWhiteList(address contractAddress);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -50,6 +52,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
     function setRegistryHub(address _registryHub) public onlyAdmin {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
+        emit SetRegistryHub(_registryHub);
     }
 
     function adminAddWhitelistManager(address _manager) public onlyAdmin {
@@ -67,6 +70,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
     function setWhitelist(address _contract) public onlyAdminOrWhitelistManager {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
+        emit SetWhiteList(_contract);
     }
 
     function lockOrBurnAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) override external {

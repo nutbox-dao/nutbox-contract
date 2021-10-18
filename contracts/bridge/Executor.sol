@@ -16,6 +16,10 @@ contract Executor is AccessControl, IExecutor {
     address bridge;
     string version = "executor:version 1.0";
 
+    event AdminSetBridge(address bridge);
+    event AdminRenonceAdmin(address newAdmin);
+    event ExecuteProposal(bytes extrinsic);
+
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
         _;
@@ -35,11 +39,13 @@ contract Executor is AccessControl, IExecutor {
     function adminSetBridge(address _bridge) public onlyAdmin {
         require(_bridge != address(0), 'Invalid bridge address');
         bridge = _bridge;
+        emit AdminSetBridge(_bridge);
     }
 
     function adminRenonceAdmin(address _newAdmin) external onlyAdmin {
         grantRole(DEFAULT_ADMIN_ROLE, _newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        emit AdminRenonceAdmin(_newAdmin);
     }
 
     function executeProposal(bytes calldata extrinsic) override external onlyBridge {
@@ -104,6 +110,7 @@ contract Executor is AccessControl, IExecutor {
             } else {
                 require(false, 'Unsupported asset type');
             }
+            emit ExecuteProposal(extrinsic);
         } else {    // message
             // TODO
         }

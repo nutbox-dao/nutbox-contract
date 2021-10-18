@@ -33,6 +33,9 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     event WhitelistManagerRemoved(address manager);
     event AttachedPool(bytes32 assetId, address stakingFeast, uint8 pid);
     event BalanceUpdated(bytes32 source, bytes32 assetId, address account, uint256 amount, string bindAccount);
+    event SetExecutor(address executor);
+    event SetRegistryHub(address registryHub);
+    event SetWhiteList(address contractAddress);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -63,11 +66,13 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     function setExecutor(address _executor) public onlyAdmin {
         require(_executor != address(0), 'Invalid executor hub address');
         executor = _executor;
+        emit SetExecutor(_executor);
     }
 
     function setRegistryHub(address _registryHub) public onlyAdmin {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
+        emit SetRegistryHub(_registryHub);
     }
 
     function adminAddWhitelistManager(address _manager) public onlyAdmin {
@@ -85,6 +90,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     function setWhitelist(address _contract) public onlyAdminOrWhitelistManager {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
+        emit SetWhiteList(_contract);
     }
 
     function attachPool(bytes32 assetId, address stakingFeast, uint8 pid) external {

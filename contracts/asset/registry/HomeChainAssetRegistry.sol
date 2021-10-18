@@ -22,6 +22,7 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
         bytes32 indexed id,
         address indexed homeLocation
     );
+    event SetRegistryHub(address registryHub);
 
     mapping (bytes32 => Metadata) public idToMetadata;
 
@@ -34,6 +35,7 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
     function setRegistryHub(address _registryHub) public onlyOwner {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
+        emit SetRegistryHub(_registryHub);
     }
 
     function registerAsset(bytes memory foreignLocation, address homeLocation, bytes memory properties) external override {
