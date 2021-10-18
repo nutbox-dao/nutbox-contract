@@ -151,7 +151,7 @@ contract Bridge is AccessControl, IBridge {
         bytes32 proposalId = keccak256(abi.encodePacked(chainId, sequence, extrinsicHash));
         Types.Proposal storage proposal = proposalHistory[proposalId];
 
-        require(proposal.status != Types.ProposalStatus.Cancelled, "Proposal already cancelled");
+        require(proposal.status < Types.ProposalStatus.Cancelled, "Proposal already cancelled or executed");
 
         proposal.status = Types.ProposalStatus.Cancelled;
         emit ProposalCancelled(proposal, msg.sender);
