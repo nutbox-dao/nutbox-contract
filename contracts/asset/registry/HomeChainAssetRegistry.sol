@@ -5,12 +5,10 @@ pragma experimental ABIEncoderV2;
 
 import '../interfaces/IAssetRegistry.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-import '../ERC20Factory.sol';
 
 contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
     address public registryHub;
-    address public erc20Factory;
 
     struct Metadata {
         address homeLocation;
@@ -26,11 +24,9 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
     mapping (bytes32 => Metadata) public idToMetadata;
 
-    constructor(address _registryHub, address _erc20Factory) {
+    constructor(address _registryHub) {
         require(_registryHub != address(0), 'Invalid registry hub address');
-        require(_erc20Factory != address(0), 'Invalid address');
         registryHub = _registryHub;
-        erc20Factory = _erc20Factory;
     }
 
     function setRegistryHub(address _registryHub) public onlyOwner {

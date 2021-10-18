@@ -28,7 +28,6 @@ contract LinearCalculator is ICalculator, Ownable {
     using SafeMath for uint256;
     using BytesLib for bytes;
 
-    uint8 constant MAX_DISTRIBUTIONS = 6;
     address admin;
     address factory;
     mapping (address => Types.Distribution[]) public distributionErasMap;
