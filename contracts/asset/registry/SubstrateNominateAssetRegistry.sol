@@ -40,7 +40,7 @@ contract SubstrateNominateAssetRegistry is IAssetRegistry, Ownable {
     function setRegistryHub(address _registryHub) public onlyOwner {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
-        event SetRegistryHub(_registryHub);
+        emit SetRegistryHub(_registryHub);
     }
 
     //spec of foreignLocation:

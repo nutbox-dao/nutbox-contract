@@ -13,7 +13,7 @@ import '../asset/interfaces/IRegistryHub.sol';
  * This is the entry contract that user start to create their own token.
  */
 contract ERC20Factory {
-    address public registryHub;
+    address public immutable registryHub;
 
     // address => isMintable
     mapping (address => bool) public mintableList;

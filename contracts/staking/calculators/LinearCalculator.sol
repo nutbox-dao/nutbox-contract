@@ -33,7 +33,8 @@ contract LinearCalculator is ICalculator, Ownable {
     mapping (address => Types.Distribution[]) public distributionErasMap;
     mapping (address => uint8) public distributionCountMap;
 
-    event AdminSetStakingFactory(address staking, bytes policy);
+    event AdminSetStakingFactory(address factory);
+    event SetDistributionEra(address staking, bytes policy);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Account is not the admin");
@@ -56,7 +57,9 @@ contract LinearCalculator is ICalculator, Ownable {
     }
 
     function setDistributionEra(address staking, bytes calldata policy) onlyFactory public override returns(bool) {
+        require(staking != address(0), 'Invalid address');
         _applyDistributionEras(staking, policy);
+        emit SetDistributionEra(staking, policy);
         return true;
     }
 

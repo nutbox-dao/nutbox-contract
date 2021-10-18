@@ -95,7 +95,7 @@ contract Bridge is AccessControl, IBridge {
     function adminRenonceAdmin(address _newAdmin) external onlyAdmin {
         grantRole(DEFAULT_ADMIN_ROLE, _newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        event AdminRenonceAdmin(_newAdmin);
+        emit AdminRenonceAdmin(_newAdmin);
     }
 
     function adminDepositAsset(bytes32 assetId, uint256 amount) public onlyAdmin {

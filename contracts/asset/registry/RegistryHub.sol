@@ -45,7 +45,7 @@ contract RegistryHub is IRegistryHub, Ownable {
     }
 
     function setAssetHandlers(address _erc20AssetHandler, address _erc721AssetHandler, address _erc1155AssetHandler, address _trustlessAssetHandler) public onlyOwner {
-        require(_erc20AssetHandler != address(0) && _erc721AssetHandler != address(0) &&  _erc1155AssetHandler != address(0) && _trustlessAssetHandler != address(0) 'Invalid address');
+        require(_erc20AssetHandler != address(0) && _erc721AssetHandler != address(0) &&  _erc1155AssetHandler != address(0) && _trustlessAssetHandler != address(0), 'Invalid address');
         erc20AssetHandler = _erc20AssetHandler;
         erc721AssetHandler = _erc721AssetHandler;
         erc1155AssetHandler = _erc1155AssetHandler;
