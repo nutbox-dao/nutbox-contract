@@ -35,7 +35,7 @@ contract RegistryHub is IRegistryHub, Ownable {
     address erc1155AssetHandler;
     address trustlessAssetHandler;
 
-    event NewAsset(address owner, bytes32 id);
+    event NewAsset(address indexed owner, bytes32 indexed id);
 
     constructor() {
     }

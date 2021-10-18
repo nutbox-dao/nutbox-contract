@@ -24,7 +24,7 @@ contract StakingFactory {
     uint64 allStakingFeastCount;
     address[] allStakingFeast;    
 
-    event StakingFeastCreated(address indexed creater, address stakingFeast, bytes32 rewardAsset);
+    event StakingFeastCreated(address indexed creater, address indexed stakingFeast, bytes32 rewardAsset);
 
     constructor(address _registryHub) {
         registryHub = _registryHub;

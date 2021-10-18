@@ -25,7 +25,7 @@ contract ERC20Factory {
     address[] public allTokens;
     uint64 public allTokensCount;
 
-    event ERC20TokenCreated(address creator, string tokenName, string tokenSymbol, address tokenAddress,bool isMintable);
+    event ERC20TokenCreated(address indexed creator, string tokenName, string tokenSymbol, address indexed tokenAddress,bool isMintable);
 
     constructor(address _registryHub) {
         registryHub = _registryHub;

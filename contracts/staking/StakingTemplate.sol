@@ -102,10 +102,10 @@ contract StakingTemplate is Ownable {
     // fetch address use bound account
     mapping (uint8 => mapping (string => address)) public accountBindMap;
 
-    event Addpool(bytes32 pair, string poolName);
-    event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
-    event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
-    event WithdrawRewards(address nutboxAccount, uint256 amount);
+    event Addpool(bytes32 indexed pair, string poolName);
+    event Deposit(uint8 indexed pid, address indexed nutboxAccount, uint256 amount);
+    event Withdraw(uint8 indexed pid, address indexed nutboxAccount, uint256 amount);
+    event WithdrawRewards(address indexed nutboxAccount, uint256 amount);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "NA"); // not admin
