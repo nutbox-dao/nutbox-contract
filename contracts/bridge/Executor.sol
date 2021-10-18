@@ -12,7 +12,7 @@ contract Executor is AccessControl, IExecutor {
 
     using BytesLib for bytes;
 
-    address registryHub;
+    address immutable registryHub;
     address bridge;
     string version = "executor:version 1.0";
 

@@ -28,7 +28,7 @@ contract LinearCalculator is ICalculator, Ownable {
     using SafeMath for uint256;
     using BytesLib for bytes;
 
-    address admin;
+    address immutable admin;
     address factory;
     mapping (address => Types.Distribution[]) public distributionErasMap;
     mapping (address => uint8) public distributionCountMap;

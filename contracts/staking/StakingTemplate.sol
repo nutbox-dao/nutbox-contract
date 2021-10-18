@@ -95,8 +95,8 @@ contract StakingTemplate is Ownable {
     Pool[30] public openedPools;
     uint256 public lastRewardBlock;
     bytes32 public rewardAsset;
-    address factory;
-    address registryHub;
+    address immutable factory;
+    address immutable registryHub;
     address public rewardCalculator;
 
     // fetch address use bound account

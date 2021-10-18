@@ -17,7 +17,7 @@ contract Bridge is AccessControl, IBridge {
     uint256 public relayerCount;
     uint256 public fee;
     uint256 public expiry;
-    address public registryHub;
+    address public immutable registryHub;
     address public executor;
 
     // relayer => isRelayer

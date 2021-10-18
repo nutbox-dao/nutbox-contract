@@ -13,7 +13,7 @@ import './calculators/ICalculator.sol';
  */
 contract StakingFactory {
 
-    address public registryHub;
+    address public immutable registryHub;
 
     // owner => stakingFeastList
     mapping (address => address[]) public stakingFeastRecord;
