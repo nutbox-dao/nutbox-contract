@@ -136,7 +136,6 @@ contract StakingTemplate is Ownable {
         address _rewardCalculator
     ) public {
         require(msg.sender == factory, 'WP'); // wrong permission
-
         admin = _admin;
         dev = _admin;
         numberOfPools = 0;
@@ -157,8 +156,7 @@ contract StakingTemplate is Ownable {
     }
 
     function addPool(bytes32 pair, string memory poolName, uint16[] memory ratios) public onlyAdmin{
-        require(numberOfPools < 30, 'LPL');
-        require((numberOfPools + 1) == ratios.length, 'WRC'); // wrong pool ratio count
+        require(numberOfPools < 30 && (numberOfPools + 1) == ratios.length, 'WRC');// wrong pool ratio count
 
         // precheck ratios summary
         _checkRatioSum(ratios);
@@ -530,7 +528,6 @@ contract StakingTemplate is Ownable {
     }
 
     function getUserDepositInfo(uint8 pid, address user) public view returns(UserStakingInfo memory) {
-        require(pid < numberOfPools, "PNE");
         return openedPools[pid].stakingInfo[user];
     }
 
