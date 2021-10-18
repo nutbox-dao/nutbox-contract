@@ -17,13 +17,11 @@ contract Bridge is AccessControl, IBridge {
     uint256 public relayerCount;
     uint256 public fee;
     uint256 public expiry;
-    address public registryHub;
+    address public immutable registryHub;
     address public executor;
 
     // relayer => isRelayer
     mapping (address => bool) public relayerRegistry;
-    // chainId => sequence
-    mapping(uint8 => uint64) public chainSequence;
     // proposalId => Proposal
     mapping(bytes32 => Types.Proposal) public proposalHistory;
     // proposalId => relayerAddress => bool
@@ -33,6 +31,13 @@ contract Bridge is AccessControl, IBridge {
     event ProposalCancelled(Types.Proposal proposal, address relayer);
     event ProposalPassed(Types.Proposal proposal, address relayer);
     event ProposalExecuted(Types.Proposal proposal, address relayer);
+    event AdminSetExecutor(address executor);
+    event AdminAddRelayer(address relayer);
+    event AdminRemoveRelayer(address relayer);
+    event AdminSetThreshold(uint256 threshold);
+    event AdminSetFee(uint256 fee);
+    event AdminSetExpiry(uint256 expiry);
+    event AdminRenonceAdmin(address newAdmin);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -54,38 +59,46 @@ contract Bridge is AccessControl, IBridge {
     function adminSetExecutor(address _executor) external onlyAdmin {
         require(_executor != address(0), 'Invalid executor address');
         executor = _executor;
+        emit AdminSetExecutor(_executor);
     }
 
     function adminAddRelayer(address relayer) external onlyAdmin {
         require(relayerRegistry[relayer] == false, 'Address already marked as relayer');
         relayerRegistry[relayer] = true;
+        relayerCount++;
+        emit AdminAddRelayer(relayer);
     }
 
     function adminRemoveRelayer(address relayer) external onlyAdmin {
         require(relayerRegistry[relayer] == true, 'Address has not been marked as relayer');
         relayerRegistry[relayer] = false;
         relayerCount--;
+        emit AdminRemoveRelayer(relayer);
     }
 
     function adminSetThreshold(uint256 _threshold) external onlyAdmin {
         require(_threshold >= 1, 'Invalid threshold value');
         threshold = _threshold;
+        emit AdminSetThreshold(_threshold);
     }
 
     function adminSetFee(uint256 _fee) external onlyAdmin{
         fee = _fee;
+        emit AdminSetFee(_fee);
     }
 
     function adminSetExpiry(uint256 _expiry) external onlyAdmin{
         expiry = _expiry;
+        emit AdminSetExpiry(_expiry);
     }
 
     function adminRenonceAdmin(address _newAdmin) external onlyAdmin {
         grantRole(DEFAULT_ADMIN_ROLE, _newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        emit AdminRenonceAdmin(_newAdmin);
     }
 
-    function adminDepositAsset(bytes32 assetId, uint256 amount) public onlyAdmin {
+    function adminDepositAsset(bytes32 assetId, uint256 amount) external onlyAdmin {
         bytes32 source = keccak256(abi.encodePacked(address(this), assetId));
         bytes memory data = abi.encodeWithSignature(
             "lockAsset(bytes32,bytes32,address,uint256)",
@@ -150,7 +163,7 @@ contract Bridge is AccessControl, IBridge {
         bytes32 proposalId = keccak256(abi.encodePacked(chainId, sequence, extrinsicHash));
         Types.Proposal storage proposal = proposalHistory[proposalId];
 
-        require(proposal.status != Types.ProposalStatus.Cancelled, "Proposal already cancelled");
+        require(proposal.status < Types.ProposalStatus.Cancelled, "Proposal already cancelled or executed");
 
         proposal.status = Types.ProposalStatus.Cancelled;
         emit ProposalCancelled(proposal, msg.sender);
@@ -160,7 +173,7 @@ contract Bridge is AccessControl, IBridge {
         Types.Proposal storage proposal = proposalHistory[proposalId];
 
         if (proposal.status != Types.ProposalStatus.Cancelled) {
-            if (threshold <= 1 || proposal.ayeVotes >= threshold) {
+            if (proposal.ayeVotes >= threshold) {
                 proposal.status = Types.ProposalStatus.Passed;
                 emit ProposalPassed(proposal, msg.sender);
 

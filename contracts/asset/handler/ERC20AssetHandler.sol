@@ -27,6 +27,8 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
     event BurnAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount);
     event UnlockAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount);
     event MintAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount);
+    event SetRegistryHub(address registryHub);
+    event SetWhiteList(address contractAddress);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -47,26 +49,28 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         _setRoleAdmin(WHITELIST_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
-    function setRegistryHub(address _registryHub) public onlyAdmin {
+    function setRegistryHub(address _registryHub) external onlyAdmin {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
+        emit SetRegistryHub(_registryHub);
     }
 
-    function adminAddWhitelistManager(address _manager) public onlyAdmin {
+    function adminAddWhitelistManager(address _manager) external onlyAdmin {
         require(!hasRole(WHITELIST_MANAGER_ROLE, _manager), "Address already in the whitelist manager group");
         grantRole(WHITELIST_MANAGER_ROLE, _manager);
         emit WhitelistManagerAdded(_manager);
     }
 
-    function adminRemoveWhitelistManager(address _manager) public onlyAdmin {
+    function adminRemoveWhitelistManager(address _manager) external onlyAdmin {
         require(hasRole(WHITELIST_MANAGER_ROLE, _manager), "Address not in the whitelist manager group");
         revokeRole(WHITELIST_MANAGER_ROLE, _manager);
         emit WhitelistManagerRemoved(_manager);
     }
 
-    function setWhitelist(address _contract) public onlyAdminOrWhitelistManager {
+    function setWhitelist(address _contract) external onlyAdminOrWhitelistManager {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
+        emit SetWhiteList(_contract);
     }
 
     function lockOrBurnAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) override external {

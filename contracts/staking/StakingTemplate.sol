@@ -95,17 +95,21 @@ contract StakingTemplate is Ownable {
     Pool[30] public openedPools;
     uint256 public lastRewardBlock;
     bytes32 public rewardAsset;
-    address factory;
-    address registryHub;
+    address immutable factory;
+    address immutable registryHub;
     address public rewardCalculator;
 
     // fetch address use bound account
     mapping (uint8 => mapping (string => address)) public accountBindMap;
 
-    event Addpool(bytes32 pair, string poolName);
-    event Deposit(uint8 pid, address nutboxAccount, uint256 amount);
-    event Withdraw(uint8 pid, address nutboxAccount, uint256 amount);
-    event WithdrawRewards(address nutboxAccount, uint256 amount);
+    event Addpool(bytes32 indexed pair, string poolName);
+    event Deposit(uint8 indexed pid, address indexed nutboxAccount, uint256 amount);
+    event Withdraw(uint8 indexed pid, address indexed nutboxAccount, uint256 amount);
+    event WithdrawRewards(address indexed nutboxAccount, uint256 amount);
+    event SetAdmin(address admin);
+    event SetDev(address dev);
+    event SetPoolRatios(uint16[] poolRatios);
+    event SetDevRewardRatio(uint16 devRewardRatio);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "NA"); // not admin
@@ -132,7 +136,6 @@ contract StakingTemplate is Ownable {
         address _rewardCalculator
     ) public {
         require(msg.sender == factory, 'WP'); // wrong permission
-
         admin = _admin;
         dev = _admin;
         numberOfPools = 0;
@@ -141,20 +144,19 @@ contract StakingTemplate is Ownable {
         rewardCalculator = _rewardCalculator;
     }
 
-    function adminDepositReward(uint256 amount) public onlyAdmin {
+    function adminDepositReward(uint256 amount) external onlyAdmin {
        _lockAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))),
             rewardAsset,
             msg.sender,
             amount);
     }
 
-    function adminWithdrawReward(uint256 amount) public onlyAdmin {
-        _lockAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))), rewardAsset, msg.sender, amount);
+    function adminWithdrawReward(uint256 amount) external onlyAdmin {
+        _unlockAsset(keccak256(abi.encodePacked(address(this), rewardAsset, bytes("admin"))), rewardAsset, msg.sender, amount);
     }
 
-    function addPool(bytes32 pair, string memory poolName, uint16[] memory ratios) public onlyAdmin{
-        require(numberOfPools < 30, 'LPL');
-        require((numberOfPools + 1) == ratios.length, 'WRC'); // wrong pool ratio count
+    function addPool(bytes32 pair, string memory poolName, uint16[] memory ratios) external onlyAdmin{
+        require(numberOfPools < 30 && (numberOfPools + 1) == ratios.length, 'WRC');// wrong pool ratio count
 
         // precheck ratios summary
         _checkRatioSum(ratios);
@@ -196,7 +198,7 @@ contract StakingTemplate is Ownable {
         emit Addpool(pair, poolName);
     }
 
-    function removePool(uint8 pid) public onlyAdmin {
+    function removePool(uint8 pid) external onlyAdmin {
         require(openedPools[pid].pid == pid, 'WP'); // wrong pid
         require(openedPools[pid].hasStopped, 'PNS'); //Pool has not been stopped
         require(openedPools[pid].canRemove, 'PNR'); // Pool can not be removed'
@@ -212,7 +214,7 @@ contract StakingTemplate is Ownable {
 
     // Admin should call this methods multiple times until all users get refunded,
     // then pool.canRemove set to true, means pool can be removed safely.
-    function tryWithdraw(uint8 pid) public onlyAdmin {
+    function tryWithdraw(uint8 pid) external onlyAdmin {
         require(openedPools[pid].pid == pid, 'WP'); // wrong pid
         require(openedPools[pid].hasStopped, 'PNS');
         require(openedPools[pid].stakingList.length > 0, 'PNR');
@@ -248,7 +250,7 @@ contract StakingTemplate is Ownable {
     }
 
     // Stop pool, then admin should call tryWithdraw() to send back assets that user staked into this pool.
-    function stopPool(uint8 pid) public onlyAdmin {
+    function stopPool(uint8 pid) external onlyAdmin {
         require(openedPools[pid].pid == pid, 'WP');
         require(!openedPools[pid].hasStopped, 'PHS'); // pool has stopped
         uint8 opendPoolCount = 0;
@@ -271,7 +273,7 @@ contract StakingTemplate is Ownable {
         openedPools[pid].poolRatio = 0;
     }
 
-    function setPoolRatios(uint16[] memory ratios) public onlyAdmin {
+    function setPoolRatios(uint16[] memory ratios) external onlyAdmin {
         require(numberOfPools >  0, 'NPE'); // No pool exist
         require((numberOfPools) == ratios.length, 'WRC'); // wrong ratio counts
 
@@ -281,6 +283,7 @@ contract StakingTemplate is Ownable {
         _updatePools();
 
         _applyPoolsRatio(ratios);
+        emit SetPoolRatios(ratios);
     }
 
     function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
@@ -385,7 +388,7 @@ contract StakingTemplate is Ownable {
         emit Withdraw(pid, depositor, withdrawAmount);
     }
 
-    function update(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public
+    function update(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) external
     {
         uint256 prevAmount = openedPools[pid].stakingInfo[depositor].amount;
 
@@ -399,7 +402,7 @@ contract StakingTemplate is Ownable {
     /**
      * @dev This function would withdraw siingle pool rewards that exist in the pool which available for user
      */    
-    function withdrawPoolRewards(uint8 pid) public {
+    function withdrawPoolRewards(uint8 pid) external {
         // game has not started
         if (lastRewardBlock == 0) return;
 
@@ -430,7 +433,7 @@ contract StakingTemplate is Ownable {
     /**
      * @dev This function would withdraw all rewards that exist in all pools which available for user
      */
-    function withdrawTotalRewards() public {
+    function withdrawTotalRewards() external {
 
         // game has not started
         if (lastRewardBlock == 0) return;
@@ -480,7 +483,7 @@ contract StakingTemplate is Ownable {
         return openedPools[pid].stakingInfo[user].availableRewards.add(pending);
     }
 
-    function getUserTotalPendingRewards(address user) public view returns(uint256) {
+    function getUserTotalPendingRewards(address user) external view returns(uint256) {
         uint256 rewards = 0;
         for (uint8 pid = 0; pid < numberOfPools; pid++) {
             rewards = rewards.add(getUserPendingRewards(pid, user));
@@ -488,40 +491,43 @@ contract StakingTemplate is Ownable {
         return rewards;
     }
 
-    function getUserStakedAmount(uint8 pid, address user) public view returns(uint256) {
+    function getUserStakedAmount(uint8 pid, address user) external view returns(uint256) {
         return openedPools[pid].stakingInfo[user].amount;
     }
 
-    function setAdmin(address _admin) public onlyAdmin {
+    function setAdmin(address _admin) external onlyAdmin {
         admin = _admin;
+        emit SetAdmin(_admin);
     }
 
-    function getAdmin() public view returns(address) {
+    function getAdmin() external view returns(address) {
         return admin;
     }
 
-    function setDev(address _dev) public onlyAdmin {
+    function setDev(address _dev) external onlyAdmin {
         dev = _dev;
+        emit SetDev(dev);
     }
 
-    function getDev() public view returns(address) {
+    function getDev() external view returns(address) {
         return dev;
     }
 
-    function setDevRewardRatio(uint16 _ratio) public onlyAdmin {
+    function setDevRewardRatio(uint16 _ratio) external onlyAdmin {
         require(_ratio <= 10000, 'LPR'); // Pool ratio is exccedd 10000
 
         _updatePools();
         
         devRewardRatio = _ratio;
+
+        emit SetDevRewardRatio(_ratio);
     }
 
-    function getDevRewardRatio() public view returns(uint16) {
+    function getDevRewardRatio() external view returns(uint16) {
         return devRewardRatio;
     }
 
-    function getUserDepositInfo(uint8 pid, address user) public view returns(UserStakingInfo memory) {
-        require(pid < numberOfPools, "PNE");
+    function getUserDepositInfo(uint8 pid, address user) external view returns(UserStakingInfo memory) {
         return openedPools[pid].stakingInfo[user];
     }
 

@@ -28,11 +28,13 @@ contract LinearCalculator is ICalculator, Ownable {
     using SafeMath for uint256;
     using BytesLib for bytes;
 
-    uint8 constant MAX_DISTRIBUTIONS = 6;
-    address admin;
+    address immutable admin;
     address factory;
     mapping (address => Types.Distribution[]) public distributionErasMap;
     mapping (address => uint8) public distributionCountMap;
+
+    event AdminSetStakingFactory(address factory);
+    event SetDistributionEra(address staking, bytes policy);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Account is not the admin");
@@ -48,16 +50,20 @@ contract LinearCalculator is ICalculator, Ownable {
         admin = msg.sender;
     }
 
-    function adminSetStakingFactory(address _factory) onlyAdmin public {
+    function adminSetStakingFactory(address _factory) onlyAdmin external {
+        require(_factory != address(0), 'Invalid address');
         factory = _factory;
+        emit AdminSetStakingFactory(_factory);
     }
 
-    function setDistributionEra(address staking, bytes calldata policy) onlyFactory public override returns(bool) {
+    function setDistributionEra(address staking, bytes calldata policy) onlyFactory external override returns(bool) {
+        require(staking != address(0), 'Invalid address');
         _applyDistributionEras(staking, policy);
+        emit SetDistributionEra(staking, policy);
         return true;
     }
 
-    function calculateReward(address staking, uint256 from, uint256 to) public view override returns(uint256) {
+    function calculateReward(address staking, uint256 from, uint256 to) external view override returns(uint256) {
         uint256 rewardedBlock = from - 1;
         uint256 rewards = 0;
         Types.Distribution[] memory eras = distributionErasMap[staking];
@@ -85,7 +91,7 @@ contract LinearCalculator is ICalculator, Ownable {
         return rewards;
     }
     
-    function getCurrentRewardPerBlock(address staking) public view override returns (uint256) {
+    function getCurrentRewardPerBlock(address staking) external view override returns (uint256) {
         return getCurrentDistributionEra(staking).amount;
     }
 

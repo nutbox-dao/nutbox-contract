@@ -44,7 +44,6 @@ async function deployHomeChainAssetRegistryContract(env) {
     let factory = new ethers.ContractFactory(HomeChainAssetRegistryJson.abi, HomeChainAssetRegistryJson.bytecode, env.wallet);
     let contract = await factory.deploy(
         env.registryHubContract,
-        env.erc20RactoryContract,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();

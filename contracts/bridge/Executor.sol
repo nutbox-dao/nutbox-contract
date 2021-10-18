@@ -12,9 +12,13 @@ contract Executor is AccessControl, IExecutor {
 
     using BytesLib for bytes;
 
-    address registryHub;
+    address immutable registryHub;
     address bridge;
     string version = "executor:version 1.0";
+
+    event AdminSetBridge(address bridge);
+    event AdminRenonceAdmin(address newAdmin);
+    event ExecuteProposal(bytes extrinsic);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -32,17 +36,27 @@ contract Executor is AccessControl, IExecutor {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function adminSetBridge(address _bridge) public onlyAdmin {
+    function adminSetBridge(address _bridge) external onlyAdmin {
         require(_bridge != address(0), 'Invalid bridge address');
         bridge = _bridge;
+        emit AdminSetBridge(_bridge);
     }
 
     function adminRenonceAdmin(address _newAdmin) external onlyAdmin {
         grantRole(DEFAULT_ADMIN_ROLE, _newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        emit AdminRenonceAdmin(_newAdmin);
+    }
+
+    function adminExecuteProposal(bytes calldata extrinsic) public onlyAdmin {
+        _executeProposal(extrinsic);
     }
 
     function executeProposal(bytes calldata extrinsic) override external onlyBridge {
+        _executeProposal(extrinsic);
+    }
+
+    function _executeProposal(bytes calldata extrinsic) private {
         uint8 extrinsicType = extrinsic.toUint8(0);
         if(extrinsicType == 0) {    // asset
             uint8 assetType = extrinsic.toUint8(1);
@@ -104,6 +118,7 @@ contract Executor is AccessControl, IExecutor {
             } else {
                 require(false, 'Unsupported asset type');
             }
+            emit ExecuteProposal(extrinsic);
         } else {    // message
             // TODO
         }

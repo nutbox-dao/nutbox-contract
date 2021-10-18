@@ -13,7 +13,7 @@ import '../asset/interfaces/IRegistryHub.sol';
  * This is the entry contract that user start to create their own token.
  */
 contract ERC20Factory {
-    address public registryHub;
+    address public immutable registryHub;
 
     // address => isMintable
     mapping (address => bool) public mintableList;
@@ -25,9 +25,10 @@ contract ERC20Factory {
     address[] public allTokens;
     uint64 public allTokensCount;
 
-    event ERC20TokenCreated(address creator, string tokenName, string tokenSymbol, address tokenAddress,bool isMintable);
+    event ERC20TokenCreated(address indexed creator, string tokenName, string tokenSymbol, address indexed tokenAddress,bool isMintable);
 
     constructor(address _registryHub) {
+        require(_registryHub != address(0), 'Invalid address');
         registryHub = _registryHub;
     }
 
@@ -37,7 +38,7 @@ contract ERC20Factory {
         uint256 initialSupply,
         address owner,
         bool isMintable
-    ) public returns(address){
+    ) external returns(address){
         if (isMintable){
             MintableERC20 mintableERC20 = new MintableERC20(name, symbol, initialSupply, owner);
             mintableList[address(mintableERC20)] = true;

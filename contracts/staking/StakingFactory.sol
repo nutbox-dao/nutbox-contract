@@ -13,16 +13,21 @@ import './calculators/ICalculator.sol';
  */
 contract StakingFactory {
 
-    address public registryHub;
+    address public immutable registryHub;
 
     // owner => stakingFeastList
     mapping (address => address[]) public stakingFeastRecord;
     // owner => counter
     mapping (address => uint8) public stakingFeastCounter;
 
-    event StakingFeastCreated(address indexed creater, address stakingFeast, bytes32 rewardAsset);
+    // Store all stakingFeast address that user created
+    uint64 allStakingFeastCount;
+    address[] allStakingFeast;    
+
+    event StakingFeastCreated(address indexed creater, address indexed stakingFeast, bytes32 rewardAsset);
 
     constructor(address _registryHub) {
+        require(_registryHub != address(0), 'Invalid address');
         registryHub = _registryHub;
     }
 
@@ -31,9 +36,10 @@ contract StakingFactory {
         bytes32 _rewardAsset,
         address _rewardCalculator,
         bytes calldata policy
-    ) public {
+    ) external {
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
         require(tokenAddress != address(0), 'RANR'); // reward asset not registerd
+        require(_rewardCalculator != address(0), 'Invalid address');
 
         StakingTemplate feastAddress = new StakingTemplate(registryHub);
 
@@ -65,6 +71,8 @@ contract StakingFactory {
         // save record
         stakingFeastRecord[msg.sender].push(address(feastAddress));
         stakingFeastCounter[msg.sender] = stakingFeastCounter[msg.sender] + 1;
+        allStakingFeast.push(address(feastAddress));
+        allStakingFeastCount += 1;
 
         emit StakingFeastCreated(msg.sender, address(feastAddress), _rewardAsset);
     }
