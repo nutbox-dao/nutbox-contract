@@ -36,7 +36,7 @@ contract Executor is AccessControl, IExecutor {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function adminSetBridge(address _bridge) public onlyAdmin {
+    function adminSetBridge(address _bridge) external onlyAdmin {
         require(_bridge != address(0), 'Invalid bridge address');
         bridge = _bridge;
         emit AdminSetBridge(_bridge);

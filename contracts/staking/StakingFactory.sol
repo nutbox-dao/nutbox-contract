@@ -36,7 +36,7 @@ contract StakingFactory {
         bytes32 _rewardAsset,
         address _rewardCalculator,
         bytes calldata policy
-    ) public {
+    ) external {
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
         require(tokenAddress != address(0), 'RANR'); // reward asset not registerd
         require(_rewardCalculator != address(0), 'Invalid address');

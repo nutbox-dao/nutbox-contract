@@ -29,7 +29,7 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
         registryHub = _registryHub;
     }
 
-    function setRegistryHub(address _registryHub) public onlyOwner {
+    function setRegistryHub(address _registryHub) external onlyOwner {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
         emit SetRegistryHub(_registryHub);

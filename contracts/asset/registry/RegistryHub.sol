@@ -44,7 +44,7 @@ contract RegistryHub is IRegistryHub, Ownable {
     constructor() {
     }
 
-    function setAssetHandlers(address _erc20AssetHandler, address _erc721AssetHandler, address _erc1155AssetHandler, address _trustlessAssetHandler) public onlyOwner {
+    function setAssetHandlers(address _erc20AssetHandler, address _erc721AssetHandler, address _erc1155AssetHandler, address _trustlessAssetHandler) external onlyOwner {
         require(_erc20AssetHandler != address(0) && _erc721AssetHandler != address(0) &&  _erc1155AssetHandler != address(0) && _trustlessAssetHandler != address(0), 'Invalid address');
         erc20AssetHandler = _erc20AssetHandler;
         erc721AssetHandler = _erc721AssetHandler;
@@ -53,13 +53,13 @@ contract RegistryHub is IRegistryHub, Ownable {
         emit SetAssetHandlers(_erc20AssetHandler, _erc721AssetHandler, _erc1155AssetHandler, _trustlessAssetHandler);
     }
 
-    function setWhiteList(address _contract) public onlyOwner {
+    function setWhiteList(address _contract) external onlyOwner {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
         emit SetWhiteList(_contract);
     }
 
-    function setNUTStaking(bytes32 _nut, uint256 _stakedAmount) public onlyOwner {
+    function setNUTStaking(bytes32 _nut, uint256 _stakedAmount) external onlyOwner {
         NUT = _nut;
         stakedNUT = _stakedAmount;
         emit SetNUTStaking(_nut, _stakedAmount);

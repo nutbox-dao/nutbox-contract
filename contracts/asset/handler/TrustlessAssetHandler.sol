@@ -63,31 +63,31 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         _setRoleAdmin(WHITELIST_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
-    function setExecutor(address _executor) public onlyAdmin {
+    function setExecutor(address _executor) external onlyAdmin {
         require(_executor != address(0), 'Invalid executor hub address');
         executor = _executor;
         emit SetExecutor(_executor);
     }
 
-    function setRegistryHub(address _registryHub) public onlyAdmin {
+    function setRegistryHub(address _registryHub) external onlyAdmin {
         require(_registryHub != address(0), 'Invalid registry hub address');
         registryHub = _registryHub;
         emit SetRegistryHub(_registryHub);
     }
 
-    function adminAddWhitelistManager(address _manager) public onlyAdmin {
+    function adminAddWhitelistManager(address _manager) external onlyAdmin {
         require(!hasRole(WHITELIST_MANAGER_ROLE, _manager), "Address already in the whitelist manager group");
         grantRole(WHITELIST_MANAGER_ROLE, _manager);
         emit WhitelistManagerAdded(_manager);
     }
 
-    function adminRemoveWhitelistManager(address _manager) public onlyAdmin {
+    function adminRemoveWhitelistManager(address _manager) external onlyAdmin {
         require(hasRole(WHITELIST_MANAGER_ROLE, _manager), "Address not in the whitelist manager group");
         revokeRole(WHITELIST_MANAGER_ROLE, _manager);
         emit WhitelistManagerRemoved(_manager);
     }
 
-    function setWhitelist(address _contract) public onlyAdminOrWhitelistManager {
+    function setWhitelist(address _contract) external onlyAdminOrWhitelistManager {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
         emit SetWhiteList(_contract);

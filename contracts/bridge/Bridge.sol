@@ -98,7 +98,7 @@ contract Bridge is AccessControl, IBridge {
         emit AdminRenonceAdmin(_newAdmin);
     }
 
-    function adminDepositAsset(bytes32 assetId, uint256 amount) public onlyAdmin {
+    function adminDepositAsset(bytes32 assetId, uint256 amount) external onlyAdmin {
         bytes32 source = keccak256(abi.encodePacked(address(this), assetId));
         bytes memory data = abi.encodeWithSignature(
             "lockAsset(bytes32,bytes32,address,uint256)",
