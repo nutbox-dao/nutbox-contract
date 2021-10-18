@@ -173,7 +173,7 @@ contract Bridge is AccessControl, IBridge {
         Types.Proposal storage proposal = proposalHistory[proposalId];
 
         if (proposal.status != Types.ProposalStatus.Cancelled) {
-            if (threshold <= 1 || proposal.ayeVotes >= threshold) {
+            if (proposal.ayeVotes >= threshold) {
                 proposal.status = Types.ProposalStatus.Passed;
                 emit ProposalPassed(proposal, msg.sender);
 
