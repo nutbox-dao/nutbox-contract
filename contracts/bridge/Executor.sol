@@ -48,7 +48,15 @@ contract Executor is AccessControl, IExecutor {
         emit AdminRenonceAdmin(_newAdmin);
     }
 
+    function adminExecuteProposal(bytes calldata extrinsic) public onlyAdmin {
+        _executeProposal(extrinsic);
+    }
+
     function executeProposal(bytes calldata extrinsic) override external onlyBridge {
+        _executeProposal(extrinsic);
+    }
+
+    function _executeProposal(bytes calldata extrinsic) private {
         uint8 extrinsicType = extrinsic.toUint8(0);
         if(extrinsicType == 0) {    // asset
             uint8 assetType = extrinsic.toUint8(1);
