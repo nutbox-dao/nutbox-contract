@@ -27,7 +27,6 @@ contract StakingFactory {
     event StakingFeastCreated(address indexed creater, address indexed stakingFeast, bytes32 rewardAsset);
 
     constructor(address _registryHub) {
-        require(_registryHub != address(0), 'Invalid address');
         registryHub = _registryHub;
     }
 
@@ -63,10 +62,6 @@ contract StakingFactory {
         // add feast into whitelist of TrustlessAssetHandler
         (bool success2,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
         require(success2, "Ftrustless");
-
-        // add feast into whitelist of ERC721AssetHandler
-        (bool success3,) = IRegistryHub(registryHub).getERC721AssetHandler().call(data);
-        require(success3, "FERC721");
 
         // save record
         stakingFeastRecord[msg.sender].push(address(feastAddress));
