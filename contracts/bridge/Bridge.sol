@@ -22,8 +22,6 @@ contract Bridge is AccessControl, IBridge {
 
     // relayer => isRelayer
     mapping (address => bool) public relayerRegistry;
-    // chainId => sequence
-    mapping(uint8 => uint64) public chainSequence;
     // proposalId => Proposal
     mapping(bytes32 => Types.Proposal) public proposalHistory;
     // proposalId => relayerAddress => bool
