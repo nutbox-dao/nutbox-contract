@@ -22,7 +22,7 @@ contract StakingFactory {
 
     // Store all stakingFeast address that user created
     uint64 public allStakingFeastCount;
-    address[] public allStakingFeast;    
+    address[] public allStakingFeast;   
 
     event StakingFeastCreated(address indexed creater, address indexed stakingFeast, bytes32 rewardAsset);
 
