@@ -27,6 +27,7 @@ contract StakingFactory {
     event StakingFeastCreated(address indexed creater, address indexed stakingFeast, bytes32 rewardAsset);
 
     constructor(address _registryHub) {
+        require(_registryHub != address(0), 'Invalid address');
         registryHub = _registryHub;
     }
 
@@ -38,6 +39,7 @@ contract StakingFactory {
     ) public {
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
         require(tokenAddress != address(0), 'RANR'); // reward asset not registerd
+        require(_rewardCalculator != address(0), 'Invalid address');
 
         StakingTemplate feastAddress = new StakingTemplate(registryHub);
 

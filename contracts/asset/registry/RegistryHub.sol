@@ -45,6 +45,7 @@ contract RegistryHub is IRegistryHub, Ownable {
     }
 
     function setAssetHandlers(address _erc20AssetHandler, address _erc721AssetHandler, address _erc1155AssetHandler, address _trustlessAssetHandler) public onlyOwner {
+        require(_erc20AssetHandler != address(0) && _erc721AssetHandler != address(0) &&  _erc1155AssetHandler != address(0) && _trustlessAssetHandler != address(0) 'Invalid address');
         erc20AssetHandler = _erc20AssetHandler;
         erc721AssetHandler = _erc721AssetHandler;
         erc1155AssetHandler = _erc1155AssetHandler;
@@ -67,6 +68,7 @@ contract RegistryHub is IRegistryHub, Ownable {
     function add(address owner, bytes32 id, address homeLocation, bytes memory foreignLocation, bool trustless) external override {
         require(whiteList[msg.sender], 'Permission denied: contract is not white list');
         require(registryRecord[id] == false, 'Asset already registered');
+        require(owner != address(0), 'Invalid address');
 
         registryHub[owner].push(id);
         registryRecord[id] = true;

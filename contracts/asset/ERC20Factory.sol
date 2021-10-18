@@ -28,6 +28,7 @@ contract ERC20Factory {
     event ERC20TokenCreated(address indexed creator, string tokenName, string tokenSymbol, address indexed tokenAddress,bool isMintable);
 
     constructor(address _registryHub) {
+        require(_registryHub != address(0), 'Invalid address');
         registryHub = _registryHub;
     }
 

@@ -28,6 +28,7 @@ contract HomeChainAssetRegistry is IAssetRegistry, Ownable {
 
     constructor(address _registryHub, address _erc20Factory) {
         require(_registryHub != address(0), 'Invalid registry hub address');
+        require(_erc20Factory != address(0), 'Invalid address');
         registryHub = _registryHub;
         erc20Factory = _erc20Factory;
     }

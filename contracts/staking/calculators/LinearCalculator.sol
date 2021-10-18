@@ -51,6 +51,7 @@ contract LinearCalculator is ICalculator, Ownable {
     }
 
     function adminSetStakingFactory(address _factory) onlyAdmin public {
+        require(_factory != address(0), 'Invalid address');
         factory = _factory;
         emit AdminSetStakingFactory(_factory);
     }
