@@ -10,6 +10,7 @@ import '../common/Types.sol';
 import '../asset/interfaces/IRegistryHub.sol';
 import '../asset/handler/ERC20AssetHandler.sol';
 import './calculators/ICalculator.sol';
+import '../asset/handler/TrustlessAssetHandler.sol';
 
 /**
  * @dev Template contract of Nutbox staking module.
@@ -106,10 +107,6 @@ contract StakingTemplate is Ownable {
     event Deposit(uint8 indexed pid, address indexed nutboxAccount, uint256 amount);
     event Withdraw(uint8 indexed pid, address indexed nutboxAccount, uint256 amount);
     event WithdrawRewards(address indexed nutboxAccount, uint256 amount);
-    event SetAdmin(address admin);
-    event SetDev(address dev);
-    event SetPoolRatios(uint16[] poolRatios);
-    event SetDevRewardRatio(uint16 devRewardRatio);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "NA"); // not admin
@@ -170,14 +167,9 @@ contract StakingTemplate is Ownable {
         _updatePools();
 
         if (IRegistryHub(registryHub).isTrustless(pair)) {
-            bytes memory data = abi.encodeWithSignature(
-                "attachPool(bytes32,address,uint8)",
-                pair,
-                address(this),
-                numberOfPools
+            TrustlessAssetHandler(IRegistryHub(registryHub).getTrustlessAssetHandler()).attachPool(
+                pair,address(this), numberOfPools
             );
-            (bool success,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
-            require(success, "FAP");
         }
 
         openedPools[numberOfPools].pid = numberOfPools;
@@ -217,7 +209,6 @@ contract StakingTemplate is Ownable {
     function tryWithdraw(uint8 pid) external onlyAdmin {
         require(openedPools[pid].pid == pid, 'WP'); // wrong pid
         require(openedPools[pid].hasStopped, 'PNS');
-        require(openedPools[pid].stakingList.length > 0, 'PNR');
 
         bool isTrustless = IRegistryHub(registryHub).isTrustless(openedPools[pid].stakingPair);
         // Maybe need to change step to 50 on ethereum mainnet
@@ -283,7 +274,6 @@ contract StakingTemplate is Ownable {
         _updatePools();
 
         _applyPoolsRatio(ratios);
-        emit SetPoolRatios(ratios);
     }
 
     function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
@@ -497,7 +487,6 @@ contract StakingTemplate is Ownable {
 
     function setAdmin(address _admin) external onlyAdmin {
         admin = _admin;
-        emit SetAdmin(_admin);
     }
 
     function getAdmin() external view returns(address) {
@@ -506,7 +495,6 @@ contract StakingTemplate is Ownable {
 
     function setDev(address _dev) external onlyAdmin {
         dev = _dev;
-        emit SetDev(dev);
     }
 
     function getDev() external view returns(address) {
@@ -519,8 +507,6 @@ contract StakingTemplate is Ownable {
         _updatePools();
         
         devRewardRatio = _ratio;
-
-        emit SetDevRewardRatio(_ratio);
     }
 
     function getDevRewardRatio() external view returns(uint16) {
