@@ -36,6 +36,7 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
     event SetExecutor(address executor);
     event SetRegistryHub(address registryHub);
     event SetWhiteList(address contractAddress);
+    event RemoveWhiteList(address contractAddress);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -91,6 +92,12 @@ contract TrustlessAssetHandler is ITrustlessAssetHandler, AccessControl {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
         emit SetWhiteList(_contract);
+    }
+
+    function removeWhiteList(address _contract) external onlyAdminOrWhitelistManager {
+        require(_contract != address(0), 'Invalid contract address');
+        whiteList[_contract] = false;
+        emit RemoveWhiteList(_contract);
     }
 
     function attachPool(bytes32 assetId, address stakingFeast, uint8 pid) external {

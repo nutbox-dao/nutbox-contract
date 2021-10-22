@@ -38,6 +38,7 @@ contract RegistryHub is IRegistryHub, Ownable {
     event NewAsset(address indexed owner, bytes32 indexed id);
     event SetAssetHandlers(address erc20AssetHandler, address erc721AssetHandler, address erc1155AssetHandler, address trustlessAssetHandler);
     event SetWhiteList(address contractAddress);
+    event RemoveWhiteList(address contractAddress);
     event SetNUTStaking(bytes32 nut, uint256 stakedAmount);
     event SetMintable(bytes32 id);
 
@@ -57,6 +58,12 @@ contract RegistryHub is IRegistryHub, Ownable {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
         emit SetWhiteList(_contract);
+    }
+
+    function removeWhiteList(address _contract) external onlyOwner {
+        require(_contract != address(0), 'Invalid contract address');
+        whiteList[_contract] = false;
+        emit RemoveWhiteList(_contract);
     }
 
     function setNUTStaking(bytes32 _nut, uint256 _stakedAmount) external onlyOwner {
