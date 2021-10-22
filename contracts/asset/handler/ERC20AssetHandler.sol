@@ -29,6 +29,7 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
     event MintAsset(bytes32 source, bytes32 assetId, address recipient, uint256 amount);
     event SetRegistryHub(address registryHub);
     event SetWhiteList(address contractAddress);
+    event RemoveWhiteList(address contractAddress);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender is not admin");
@@ -71,6 +72,12 @@ contract ERC20AssetHandler is ITrustAssetHandler, ERC20Helper, AccessControl {
         require(_contract != address(0), 'Invalid contract address');
         whiteList[_contract] = true;
         emit SetWhiteList(_contract);
+    }
+
+    function removeWhiteList(address _contract) external onlyAdminOrWhitelistManager {
+        require(_contract != address(0), 'Invalid contract address');
+        whiteList[_contract] = false;
+        emit RemoveWhiteList(_contract);
     }
 
     function lockOrBurnAsset(bytes32 source, bytes32 assetId, address depositer, uint256 amount) override external {
