@@ -3,6 +3,8 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
+const { u8aToHex } = require('@polkadot/util')
+const { decodeAddress } = require('@polkadot/util-crypto')
 const { waitForTx, utf8ToHex } = require('./utils.js');
 const RegistryHubJson = require('../build/contracts/RegistryHub.json');
 const HomeChainAssetRegistryJson = require('../build/contracts/HomeChainAssetRegistry.json');
@@ -120,6 +122,7 @@ async function main() {
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
+    env.gasPrice = await env.provider.getGasPrice();
 
     await setWhitelist(env, HomeChainAssetRegistryAddress);
     await setWhitelist(env, SteemHiveDelegateAssetRegistryAddress);
@@ -132,8 +135,8 @@ return;
     await registerMintableERC20(env, mintabelERC20);
     
     // deploy erc20 contract
-    const simpleERC20 = await deployERC20(env);
-    await registerERC20(env, simpleERC20);
+    // const simpleERC20 = await deployERC20(env);
+    // await registerERC20(env, simpleERC20);
 
     // steem hive delegate asset registry
     const SteemHiveDelegateAssetRegistry = new ethers.Contract(
@@ -144,11 +147,11 @@ return;
     //  assetType           bytes2  bytes[1, 2]     "sp"
     //  agentAccountLen     uint32  bytes[3, 6]
     //  agentAccount        bytes   bytes[7, end]
-    const tx1 = await SteemHiveDelegateAssetRegistry.registerAsset(
-        '0x0173700000000411223344', '0x0000000000000000000000000000000000000000', '0x',
-        { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
-    );
-    await waitForTx(env.provider, tx1.hash);
+    // const tx1 = await SteemHiveDelegateAssetRegistry.registerAsset(
+    //     '0x0173700000000411223344', '0x0000000000000000000000000000000000000000', '0x',
+    //     { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+    // );
+    // await waitForTx(env.provider, tx1.hash);
 
     // substrate crowdloan asset registry
     const SubstrateCrowdloanAssetRegistry = new ethers.Contract(
@@ -165,8 +168,8 @@ return;
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substr(2) +     // chainId: polkadot
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2004), 4).substr(2) +  // paraId: 2004
         ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 4).substr(2) +     // trieIndex: 4
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(47), 4).substr(2) +    // account length
-        utf8ToHex('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP'),     // communityAccount
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 4).substr(2) +    // account length
+        u8aToHex(decodeAddress('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP')).substr(2),     // communityAccount
         '0x0000000000000000000000000000000000000000',
         '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
@@ -185,8 +188,8 @@ return;
     const tx3 = await SubstrateNominateAssetRegistry.registerAsset(
         '0x' + 
         ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substr(2) +     // chainId: polkadot
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(47), 4).substr(2) +     // validatorAccount length
-        utf8ToHex('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP'),     // validatorAccount        
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(32), 4).substr(2) +     // validatorAccount length
+        u8aToHex(decodeAddress('DzmAoYXo1ka1xW3CCZajTXqJxG5oQUJLqLBbpqDzCUatHBP')).substr(2),     // validatorAccount        
         '0x0000000000000000000000000000000000000000',
         '0x',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}

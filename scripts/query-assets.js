@@ -37,8 +37,6 @@ async function main() {
     const source = ethers.utils.keccak256('0x' + BridgeAddress.substr(2) + substrateCrowdloanAsset.substr(2));
     const balance = await TrustlessAssetHandler.getBalance(source, AssetsOwner);
     console.log(`Balance of ${AssetsOwner}: ${balance}`);
-
-    
 }
 
 main()

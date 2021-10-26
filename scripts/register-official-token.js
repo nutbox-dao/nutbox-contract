@@ -69,13 +69,12 @@ async function main() {
     // const NUT = await deployERC20(env, 'Walnut', 'NUT');
 
     // await registerERC20(env, '0x46a5954257dFDdC69DFfC530485f23CADFF63A44');
-    const nutAssetId = await registerERC20(env, '0x4E42eB91E2A27817cDB8C8094eB495a1322BbA01');
-
+    const nutAssetId = "0x8fc392966ab8ae661c101da3cac00722d172319b137266ecaca375f7f90838e8"// await registerERC20(env, '0x61b053807fBD95d1e187cd3Ed98c9abf2CEED62a');
 
     // set nut staking
     const registryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.wallet);
     console.log('NUT asset ID', nutAssetId);
-    await registryHub.setNUTStaking(nutAssetId, ethers.utils.parseUnits("1.0", 18));
+    await registryHub.setNUTStaking(nutAssetId, ethers.utils.parseUnits("10.0", 18));
 }
 
 main()
