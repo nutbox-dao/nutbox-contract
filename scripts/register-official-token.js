@@ -20,7 +20,7 @@ async function deployERC20(env, name, symbols) {
     return new Promise(async (resolve, reject) => {
         const ERC20Factory = new ethers.Contract(ERC20FactoryAddress, ERC20FactoryJson.abi, env.wallet);
         ERC20Factory.on('ERC20TokenCreated', (creator, _name, _symbol, _tokenAddress, isMintable) => {
-            if(name == _name && !isMintable){
+            if(name == _name){
                 console.log(_tokenAddress, _name, _symbol, isMintable);
                 console.log("✓ Simple ERC20 contract deployed", _tokenAddress);
                 ERC20Factory.removeAllListeners('ERC20TokenCreated')
@@ -66,10 +66,10 @@ async function main() {
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
 
     // const WETH = await deployERC20(env, 'WETH', 'WETH');
-    // const NUT = await deployERC20(env, 'Walnut', 'NUT');
+    const NUT = await deployERC20(env, 'Nutbox', 'NUT');
 
-    // await registerERC20(env, '0x46a5954257dFDdC69DFfC530485f23CADFF63A44');
-    const nutAssetId = "0x8fc392966ab8ae661c101da3cac00722d172319b137266ecaca375f7f90838e8"// await registerERC20(env, '0x61b053807fBD95d1e187cd3Ed98c9abf2CEED62a');
+    let nutAssetId = await registerERC20(env, NUT);
+    // nutAssetId = "0x8fc392966ab8ae661c101da3cac00722d172319b137266ecaca375f7f90838e8"// await registerERC20(env, '0x61b053807fBD95d1e187cd3Ed98c9abf2CEED62a');
 
     // set nut staking
     const registryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.wallet);
