@@ -14,10 +14,10 @@ contract NUTToken is Ownable, AccessControlEnumerable, ERC20Burnable, ERC20Pausa
 
     // address => hasWhitelisted
     mapping (address => bool) public whiteList;
-    bool transferOpened;
+    bool public transferOpened = false;
 
-    event SetWhiteList(address contractAddress);
-    event RemoveWhiteList(address contractAddress);
+    event SetWhiteList(address indexed contractAddress);
+    event RemoveWhiteList(address indexed contractAddress);
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
@@ -35,8 +35,6 @@ contract NUTToken is Ownable, AccessControlEnumerable, ERC20Burnable, ERC20Pausa
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
         _mint(owner, initialSupply);
-
-        transferOpened = false;
     }
 
     /**
