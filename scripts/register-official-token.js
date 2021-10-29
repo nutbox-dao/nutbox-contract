@@ -63,18 +63,31 @@ async function main() {
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
-    env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
+    env.gasPrice = await env.provider.getGasPrice();
 
     // const WETH = await deployERC20(env, 'WETH', 'WETH');
-    const NUT = await deployERC20(env, 'Nutbox', 'NUT');
+    const NUT ='0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745'// await deployERC20(env, 'Nutbox', 'NUT');
+    const WBNB = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+    const ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
+    const CAKE = '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82';
+    const BTCB = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c';
 
     let nutAssetId = await registerERC20(env, NUT);
-    // nutAssetId = "0x8fc392966ab8ae661c101da3cac00722d172319b137266ecaca375f7f90838e8"// await registerERC20(env, '0x61b053807fBD95d1e187cd3Ed98c9abf2CEED62a');
-
+    let bnbAsset = await registerERC20(env, WBNB);
+    let ethAsset = await registerERC20(env, ETH);
+    let cakeAsset = await registerERC20(env, CAKE);
+    let btcAsset = await registerERC20(env, BTCB);
+    console.log('assetsId', {
+        nutAssetId,
+        bnbAsset,
+        ethAsset,
+        cakeAsset,
+        btcAsset
+    });
     // set nut staking
     const registryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.wallet);
     console.log('NUT asset ID', nutAssetId);
-    await registryHub.setNUTStaking(nutAssetId, ethers.utils.parseUnits("10.0", 18));
+    await registryHub.setNUTStaking(nutAssetId, ethers.utils.parseUnits("0.0", 18));
 }
 
 main()

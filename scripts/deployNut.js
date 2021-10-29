@@ -9,12 +9,13 @@ async function deployNutContract(env) {
     let contract = await factory.deploy(
         'Nutbox',
         'NUT',
-        ethers.utils.parseUnits("10000000.0", 18),
-        env.wallet.address,
+        ethers.utils.parseUnits("20000000.0", 18),
+        '0x7b1941AE388f62d5Caf20D4f709Aafd74001ff58',
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();
     console.log("✓ NUTToken contract deployed", contract.address);
+    return contract.address;
 }
 
 async function main() {
@@ -25,9 +26,12 @@ async function main() {
     console.log(`private: ${env.privateKey}, url: ${env.url}`);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
-    env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
+    env.gasPrice = await env.provider.getGasPrice();
 
-    await deployNutContract(env)
+    const NUT = await deployNutContract(env);
+    const contract = new ethers.Contract(NUT, NUTTokenJson.abi, env.wallet);
+    const res = await contract.setWhiteList('0x7b1941AE388f62d5Caf20D4f709Aafd74001ff58');
+    console.log(res);
 }
 
 main()
