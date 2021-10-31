@@ -15,16 +15,7 @@ contract StakingFactory {
 
     address public immutable registryHub;
 
-    // owner => stakingFeastList
-    mapping (address => address[]) public stakingFeastRecord;
-    // owner => counter
-    mapping (address => uint8) public stakingFeastCounter;
-
-    // Store all stakingFeast address that user created
-    uint64 public allStakingFeastCount;
-    address[] public allStakingFeast;   
-
-    event StakingFeastCreated(address indexed creater, address indexed stakingFeast, bytes32 rewardAsset);
+    event StakingFeastCreated(address indexed creator, address indexed stakingFeast, bytes32 indexed rewardAsset);
 
     constructor(address _registryHub) {
         registryHub = _registryHub;
@@ -36,6 +27,10 @@ contract StakingFactory {
         address _rewardCalculator,
         bytes calldata policy
     ) external {
+        if (IRegistryHub(registryHub).mintable(_rewardAsset)) {
+            require((IRegistryHub(registryHub).getOwner(_rewardAsset) == msg.sender), "FEOWNER");
+        }
+
         address tokenAddress = IRegistryHub(registryHub).getHomeLocation(_rewardAsset);
         require(tokenAddress != address(0), 'RANR'); // reward asset not registerd
         require(_rewardCalculator != address(0), 'Invalid address');
@@ -62,12 +57,6 @@ contract StakingFactory {
         // add feast into whitelist of TrustlessAssetHandler
         (bool success2,) = IRegistryHub(registryHub).getTrustlessAssetHandler().call(data);
         require(success2, "Ftrustless");
-
-        // save record
-        stakingFeastRecord[msg.sender].push(address(feastAddress));
-        stakingFeastCounter[msg.sender] = stakingFeastCounter[msg.sender] + 1;
-        allStakingFeast.push(address(feastAddress));
-        allStakingFeastCount += 1;
 
         emit StakingFeastCreated(msg.sender, address(feastAddress), _rewardAsset);
     }

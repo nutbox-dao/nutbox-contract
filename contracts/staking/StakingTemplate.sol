@@ -107,6 +107,10 @@ contract StakingTemplate is Ownable {
     event Deposit(uint8 indexed pid, address indexed nutboxAccount, uint256 amount);
     event Withdraw(uint8 indexed pid, address indexed nutboxAccount, uint256 amount);
     event WithdrawRewards(address indexed nutboxAccount, uint256 amount);
+    event SetPoolRatios(address indexed admin, uint16[] ratios);
+    event SetDevRewardRatio(address indexed admin, uint16 devRatio);
+    event SetAdmin(address indexed originalAdmin, address indexed newAdmin);
+    event SetDev(address indexed originalDev, address indexed newDev);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "NA"); // not admin
@@ -274,6 +278,7 @@ contract StakingTemplate is Ownable {
         _updatePools();
 
         _applyPoolsRatio(ratios);
+        emit SetPoolRatios(msg.sender, ratios);
     }
 
     function deposit(uint8 pid, address depositor, uint256 amount, string memory _bindAccount) public {
@@ -486,6 +491,7 @@ contract StakingTemplate is Ownable {
     }
 
     function setAdmin(address _admin) external onlyAdmin {
+        emit SetAdmin(admin, _admin);
         admin = _admin;
     }
 
@@ -494,6 +500,7 @@ contract StakingTemplate is Ownable {
     }
 
     function setDev(address _dev) external onlyAdmin {
+        emit SetDev(dev, _dev);
         dev = _dev;
     }
 
@@ -507,6 +514,7 @@ contract StakingTemplate is Ownable {
         _updatePools();
         
         devRewardRatio = _ratio;
+        emit SetDevRewardRatio(msg.sender, _ratio);
     }
 
     function getDevRewardRatio() external view returns(uint16) {

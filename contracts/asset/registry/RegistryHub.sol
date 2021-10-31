@@ -12,6 +12,8 @@ contract RegistryHub is IRegistryHub, Ownable {
     mapping (address => bool) public whiteList;
     // owner => assetIdList
     mapping (address => bytes32[]) public registryHub;
+    // assetId => owner
+    mapping (bytes32 => address) public assetOwner;
     // owner => counter
     mapping (address => uint8) public registryCounter;
     // owner => assetId => hasRegistered
@@ -79,6 +81,7 @@ contract RegistryHub is IRegistryHub, Ownable {
 
         registryHub[owner].push(id);
         registryRecord[id] = true;
+        assetOwner[id] = owner;
         registryCounter[owner] = registryCounter[owner] + 1;
         idToForeignLocation[id] = foreignLocation;
         idToHomeLocation[id] = homeLocation;
@@ -95,6 +98,10 @@ contract RegistryHub is IRegistryHub, Ownable {
 
     function mintable(bytes32 id) external override view returns(bool) {
         return mintableRecord[id];
+    }
+
+    function getOwner(bytes32 id) external override view returns(address) {
+        return assetOwner[id];
     }
 
     function isTrustless(bytes32 id) external override view returns(bool) {
