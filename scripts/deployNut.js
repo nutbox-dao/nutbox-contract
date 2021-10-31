@@ -18,6 +18,18 @@ async function deployNutContract(env) {
     return contract.address;
 }
 
+async function addAddressToWhiteList(address, env) {
+    const contract = new ethers.Contract('0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745', NUTTokenJson.abi, env.wallet);
+    const res = await contract.setWhiteList(address);
+    console.log(`Add ${address} to NUT whiteList`);
+}
+
+async function removeAddressToWhiteList(address, env) {
+    const contract = new ethers.Contract('0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745', NUTTokenJson.abi, env.wallet);
+    const res = await contract.removeWhiteList(address);
+    console.log(`Remove ${address} to NUT whiteList`);
+}
+
 async function main() {
     let env = {};
     env.url = process.env.ENDPOINT || 'http://localhost:8545';
@@ -28,10 +40,8 @@ async function main() {
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
 
-    const NUT = await deployNutContract(env);
-    const contract = new ethers.Contract(NUT, NUTTokenJson.abi, env.wallet);
-    const res = await contract.setWhiteList('0x7b1941AE388f62d5Caf20D4f709Aafd74001ff58');
-    console.log(res);
+    // const NUT = await deployNutContract(env);
+    await addAddressToWhiteList('0x7aaf0d8a812Ad5438B5162233511d83cA84aA295', env);
 }
 
 main()
