@@ -15,7 +15,7 @@ async function main() {
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
-    env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
+    env.gasPrice = await env.provider.getGasPrice();
 
     const Bridge = new ethers.Contract(BridgeAddress, BridgeJson.abi, env.wallet);
     const tx1 = await Bridge.adminAddRelayer(RELAYER, { gasPrice: env.gasPrice, gasLimit: env.gasLimit});

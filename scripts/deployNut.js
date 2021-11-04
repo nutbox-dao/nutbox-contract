@@ -41,7 +41,7 @@ async function main() {
     env.gasPrice = await env.provider.getGasPrice();
 
     // const NUT = await deployNutContract(env);
-    await addAddressToWhiteList('0x7aaf0d8a812Ad5438B5162233511d83cA84aA295', env);
+    await addAddressToWhiteList('0xAF33cBE3F52C159f9408a2b87Aed65826ac47258', env);
 }
 
 main()

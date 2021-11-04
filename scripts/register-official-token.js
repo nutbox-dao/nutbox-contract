@@ -66,17 +66,28 @@ async function main() {
     env.gasPrice = await env.provider.getGasPrice();
 
     // const WETH = await deployERC20(env, 'WETH', 'WETH');
-    const NUT ='0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745'// await deployERC20(env, 'Nutbox', 'NUT');
-    const WBNB = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
-    const ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
-    const CAKE = '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82';
-    const BTCB = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c';
+    // const NUT ='0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745'// await deployERC20(env, 'Nutbox', 'NUT');
+    // const WBNB = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+    // const ETH = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
+    // const CAKE = '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82';
+    // const BTCB = '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c';
+    // const MINT = '0x1f3Af095CDa17d63cad238358837321e95FC5915';
+    const mintGrant = '0x58764cE77f0140F9678bA6dED9D9697c979F4E0f';
+    const mintDao = '0x558810B46101DE82b579DD1950E9C717dCc28338';
+    const mintCreator = '0x9f3C60dC06f66b3e0ea1Eb05866F9c1A74d43D67';
 
-    let nutAssetId = await registerERC20(env, NUT);
-    let bnbAsset = await registerERC20(env, WBNB);
-    let ethAsset = await registerERC20(env, ETH);
-    let cakeAsset = await registerERC20(env, CAKE);
-    let btcAsset = await registerERC20(env, BTCB);
+    // let nutAssetId = await registerERC20(env, NUT);
+    // let bnbAsset = await registerERC20(env, WBNB);
+    // let ethAsset = await registerERC20(env, ETH);
+    // let cakeAsset = await registerERC20(env, CAKE);
+    // let btcAsset = await registerERC20(env, BTCB);
+    // let mintAsset = await registerERC20(env, MINT);
+    let mintGrantAsset = await registerERC20(env, mintGrant);
+    let mintDaoAsset = await registerERC20(env, mintDao);
+    let mintCreatorAsset = await registerERC20(env, mintCreator);
+
+    console.log({mintGrantAsset,mintDaoAsset,mintCreatorAsset});
+    return;
     console.log('assetsId', {
         nutAssetId,
         bnbAsset,
