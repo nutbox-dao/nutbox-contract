@@ -21,6 +21,9 @@ const TrustlessAssetHandlerAddress = Contracts.TrustlessAssetHandler;
 const BridgeAddress = Contracts.Bridge;
 const LinearCalculatorAddress = Contracts.LinearCalculator;
 
+const ExecutorJson = require('../build/contracts/Executor.json');
+const ExecutorAddress = Contracts.Executor;
+
 async function main() {
     let env = {};
     env.url = process.env.ENDPOINT || 'http://localhost:8545';
@@ -29,6 +32,12 @@ async function main() {
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
+    const adminRole = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
+    const contract = new ethers.Contract(ExecutorAddress, ExecutorJson.abi, env.wallet)
+    const res = await contract.hasRole(adminRole, '0x57747260d8e08f66eDD1954B3A41F9ed417A6cDc');
+    console.log(23, res);
+    return;
 
     const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.provider);
     const homeChainAsset = await RegistryHub.registryHub(env.wallet.address, 0);

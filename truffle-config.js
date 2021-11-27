@@ -23,6 +23,10 @@
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
+require('dotenv').config();
+const ethers = require('ethers');
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+const MNEMONIC = 'tuition patrol slot pond lift search soccer chest taxi brass fever chat'
 
 module.exports = {
   /**
@@ -46,7 +50,14 @@ module.exports = {
      host: "127.0.0.1",     // Localhost (default: none)
      port: 8545,            // Standard Ethereum port (default: none)
      network_id: "*",       // Any network (default: none)
-    }
+    },
+    bscmain: {
+      provider: () => new HDWalletProvider(MNEMONIC, 'https://bsc-dataseed.binance.org'),
+      network_id: 56,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port
@@ -95,8 +106,13 @@ module.exports = {
   },
 
   plugins: [
-    'truffle-contract-size'
+    'truffle-contract-size',
+    'truffle-plugin-verify'
   ],
+
+  api_keys: {
+    bscscan: 'YS5EV5ETHJ96KPAFZV358YFQ5MKJYMQTMY'
+  },
 
   // Truffle DB is currently disabled by default; to enable it, change enabled: false to enabled: true
   //
