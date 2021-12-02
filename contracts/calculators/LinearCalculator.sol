@@ -3,11 +3,9 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import './ICalculator.sol';
-import '../../common/Types.sol';
 import 'solidity-bytes-utils/contracts/BytesLib.sol';
+import '../interfaces/ICalculator.sol';
 
 /**
  * LinearCalculator is a distribution mechanism that people can set a reward on specific blocks height.
@@ -23,50 +21,45 @@ import 'solidity-bytes-utils/contracts/BytesLib.sol';
  *         uint256: stopHeight,
  *         uint256: amount
  */
-contract LinearCalculator is ICalculator, Ownable {
+contract LinearCalculator is ICalculator {
+    struct Distribution {
+        // rewards per block of this distribution.
+        uint256 amount;
+        // when current block height > startHeight, distribution was enabled.
+        uint256 startHeight;
+        // when curent block height > stopHeight, distribution was disabled
+        uint256 stopHeight;
+    }
 
     using SafeMath for uint256;
     using BytesLib for bytes;
 
-    address immutable admin;
-    address factory;
-    mapping (address => Types.Distribution[]) public distributionErasMap;
+    address communityFactory;
+    mapping (address => Distribution[]) public distributionErasMap;
     mapping (address => uint8) public distributionCountMap;
 
-    event AdminSetStakingFactory(address factory);
-    event SetDistributionEra(address staking, bytes policy);
-
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "Account is not the admin");
-        _;
-    }
+    event DistributionEraSet(address staking, bytes policy);
 
     modifier onlyFactory() {
-        require(msg.sender == factory, "Account is not the staking factory");
+        require(msg.sender == communityFactory, "Account is not the community factory");
         _;
     }
 
-    constructor() {
-        admin = msg.sender;
-    }
-
-    function adminSetStakingFactory(address _factory) onlyAdmin external {
-        require(_factory != address(0), 'Invalid address');
-        factory = _factory;
-        emit AdminSetStakingFactory(_factory);
+    constructor(address _communityFactory) {
+        communityFactory = _communityFactory;
     }
 
     function setDistributionEra(address staking, bytes calldata policy) onlyFactory external override returns(bool) {
         require(staking != address(0), 'Invalid address');
         _applyDistributionEras(staking, policy);
-        emit SetDistributionEra(staking, policy);
+        emit DistributionEraSet(staking, policy);
         return true;
     }
 
     function calculateReward(address staking, uint256 from, uint256 to) external view override returns(uint256) {
         uint256 rewardedBlock = from - 1;
         uint256 rewards = 0;
-        Types.Distribution[] memory eras = distributionErasMap[staking];
+        Distribution[] memory eras = distributionErasMap[staking];
 
         if (eras.length == 0 || block.number <= eras[0].startHeight) {
             return rewards;
@@ -95,11 +88,12 @@ contract LinearCalculator is ICalculator, Ownable {
         return getCurrentDistributionEra(staking).amount;
     }
 
-    function getCurrentDistributionEra(address staking) public view returns (Types.Distribution memory) {
-        Types.Distribution[] memory eras = distributionErasMap[staking];
+    function getCurrentDistributionEra(address staking) public view returns (Distribution memory era) {
+        Distribution[] memory eras = distributionErasMap[staking];
         for(uint8 i = 0; i < distributionCountMap[staking]; i++) {
             if (block.number >= eras[i].startHeight && block.number <= eras[i].stopHeight) {
-                return eras[i];
+                era = eras[i];
+                return era;
             }
         }
     }
@@ -133,7 +127,7 @@ contract LinearCalculator is ICalculator, Ownable {
             // check 3)
             require(start < stop, 'Invalid stop height of distribution');
             // set distribution policy
-            distributionErasMap[staking].push(Types.Distribution ({
+            distributionErasMap[staking].push(Distribution ({
                 startHeight: start,
                 stopHeight: stop,
                 amount: amount
