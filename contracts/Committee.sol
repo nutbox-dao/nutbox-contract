@@ -56,11 +56,11 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         whitelistContracts[_c] = true;
     }
 
-    function adminAddFeeIgnoreList(address _f) external onlyOwner {
+    function adminAddFeeIgnoreAddress(address _f) external onlyOwner {
         feeIgnoreList[_f] = true;
     }
 
-    function adminRemoveFeeIgnore(address _f) external onlyOwner {
+    function adminRemoveFeeIgnoreAddress(address _f) external onlyOwner {
         feeIgnoreList[_f] = false;
     }
 

@@ -77,6 +77,8 @@ async function main() {
     console.log(`Admin register SPStakingFactory`);
     tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
     console.log(`Admin register ERC20StakingFactory`);
+    tx = await committeeContract.adminAddFeeIgnoreAddress(env.SPStakingFactory);
+    console.log(`Admin set address:${env.SPStakingFactory} to fee ignore list`);
 
     const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
     tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
