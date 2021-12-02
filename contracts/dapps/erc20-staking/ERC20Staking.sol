@@ -39,9 +39,9 @@ contract ERC20Staking is IPool, ERC20Helper {
 
     // stakeToken actually is a asset contract entity, it represents the asset user stake of this pool.
     // Bascially, it should be a normal ERC20 token or a lptoken of a specific token exchange pair
-    address stakeToken;
+    address immutable stakeToken;
     // community that pool belongs to
-    address community;
+    address immutable community;
 
     // Total staked amount
     uint256 totalStakedAmount;

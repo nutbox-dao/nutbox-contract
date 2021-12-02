@@ -7,6 +7,7 @@ import "./MintableERC20.sol";
 import './Community.sol';
 import './interfaces/ICalculator.sol';
 import './interfaces/ICommittee.sol';
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @dev Factory contract to create an StakingTemplate entity
@@ -21,12 +22,14 @@ contract CommunityFactory {
         address owner;
     }
 
-    address committee;
+    address immutable committee;
     uint64 public communityCount;
     address[] public communities;
     mapping (address => bool) public calculators;
+    // owner  =>  community address, can only create one community from an account
+    mapping (address => address) public ownerCommunity;
 
-    event CommunityCreated(address indexed creater, address indexed community, address communityToken);
+    event CommunityCreated(address indexed creator, address indexed community, address communityToken);
     event ERC20TokenCreated(address indexed token, address indexed owner, TokenProperties properties);
 
     constructor(address _committee) {
@@ -41,32 +44,28 @@ contract CommunityFactory {
         address rewardCalculator,
         bytes calldata distributionPolicy
     ) external {
-        require(ICommittee(committee).verifyContract(rewardCalculator), 'Unsupported calculator');
+        require(ICommittee(committee).verifyContract(rewardCalculator), 'UC'); // Unsupported calculator
+        require(ownerCommunity[msg.sender] == address(0), "HC"); // Have created a community
 
-        Community community = new Community(committee);
 
         // we would create a new mintable token for community
         if (communityToken == address(0)){
             MintableERC20 mintableERC20 = new MintableERC20(properties.name, properties.symbol, properties.supply, properties.owner);
-
-            bytes32 MINTER_ROLE = mintableERC20.MINTER_ROLE();
-            (bool success, ) = address(mintableERC20).call(
-                abi.encodeWithSignature("grantRole(bytes32,address)", MINTER_ROLE, address(community))
-            );
-            require(success, 'Failed to grant mint role for community');
             communityToken = address(mintableERC20);
-            emit ERC20TokenCreated(communityToken, properties.owner, properties);
+            emit ERC20TokenCreated(communityToken, msg.sender, properties);
         }
 
-        community.initialize(
-            msg.sender,
-            communityToken,
-            rewardCalculator
-        );
+        Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, communityToken == address(0));
+
+        if(ICommittee(committee).getFee('CREATING_COMMUNITY') > 0){
+            IERC20(ICommittee(committee).getNut()).transferFrom(msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_COMMUNITY'));
+            ICommittee(committee).updateLedger('CREATING_COMMUNITY', address(this), msg.sender);
+        }
 
         // set staking feast rewarad distribution distributionPolicy
         ICalculator(rewardCalculator).setDistributionEra(address(community), distributionPolicy);
 
+        ownerCommunity[msg.sender] = address(community);
         // save record
         communities.push(address(community));
         communityCount += 1;

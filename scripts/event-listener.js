@@ -3,118 +3,48 @@
 
 const ethers = require('ethers');
 
-const ERC20AssetHandlerJson = require('../build/contracts/ERC20AssetHandler.json');
-const TrustlessAssetHandlerJson = require('../build/contracts/TrustlessAssetHandler.json');
-const RegistryHubJson = require('../build/contracts/RegistryHub.json');
-const HomeChainAssetRegistryJson = require('../build/contracts/HomeChainAssetRegistry.json');
-const SteemHiveDelegateAssetRegistryJson = require('../build/contracts/SteemHiveDelegateAssetRegistry.json');
-const SubstrateCrowdloanAssetRegistryJson = require('../build/contracts/SubstrateCrowdloanAssetRegistry.json');
-const SubstrateNominateAssetRegistryJson = require('../build/contracts/SubstrateNominateAssetRegistry.json');
-const StakingFactoryJson = require('../build/contracts/StakingFactory.json');
-const StakingTemplateJson = require('../build/contracts/StakingTemplate.json');
-const ExectorJson = require('../build/contracts/Executor.json');
-const BridgeJson = require('../build/contracts/Bridge.json');
-const SimpleERC20Json = require('../build/contracts/SimpleERC20.json');
-const Contracts = require('./contracts.json');
+const CommitteeJson = require('../build/contracts/Committee.json')
+const CommunityFactoryJson = require('../build/contracts/CommunityFactory.json')
+const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
+const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
 
-const RegistryHubAddress = Contracts.RegistryHub;
-const HomeChainAssetRegistryAddress = Contracts.HomeChainAssetRegistry;
-const SteemHiveDelegateAssetRegistryAddress = Contracts.SteemHiveDelegateAssetRegistry;
-const SubstrateCrowdloanAssetRegistryAddress = Contracts.SubstrateCrowdloanAssetRegistry;
-const SubstrateNominateAssetRegistryAddress = Contracts.SubstrateNominateAssetRegistry;
-const ERC20AssetHandlerAddress = Contracts.ERC20AssetHandler;
-const TrustlessAssetHandlerAddress = Contracts.TrustlessAssetHandler;
-const ExecutorAddress = Contracts.Executor;
-const BridgeAddress = Contracts.Bridge;
-const StakingFactoryAddress = Contracts.StakingFactory;
+const Addresses = require("./contracts.json");
+const { waitForTx } = require('./utils');
+
+const CommitteeAddress = Addresses.Committee;
+const CommunityFactoryAddress = Addresses.CommunityFactory;
+const SPStakingFactoryAddress = Addresses.SPStakingFactory;
+const ERC20StakingFactoryAddress = Addresses.ERC20StakingFactory;
+
+const NutAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'
 
 function main() {
     let env = {};
     env.url = process.env.ENDPOINT || 'http://localhost:8545';
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
 
-    const RegistryHub = new ethers.Contract(RegistryHubAddress, RegistryHubJson.abi, env.provider);
-    RegistryHub.on('NewAsset', (owner, id) => {
-        console.log(`RegistryHub::NewAsset(${owner}, ${id})`);
+    const Committee = new ethers.Contract(CommitteeAddress, CommitteeJson.abi, env.provider);
+    Committee.on('NewRevenue', (feeType, who, amount) => {
+        console.log(`Committee::NewRevenue(${feeType}, ${who}, ${amount.toString() / 1e18})`);
     });
 
-    const HomeChainAssetRegistry = new ethers.Contract(HomeChainAssetRegistryAddress, HomeChainAssetRegistryJson.abi, env.provider);
-    HomeChainAssetRegistry.on('HomeChainAssetRegistered', (owner, id, location) => {
-        console.log(`HomeChainAssetRegistry::HomeChainAssetRegistered(${owner}, ${id}, ${location})`);
-    });
+    const CommunityFactory = new ethers.Contract(CommunityFactoryAddress, CommunityFactoryJson.abi, env.provider)
+    CommunityFactory.on('CommunityCreated', (creator, community, token) => {
+        console.log(`CommunityFactory::CommunityCreated(${creator}, ${community}, ${token})`);
+    })
+    CommunityFactory.on('ERC20TokenCreated', (token, owner, propertied) => {
+        console.log(`CommunityFactory::ERC20TokenCreated(${token}, ${owner}, ${propertied})`);
+    })
+    
+    const SPStakingFactory = new ethers.Contract(SPStakingFactoryAddress, SPStakingFactoryJson.abi, env.provider)
+    SPStakingFactory.on('SPStakingCreated', (pool, community, chainId, delegatee) => {
+        console.log(`SPStakingFactory::SPStakingCreated(${pool}, ${community}, ${chainId}, ${ethers.utils.parseBytes32String(delegatee)})`);
+    })
 
-    const SteemHiveDelegateAssetRegistry = new ethers.Contract(SteemHiveDelegateAssetRegistryAddress, SteemHiveDelegateAssetRegistryJson.abi, env.provider);
-    SteemHiveDelegateAssetRegistry.on('SteemHiveDelegateAssetRegisterd', (owner, id, meta) => {
-        console.log(`SteemHiveDelegateAssetRegistry::SteemHiveDelegateAssetRegisterd(${owner}, ${id}, ${meta})`);
-    });
-
-    const SubstrateCrowdloanAssetRegistry = new ethers.Contract(SubstrateCrowdloanAssetRegistryAddress, SubstrateCrowdloanAssetRegistryJson.abi, env.provider);
-    SubstrateCrowdloanAssetRegistry.on('SubstrateCrowdloanAssetRegistered', (owner, id, meta) => {
-        console.log(`SubstrateCrowdloanAssetRegistry::SubstrateCrowdloanAssetRegistered(${owner}, ${id}, ${meta})`);
-    });
-
-    const SubstrateNominateAssetRegistry = new ethers.Contract(SubstrateNominateAssetRegistryAddress, SubstrateNominateAssetRegistryJson.abi, env.provider);
-    SubstrateNominateAssetRegistry.on('SubstrateNominateAssetRegistered', (owner, id, meta) => {
-        console.log(`SubstrateNominateAssetRegistry::SubstrateNominateAssetRegistered(${owner}, ${id}, ${meta})`);
-    });
-
-    const ERC20AssetHandler = new ethers.Contract(ERC20AssetHandlerAddress, ERC20AssetHandlerJson.abi, env.provider);
-    ERC20AssetHandler.on('WhitelistManagerAdded', (manager) => {
-        console.log(`ERC20AssetHandler::WhitelistManagerAdded(${manager})`);
-    });
-    ERC20AssetHandler.on('WhitelistManagerRemoved', (manager) => {
-        console.log(`ERC20AssetHandler::WhitelistManagerRemoved(${manager})`);
-    });
-    ERC20AssetHandler.on('LockAsset', (source, assetId, depositer, amount) => {
-        console.log(`ERC20AssetHandler::LockAsset(${source}, ${assetId}, ${depositer}, ${amount})`);
-    });
-    ERC20AssetHandler.on('BurnAsset', (source, assetId, depositer, amount) => {
-        console.log(`ERC20AssetHandler::BurnAsset(${source}, ${assetId}, ${depositer}, ${amount})`);
-    });
-    ERC20AssetHandler.on('UnlockAsset', (source, assetId, recipient, amount) => {
-        console.log(`ERC20AssetHandler::UnlockAsset(${source}, ${assetId}, ${recipient}, ${amount})`);
-    });
-    ERC20AssetHandler.on('MintAsset', (source, assetId, recipient, amount) => {
-        console.log(`ERC20AssetHandler::MintAsset(${source}, ${assetId}, ${recipient}, ${amount})`);
-    });
-
-    const TrustlessAssetHandler = new ethers.Contract(TrustlessAssetHandlerAddress, TrustlessAssetHandlerJson.abi, env.provider);
-    TrustlessAssetHandler.on('AttachedPool', (assetId, stakingFeast, pid) => {
-        console.log(`TrustlessAssetHandler::AttachedPool(${assetId}, ${stakingFeast}, ${pid})`);
-    });
-    TrustlessAssetHandler.on('BalanceUpdated', (source, assetId, account, amount, bindAccount) => {
-        console.log(`TrustlessAssetHandler::BalanceUpdated(${source}, ${assetId}, ${account}, ${amount}, ${bindAccount})`);
-    });
-
-    const Bridge = new ethers.Contract(BridgeAddress, BridgeJson.abi, env.provider);
-    Bridge.on('ProposalVoted', (proposal, relayer) => {
-        console.log(`Bridge::ProposalVoted(${proposal}, ${relayer})`);
-    });
-    Bridge.on('ProposalCancelled', (proposal, relayer) => {
-        console.log(`Bridge::ProposalCancelled(${proposal}, ${relayer})`);
-    });
-    Bridge.on('ProposalPassed', (proposal, relayer) => {
-        console.log(`Bridge::ProposalPassed(${proposal}, ${relayer})`);
-    });
-    Bridge.on('ProposalExecuted', (proposal, relayer) => {
-        console.log(`Bridge::ProposalExecuted(${proposal}, ${relayer})`);
-    });
-
-    const StakingFactory = new ethers.Contract(StakingFactoryAddress, StakingFactoryJson.abi, env.provider);
-    StakingFactory.on('StakingFeastCreated', (creater, stakingFeast, rewardAsset) => {
-        console.log(`StakingFactory::StakingFeastCreated(${creater}, ${stakingFeast}, ${rewardAsset})`);
-        // start watch events of the staking feast
-        const StakingFeast = new ethers.Contract(stakingFeast, StakingTemplateJson.abi, env.provider);
-        StakingFeast.on('Deposit', (pid, nutboxAccount, amount) => {
-            console.log(`StakingFeast[${stakingFeast}]::Deposit(${pid}, ${nutboxAccount}, ${amount})`);
-        });
-        StakingFeast.on('Withdraw', (pid, nutboxAccount, amount) => {
-            console.log(`StakingFeast[${stakingFeast}]::Withdraw(${pid}, ${nutboxAccount}, ${amount})`);
-        });
-        StakingFeast.on('WithdrawRewards', (nutboxAccount, amount) => {
-            console.log(`StakingFeast[${stakingFeast}]::WithdrawRewards(${nutboxAccount}, ${amount})`);
-        });
-    });
+    const ERC20StakingFactory = new ethers.Contract(ERC20StakingFactoryAddress, ERC20StakingFactoryJson.abi, env.provider)
+    ERC20StakingFactory.on('ERC20StakingCreated', (pool, community, erc20Token) => {
+        console.log(`ERC20StakingFactory::ERC20StakingCreated(${pool}, ${community}, ${erc20Token})`);
+    })
 
     process.stdin.resume();//so the program will not close instantly
 

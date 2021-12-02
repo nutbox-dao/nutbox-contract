@@ -24,4 +24,6 @@ interface ICommittee {
     function getRevenue(string memory feeType) external view returns (uint256);
 
     function verifyContract(address factory) external view returns (bool);
+
+    function getFeeIgnore(address ignoreAddress) external view returns (bool);
 }

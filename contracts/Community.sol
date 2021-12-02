@@ -22,42 +22,43 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
     using SafeMath for uint256;
 
-    address committee;
+    address immutable committee;
     uint16 public feeRatio;    // actually fee is reward.mult(feeRatio).div(10000)
     // pool => hasOpened
-    mapping(address => bool) public openedPools;
+    mapping(address => bool) openedPools;
     // pool => shareAcc
-    mapping(address => uint256) public poolAcc;
+    mapping(address => uint256) poolAcc;
     // pool => user => amount
-    mapping(address => mapping(address => uint256)) public userRewards;
+    mapping(address => mapping(address => uint256)) userRewards;
     // pool => user => amount
-    mapping(address => mapping(address => uint256)) public userDebts;
-    // pool => canUpdate
+    mapping(address => mapping(address => uint256)) userDebts;
+    // pool => canUpdate, all added pools
     mapping(address => bool) public whitelists;
     address[] public activedPools;
     address[] public createdPools;
     uint16[] public poolRatios;
     uint256 public lastRewardBlock;
-    address public communityToken;
-    bool public isMintableCommunityToken;
-    address public factory;
-    address public rewardCalculator;
+    address immutable public communityToken;
+    bool immutable public isMintableCommunityToken;
+    address immutable public rewardCalculator;
 
     // events triggered by community admin
     event AdminSetFeeRatio(uint16 ratio);
     event AdminDepositeReward(address indexed token, uint256 amount);
     event AdminWithdrawReward(address indexed token, uint256 amount);
-    event AdminAddPool(address indexed pool, string name);
+    event AdminAddPool(address indexed pool, string name, address indexed factory);
     event AdminClosePool(address indexed pool);
-    event AdminOpenPool(address indexed pool);
     event AdminSetPoolRatio(address[] pools, uint16[] ratios);
-
     // events triggered by user
-    event WithdrawRewards(address who, uint256 amount);
+    event WithdrawRewards(address indexed who, uint256 amount);
 
-    constructor(address _committee) {
+    constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
+        transferOwnership(_admin);
         committee = _committee;
-        factory = msg.sender;
+        communityToken = _communityToken;
+        rewardCalculator = _rewardCalculator;
+        isMintableCommunityToken = _isMintableCommunityToken;
+        lastRewardBlock = 0;
         feeRatio = 0;
     }
 
@@ -65,34 +66,8 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         return owner();
     }
 
-    /**
-     * @dev Create staking template contract instance.
-     * The admin is the account who use Community contract deploy this template.
-     *
-     * Notice:
-     * Here we use Struct as function parameter, which supported in ABI-Encode-V2
-     */
-    function initialize (
-        address _admin,
-        address _communityToken,
-        address _rewardCalculator
-    ) public {
-        require(msg.sender == factory, 'Call is not factory');
-
-        // tranfer ownership from factory to community owner
-        transferOwnership(_admin);
-
-        // pay fee for community creating
-        lockERC20(ICommittee(committee).getNut(), _admin, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_COMMUNITY'));
-        ICommittee(committee).updateLedger('CREATING_COMMUNITY', address(this), _admin);
-
-        lastRewardBlock = 0;
-        communityToken = _communityToken;
-        rewardCalculator = _rewardCalculator;
-    }
-
     function adminSetFeeRatio(uint16 _ratio) external onlyOwner {
-        require(_ratio <= 10000, 'Pool ratio is exccedd 10000');
+        require(_ratio <= 10000, 'PR>1w');//Pool ratio is exccedd 10000
 
         _updatePoolsWithFee(owner());
         
@@ -111,8 +86,8 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
 
     function adminAddPool(string memory poolName, uint16[] memory ratios, address poolFactory, bytes calldata meta) external onlyOwner {
-        require((activedPools.length + 1) == ratios.length, 'Wrong Pool ratio count');
-        require(ICommittee(committee).verifyContract(poolFactory) == true, 'Unsupported pool factory');
+        require((activedPools.length + 1) == ratios.length, 'WPC');//Wrong Pool ratio count
+        require(ICommittee(committee).verifyContract(poolFactory) == true, 'UPF');//Unsupported pool factory
         _checkRatioSum(ratios);
 
         // create pool imstance
@@ -126,14 +101,17 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
         _updatePoolsWithFee(owner());
 
-        lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_POOL'));
-        ICommittee(committee).updateLedger('CREATING_POOL', address(this), msg.sender);
+        if(ICommittee(committee).getFee('CREATING_POOL') > 0) {
+            lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_POOL'));
+            ICommittee(committee).updateLedger('CREATING_POOL', address(this), msg.sender);
+        }
 
-        emit AdminAddPool(pool, poolName);
+        emit AdminAddPool(pool, poolName, poolFactory);
     }
 
     function adminClosePool(address poolAddress, address[] memory _activedPools, uint16[] memory ratios) external onlyOwner {
-        require(openedPools[poolAddress] == true, 'Pool is already inactived');
+        require(openedPools[poolAddress] == true, 'PIA');// Pool is already inactived
+        require(_activedPools.length == activedPools.length - 1, "Wrong activedPools length");
         require(_activedPools.length == ratios.length, 'Length of pools and ratios dismatch');
         _checkRatioSum(ratios);
 
@@ -148,28 +126,6 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         emit AdminClosePool(poolAddress);
     }
 
-    function adminOpenPool(address poolAddress, address[] memory _activedPools, uint16[] memory ratios) external onlyOwner {
-        require(openedPools[poolAddress] == false, 'Pool is actived');
-        require(_activedPools.length == ratios.length, 'Length of pools and ratios dismatch');
-        // check whether pool is exist in given active pool list
-        bool canOpen = false;
-        for (uint16 i = 0; i < _activedPools.length; i++) {
-            if (_activedPools[i] == poolAddress) canOpen = true;
-        }
-        require(canOpen, 'Wrong pool address or active pool list');
-        _checkRatioSum(ratios);
-
-        _updatePoolsWithFee(owner());
-
-        // mark as actived
-        openedPools[poolAddress] = true;
-        activedPools = _activedPools;
-        poolRatios = ratios;
-
-        emit AdminSetPoolRatio(activedPools, ratios);
-        emit AdminOpenPool(poolAddress);
-    }
-
     function adminSetPoolRatios(uint16[] memory ratios) external onlyOwner {
         require(activedPools.length == ratios.length, 'Wrong ratio list length');
         _checkRatioSum(ratios);
@@ -182,39 +138,10 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
 
     /**
-     * @dev This function would withdraw siingle pool rewards that exist in the pool which available for user
-     */
-    function withdrawPoolRewards(address poolAddress) external {
-        // game has not started
-        if (lastRewardBlock == 0) return;
-
-        // There are new blocks created after last updating, so update pools before withdraw
-        if(block.number > lastRewardBlock) {
-            _updatePoolsWithFee(msg.sender);
-        }
-
-        uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
-        uint256 availableRewards = 0;
-        uint256 pending = stakedAmount.mul(poolAcc[poolAddress]).div(1e12).sub(userDebts[poolAddress][msg.sender]);
-        if(pending > 0) {
-            userRewards[poolAddress][msg.sender] = userRewards[poolAddress][msg.sender].add(pending);
-        }
-        availableRewards = userRewards[poolAddress][msg.sender];
-        // transfer rewards to user
-        _unlockOrMintAsset(communityToken, msg.sender, availableRewards);
-
-        // after tranfer successfully, update staking info
-        userDebts[poolAddress][msg.sender] = stakedAmount.mul(poolAcc[poolAddress]).div(1e12);
-        userRewards[poolAddress][msg.sender] = 0;
-
-        emit WithdrawRewards(msg.sender, availableRewards);
-    }
-
-    /**
      * @dev This function would withdraw all rewards that exist in all pools which available for user
      * This function will not only travel actived pools, but also closed pools
      */
-    function withdrawTotalRewards() external {
+    function withdrawPoolsRewards(address[] memory poolAddresses) external {
 
         // game has not started
         if (lastRewardBlock == 0) return;
@@ -225,7 +152,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         }
 
         uint256 totalAvailableRewards = 0;
-        for (uint8 i = 0; i < createdPools.length; i++) {
+        for (uint8 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = createdPools[i];
             uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
 
@@ -235,19 +162,12 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             }
             // add all pools available rewards
             totalAvailableRewards = totalAvailableRewards.add(userRewards[poolAddress][msg.sender]);
-        }
-
-        // transfer rewards to user
-        _unlockOrMintAsset(communityToken, msg.sender, totalAvailableRewards);
-
-        // after tranfer successfully, update staking info
-        for (uint8 i = 0; i < createdPools.length; i++) {
-            address poolAddress = createdPools[i];
-            uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
             userDebts[poolAddress][msg.sender] = stakedAmount.mul(poolAcc[poolAddress]).div(1e12);
             userRewards[poolAddress][msg.sender] = 0;
         }
 
+        // transfer rewards to user
+        _unlockOrMintAsset(communityToken, msg.sender, totalAvailableRewards);
         emit WithdrawRewards(msg.sender, totalAvailableRewards);
     }
 
@@ -287,27 +207,36 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         return userDebts[pool][user];
     }
 
+    function getActivedPoolsLength() external view returns (uint256) {
+        return activedPools.length;
+    }
+
+    function getCreatedPoolsLength() external view returns (uint256) {
+        return createdPools.length;
+    }
+
     function appendUserReward(address pool, address user, uint256 amount) external override {
-        require(whitelists[msg.sender], 'Perssion denied: pool not in whitelist');
+        require(whitelists[msg.sender], 'PNIW');//Perssion denied: pool not in whitelist
         userRewards[pool][user] = userRewards[pool][user].add(amount);
     }
 
     function setUserDebt(address pool, address user, uint256 debt) external override {
-        require(whitelists[msg.sender], 'Perssion denied: pool not in whitelist');
+        require(whitelists[msg.sender], 'PNIW');
         userDebts[pool][user] = debt;
     }
 
     function updatePools(address feePayer) external override {
-        require(whitelists[msg.sender], 'Perssion denied: pool not in whitelist');
+        require(whitelists[msg.sender], 'PNIW');
         _updatePoolsWithFee(feePayer);
     }
 
     function _updatePoolsWithFee(address feePayer) private {
 
         // need pay staking fee whenever update pools
-        
-        lockERC20(ICommittee(committee).getNut(), feePayer, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('STAKING'));
-        ICommittee(committee).updateLedger('STAKING', address(this), feePayer);
+        if (!ICommittee(committee).getFeeIgnore(feePayer) && ICommittee(committee).getFee('STAKING') > 0){
+            lockERC20(ICommittee(committee).getNut(), feePayer, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('STAKING'));
+            ICommittee(committee).updateLedger('STAKING', address(this), feePayer);
+        }
 
         uint256 rewardsReadyToMinted = 0;
         uint256 currentBlock = block.number;

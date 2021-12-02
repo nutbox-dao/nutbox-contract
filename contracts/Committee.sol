@@ -28,6 +28,9 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     // contract => isWhilistContract
     mapping(address => bool) whitelistContracts;
 
+    // some address no need to pay fee. eg: steem brigde
+    mapping(address => bool) feeIgnoreList;
+
     event FeeSet(string indexed feeType, uint256 amount);
     event NewRevenue(string indexed feeType, address who, uint256 amount);
     event NewAppropriation(address recipient, uint256 amount);
@@ -50,7 +53,15 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     }
 
     function adminRemoveContract(address _c) external onlyOwner {
-        whitelistContracts[_c] = false;
+        whitelistContracts[_c] = true;
+    }
+
+    function adminAddFeeIgnoreList(address _f) external onlyOwner {
+        feeIgnoreList[_f] = true;
+    }
+
+    function adminRemoveFeeIgnore(address _f) external onlyOwner {
+        feeIgnoreList[_f] = false;
     }
 
     function adminSetTreasury(address _treasury) external onlyOwner {
@@ -89,6 +100,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     }
 
     function updateLedger(string memory feeType, address community, address who) external override {
+        if(feeIgnoreList[who]) return;
         require(whitelistManager[msg.sender] || whitelist[msg.sender], 'Permission denied: caller is not in whitelist');
         bytes32 ft = keccak256(abi.encodePacked(feeType));
         uint256 amount = fees[ft];
@@ -104,5 +116,9 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
 
     function verifyContract(address c) external view override returns (bool) {
         return whitelistContracts[c];
+    }
+
+    function getFeeIgnore(address ignoreAddress) external view override returns (bool) {
+        return feeIgnoreList[ignoreAddress];
     }
 }
