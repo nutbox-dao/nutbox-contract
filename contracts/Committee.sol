@@ -32,7 +32,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     mapping(address => bool) feeIgnoreList;
 
     event FeeSet(string indexed feeType, uint256 amount);
-    event NewRevenue(string indexed feeType, address who, uint256 amount);
+    event NewRevenue(string feeType, address indexed community, address indexed pool, address indexed who, uint256 amount);
     event NewAppropriation(address recipient, uint256 amount);
 
     constructor(address _treasury, address _nut) {
@@ -99,7 +99,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         return fees[keccak256(abi.encodePacked(feeType))];
     }
 
-    function updateLedger(string memory feeType, address community, address who) external override {
+    function updateLedger(string memory feeType, address community, address pool, address who) external override {
         if(feeIgnoreList[who]) return;
         require(whitelistManager[msg.sender] || whitelist[msg.sender], 'Permission denied: caller is not in whitelist');
         bytes32 ft = keccak256(abi.encodePacked(feeType));
@@ -107,7 +107,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         if (amount == 0) return;
         revenues[ft] = revenues[ft].add(amount);
         communityFees[community] = communityFees[community].add(amount);
-        emit NewRevenue(feeType, who, amount);
+        emit NewRevenue(feeType, community, pool, who, amount);
     }
 
     function getRevenue(string memory feeType) external view override returns (uint256) {

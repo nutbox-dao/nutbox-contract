@@ -10,7 +10,8 @@ const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
 const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 
-const NutAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'  // local host
+// const NutAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'  // local host
+const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -86,6 +87,8 @@ async function main() {
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
+    const blockNum = await env.provider.getBlockNumber();
+
     const output = {
         Committee: env.Committee ?? "Not Deployed",
         CommunityFactory: env.CommunityFactory ?? "Not Deployed",
@@ -103,6 +106,7 @@ async function main() {
         Url:            ${env.url}
         Deployer:       ${env.wallet.address}
         Depoly Cost:    ${ethers.utils.formatEther(deployCost)}
+        Depoly block number: ${blockNum}
 
         Contract Addresses:
         ===============================================================

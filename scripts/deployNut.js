@@ -2,7 +2,8 @@ require('dotenv').config();
 const ethers = require('ethers');
 
 const NUTTokenJson = require('../build/contracts/NUTToken.json');
-const NUTAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'
+const NUTAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6' // localhost
+const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
 
 async function deployNutContract(env) {
     let factory = new ethers.ContractFactory(NUTTokenJson.abi, NUTTokenJson.bytecode, env.wallet);
@@ -28,8 +29,6 @@ async function main() {
     env.gasPrice = await env.provider.getGasPrice();
 
     const tx = await deployNutContract(env);
-   
-
 }
 
 main()

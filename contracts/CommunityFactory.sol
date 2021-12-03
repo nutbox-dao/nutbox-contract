@@ -7,14 +7,14 @@ import "./MintableERC20.sol";
 import './Community.sol';
 import './interfaces/ICalculator.sol';
 import './interfaces/ICommittee.sol';
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./ERC20Helper.sol";
 
 /**
  * @dev Factory contract to create an StakingTemplate entity
  *
  * This is the entry contract that user start to create their own staking economy.
  */
-contract CommunityFactory {
+contract CommunityFactory is ERC20Helper {
     struct TokenProperties {
         string name;
         string symbol;
@@ -58,8 +58,8 @@ contract CommunityFactory {
         Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, communityToken == address(0));
 
         if(ICommittee(committee).getFee('CREATING_COMMUNITY') > 0){
-            IERC20(ICommittee(committee).getNut()).transferFrom(msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_COMMUNITY'));
-            ICommittee(committee).updateLedger('CREATING_COMMUNITY', address(this), msg.sender);
+            lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_COMMUNITY'));
+            ICommittee(committee).updateLedger('CREATING_COMMUNITY', address(this), address(0), msg.sender);
         }
 
         // set staking feast rewarad distribution distributionPolicy

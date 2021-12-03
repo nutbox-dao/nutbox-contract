@@ -18,6 +18,7 @@ interface ICommittee {
     function updateLedger(
         string memory feeType,
         address community,
+        address pool,
         address who
     ) external;
 
