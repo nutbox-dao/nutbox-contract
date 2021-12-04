@@ -44,12 +44,10 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
     // events triggered by community admin
     event AdminSetFeeRatio(uint16 ratio);
-    event AdminWithdrawReward(address indexed token, uint256 amount);
-    event AdminAddPool(address indexed pool, string name, address indexed factory);
     event AdminClosePool(address indexed pool);
     event AdminSetPoolRatio(address[] pools, uint16[] ratios);
     // events triggered by user
-    event WithdrawRewards(address indexed who, uint256 amount);
+    event WithdrawRewards(address[] pool, address indexed who, uint256 amount);
     // when user update pool, there may be some fee charge to owner's account
     event PoolUpdated(address indexed who, uint256 amount);
 
@@ -78,7 +76,6 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
     function adminWithdrawReward(uint256 amount) external onlyOwner {
         releaseERC20(communityToken, msg.sender, amount);
-        emit AdminWithdrawReward(communityToken, amount);
     }
 
     function adminAddPool(string memory poolName, uint16[] memory ratios, address poolFactory, bytes calldata meta) external onlyOwner {
@@ -87,7 +84,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         _checkRatioSum(ratios);
 
         // create pool imstance
-        address pool = IPoolFactory(poolFactory).createPool(address(this), meta);
+        address pool = IPoolFactory(poolFactory).createPool(address(this), poolName, meta);
         openedPools[pool] = true;
         whitelists[pool] = true;
         poolAcc[pool] = 0;
@@ -101,8 +98,6 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_POOL'));
             ICommittee(committee).updateLedger('CREATING_POOL', address(this), pool, msg.sender);
         }
-
-        emit AdminAddPool(pool, poolName, poolFactory);
     }
 
     function adminClosePool(address poolAddress, address[] memory _activedPools, uint16[] memory ratios) external onlyOwner {
@@ -149,7 +144,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
         uint256 totalAvailableRewards = 0;
         for (uint8 i = 0; i < poolAddresses.length; i++) {
-            address poolAddress = createdPools[i];
+            address poolAddress = poolAddresses[i];
             uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
 
             uint256 pending = stakedAmount.mul(poolAcc[poolAddress]).div(1e12).sub(userDebts[poolAddress][msg.sender]);
@@ -164,7 +159,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
         // transfer rewards to user
         _unlockOrMintAsset(msg.sender, totalAvailableRewards);
-        emit WithdrawRewards(msg.sender, totalAvailableRewards);
+        emit WithdrawRewards(poolAddresses, msg.sender, totalAvailableRewards);
     }
 
     function getPoolPendingRewards(address poolAddress, address user) public view returns(uint256) {

@@ -169,15 +169,23 @@ async function createSpPool(community, env) {
 async function main() {
     let env = {}
     env.url = process.env.TESTENDPOINT;
-    env.privateKey = process.env.TESTKEY;
+    env.privateKey = process.env.TESTKEY2;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
 
     // const { community, communityToken } = await createSimpleCommunity(env);
-    const { community, communityToken } = await createMintableCommunity(env);
+    // const { community, communityToken } = await createMintableCommunity(env);
+    // console.log(community);
+    // const contract1 = new ethers.Contract('0x7EB464eD9844326630a15176c54042C56657B539', CommunityJson.abi, env.wallet)
+    // const tx1 = await contract.adminSetFeeRatio(1000);
+    // console.log(tx1.hash);
+
+    const { community2, communityToken2 } = await createMintableCommunity(env);
+    console.log(community2); // 0x575e3C9EF82EeEE680a3495C9b2cf11a8a857546
+    // communityToken2   0x8059271909267422297b5c67b7E0A0cDEb5A3565
     
-    const poolAddress = await createERC20Pool(community, env);
-    const spPool = await createSpPool(community, env);
+    // const poolAddress = await createERC20Pool(community, env);
+    // const spPool = await createSpPool(community, env);
 }
 
 main()

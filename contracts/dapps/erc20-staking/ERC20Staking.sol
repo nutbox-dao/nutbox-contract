@@ -36,6 +36,7 @@ contract ERC20Staking is IPool, ERC20Helper {
 
     // total stakers of this pool
     uint64 stakerCount;
+    string public name;
 
     // stakeToken actually is a asset contract entity, it represents the asset user stake of this pool.
     // Bascially, it should be a normal ERC20 token or a lptoken of a specific token exchange pair
@@ -47,16 +48,19 @@ contract ERC20Staking is IPool, ERC20Helper {
     uint256 totalStakedAmount;
 
     event Deposited(
+        address indexed community,
         address indexed who,
         uint256 amount
     );
     event Withdrawn(
+        address indexed community,
         address indexed who,
         uint256 amount
     );
 
-    constructor(address _community, address _stakeToken) {
+    constructor(address _community, string memory _name, address _stakeToken) {
         community = _community;
+        name = _name;
         stakeToken = _stakeToken;
     }
 
@@ -105,7 +109,7 @@ contract ERC20Staking is IPool, ERC20Helper {
             .mul(ICommunity(community).getShareAcc(address(this)))
             .div(1e12));
 
-        emit Deposited(depositor, amount);
+        emit Deposited(community, depositor, amount);
     }
 
     function withdraw(
@@ -148,7 +152,7 @@ contract ERC20Staking is IPool, ERC20Helper {
             .mul(ICommunity(community).getShareAcc(address(this)))
             .div(1e12));
 
-        emit Withdrawn(depositor, withdrawAmount);
+        emit Withdrawn(community, depositor, withdrawAmount);
     }
 
     function getUserStakedAmount(address user)

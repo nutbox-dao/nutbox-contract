@@ -41,6 +41,7 @@ contract SPStaking is IPool {
     uint64 stakerCount;
 
     address immutable factory;
+    string public name;
 
     // community that pool belongs to
     address immutable community;
@@ -53,14 +54,16 @@ contract SPStaking is IPool {
     uint256 totalStakedAmount;
 
     event UpdateStaking(
+        address indexed community,
         address indexed who,
         uint256 previousAmount,
         uint256 newAmount
     );
 
-    constructor(address _community, uint8 _chainId, bytes32 _delegatee) {
+    constructor(address _community, string memory _name, uint8 _chainId, bytes32 _delegatee) {
         factory = msg.sender;
         community = _community;
+        name = _name;
         delegatee = _delegatee;
         chainId = _chainId;
     }
@@ -127,7 +130,7 @@ contract SPStaking is IPool {
             .mul(ICommunity(community).getShareAcc(address(this)))
             .div(1e12));
         
-        emit UpdateStaking(depositor, prevAmount, amount);
+        emit UpdateStaking(community, depositor, prevAmount, amount);
     }
 
     function getUserStakedAmount(address user)

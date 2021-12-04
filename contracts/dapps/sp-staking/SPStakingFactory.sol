@@ -22,16 +22,17 @@ contract SPStakingFactory is IPoolFactory, Ownable {
     event SPStakingCreated(
         address indexed pool,
         address indexed community,
+        string name,
         uint8 chainId,
         bytes32 delegatee
     );
 
-    function createPool(address community, bytes calldata meta) override external returns(address) {
+    function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
         uint8 chainId = meta.toUint8(0);
         bytes32 delegatee = meta.toBytes32(1);
-        SPStaking pool = new SPStaking(community, chainId, delegatee);
-        emit SPStakingCreated(address(pool), community, chainId, delegatee);
+        SPStaking pool = new SPStaking(community, name, chainId, delegatee);
+        emit SPStakingCreated(address(pool), community, name, chainId, delegatee);
         return address(pool);
     }
 
