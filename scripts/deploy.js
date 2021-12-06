@@ -62,6 +62,12 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
+    // env.Committee = '0x78A00B57C1CD729CD1fF0B7C8C0Be8CDD14Ff645';
+    // env.CommunityFactory = '0x576A2002EEc10E34081059e3603dadE56C094C29'
+    // env.SPStakingFactory = '0x7Aa2ae9829E81e2ce3ad388a6C472426976BF8BB'
+    // env.ERC20StakingFactory = '0x2cD047D1Bfec5c8943c546A77af1FdE89769E339'
+    // env.LinearCalculator = '0x083FE5607fcB103A0ba14D3d6A5fa211f567b620'
+
     await deployCommitteeContract(env);
     await deployCommunityFactoryContract(env);
     await deploySPStakingFactoryContract(env);

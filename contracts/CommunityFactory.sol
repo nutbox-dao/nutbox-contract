@@ -23,8 +23,6 @@ contract CommunityFactory is ERC20Helper {
     }
 
     address immutable committee;
-    uint64 public communityCount;
-    address[] public communities;
     mapping (address => bool) public calculators;
     // owner  =>  community address, can only create one community from an account
     mapping (address => address) public ownerCommunity;
@@ -66,9 +64,6 @@ contract CommunityFactory is ERC20Helper {
         ICalculator(rewardCalculator).setDistributionEra(address(community), distributionPolicy);
 
         ownerCommunity[msg.sender] = address(community);
-        // save record
-        communities.push(address(community));
-        communityCount += 1;
 
         // add community to fee payment whitelist
         ICommittee(committee).setFeePayer(address(community));

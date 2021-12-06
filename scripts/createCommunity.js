@@ -27,7 +27,7 @@ async function createSimpleCommunity(env) {
             console.log('Current block number', block);
             const policyArray = [
                 {
-                    startHeight: block + 5,
+                    startHeight: block + 15,
                     stopHeight: block + 100,
                     reward: ethers.utils.parseUnits("10", 18)
                 },
@@ -58,6 +58,7 @@ async function createSimpleCommunity(env) {
                     gasLimit: process.env.GASLIMIT,
                     gasPrice: await env.provider.getGasPrice()
                 });
+            console.log('Create community tx:', tx.hash);
         } catch (e) {
             console.log('Create simple community fail:', e);
         }
@@ -96,7 +97,6 @@ async function createMintableCommunity(env) {
                 contract.removeAllListeners('CommunityCreated');
                 resolve({ community, communityToken });
             })
-            console.log(await contract.communityCount());
             const tx = await contract.createCommunity('0x0000000000000000000000000000000000000000', {
                 name: 'Nutbox',
                 symbol: 'NUT', 
@@ -118,10 +118,14 @@ async function createERC20Pool(community, env) {
         try{
             const communityContract = new ethers.Contract(community, CommunityJson.abi, env.wallet);
             const ERC20StakingFactoryContract = new ethers.Contract(ERC20StakingFactoryAddress, ERC20StakingFactoryJson.abi, env.wallet);
-            ERC20StakingFactoryContract.on('ERC20StakingCreated', (pool, community, token) => {
-                console.log(`Create new pool: ${pool}, community:${community}, token: ${token}`);
-                resolve(pool);
-                ERC20StakingFactoryContract.removeAllListeners('ERC20StakingCreated');
+            // ERC20StakingFactoryContract.on('ERC20StakingCreated', (pool, community, token) => {
+            //     console.log(`Create new pool: ${pool}, community:${community}, token: ${token}`);
+            //     resolve(pool);
+            //     ERC20StakingFactoryContract.removeAllListeners('ERC20StakingCreated');
+            // })
+            communityContract.on('AdminSetPoolRatio', (pools, ratios) => {
+                console.log("Admin set pool ratios: ", pools, ratios);
+                communityContract.removeAllListeners('AdminSetPoolRatio')
             })
             const tx = await communityContract.adminAddPool("Stake nut for nut", [10000],
             ERC20StakingFactoryAddress,
@@ -169,23 +173,22 @@ async function createSpPool(community, env) {
 async function main() {
     let env = {}
     env.url = process.env.TESTENDPOINT;
-    env.privateKey = process.env.TESTKEY2;
+    env.privateKey = process.env.TESTKEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
-
+    
     // const { community, communityToken } = await createSimpleCommunity(env);
-    // const { community, communityToken } = await createMintableCommunity(env);
-    // console.log(community);
-    // const contract1 = new ethers.Contract('0x7EB464eD9844326630a15176c54042C56657B539', CommunityJson.abi, env.wallet)
-    // const tx1 = await contract.adminSetFeeRatio(1000);
+    // console.log(community);// 0x204b4d96E8C72bc30A1c544223FF43331222eeb7
+    // const contract1 = new ethers.Contract('0x204b4d96E8C72bc30A1c544223FF43331222eeb7', CommunityJson.abi, env.wallet)
+    // const tx1 = await contract1.adminSetFeeRatio(1000);
     // console.log(tx1.hash);
 
-    const { community2, communityToken2 } = await createMintableCommunity(env);
-    console.log(community2); // 0x575e3C9EF82EeEE680a3495C9b2cf11a8a857546
-    // communityToken2   0x8059271909267422297b5c67b7E0A0cDEb5A3565
+    // const { community2, communityToken2 } = await createMintableCommunity(env);
+    // console.log(community2); // 0x8Fdd4f05D7fb2D72F0Fba5A5C3802aF2eBc6C309
+    // communityToken2   0x6065225ACc9a4eaA591ea0688CEDc49807b316E8
     
     // const poolAddress = await createERC20Pool(community, env);
-    // const spPool = await createSpPool(community, env);
+    const spPool = await createSpPool('0xf234E84e9f1F83105A120351dFEa179AC4Ad8730', env);
 }
 
 main()

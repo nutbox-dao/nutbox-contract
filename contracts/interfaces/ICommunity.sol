@@ -30,6 +30,4 @@ interface ICommunity {
     ) external;
 
     function updatePools(address feePayer) external;
-
-    function getOwner() external view returns (address);
 }

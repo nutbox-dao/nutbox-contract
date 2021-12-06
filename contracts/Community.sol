@@ -61,10 +61,6 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         feeRatio = 0;
     }
 
-    function getOwner() external view override returns (address) {
-        return owner();
-    }
-
     function adminSetFeeRatio(uint16 _ratio) external onlyOwner {
         require(_ratio <= 10000, 'PR>1w');//Pool ratio is exccedd 10000
 
@@ -98,6 +94,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_POOL'));
             ICommittee(committee).updateLedger('CREATING_POOL', address(this), pool, msg.sender);
         }
+        _emitAdminSetPoolRatio(activedPools, poolRatios);
     }
 
     function adminClosePool(address poolAddress, address[] memory _activedPools, uint16[] memory ratios) external onlyOwner {
@@ -113,7 +110,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         activedPools = _activedPools;
         poolRatios = ratios;
 
-        emit AdminSetPoolRatio(activedPools, ratios);
+        _emitAdminSetPoolRatio(activedPools, ratios);
         emit AdminClosePool(poolAddress);
     }
 
@@ -125,7 +122,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
         poolRatios = ratios;
 
-        emit AdminSetPoolRatio(activedPools, ratios);
+        _emitAdminSetPoolRatio(activedPools, ratios);
     }
 
     /**
@@ -196,14 +193,6 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         view
         override returns (uint256) {
         return userDebts[pool][user];
-    }
-
-    function getActivedPoolsLength() external view returns (uint256) {
-        return activedPools.length;
-    }
-
-    function getCreatedPoolsLength() external view returns (uint256) {
-        return createdPools.length;
     }
 
     function appendUserReward(address pool, address user, uint256 amount) external override {
@@ -284,5 +273,9 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         } else {
             releaseERC20(communityToken, address(recipient), amount);
         }
+    }
+
+    function _emitAdminSetPoolRatio(address[] memory pools, uint16[] memory ratios) private {
+        emit AdminSetPoolRatio(pools, ratios);
     }
 }
