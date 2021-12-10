@@ -44,16 +44,20 @@ contract CommunityFactory is ERC20Helper {
     ) external {
         require(ICommittee(committee).verifyContract(rewardCalculator), 'UC'); // Unsupported calculator
         require(ownerCommunity[msg.sender] == address(0), "HC"); // Have created a community
-
+        bool isMintable = false;
 
         // we would create a new mintable token for community
         if (communityToken == address(0)){
+            isMintable = true;
             MintableERC20 mintableERC20 = new MintableERC20(properties.name, properties.symbol, properties.supply, properties.owner);
             communityToken = address(mintableERC20);
             emit ERC20TokenCreated(communityToken, msg.sender, properties);
         }
 
-        Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, communityToken == address(0));
+        Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
+        if (isMintable){
+            MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
+        }
 
         if(ICommittee(committee).getFee('CREATING_COMMUNITY') > 0){
             lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_COMMUNITY'));

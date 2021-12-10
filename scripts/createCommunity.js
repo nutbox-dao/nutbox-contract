@@ -15,7 +15,8 @@ const LinearCalculatorAddress = Addresses.LinearCalculator;
 const SPStakingFactoryAddress = Addresses.SPStakingFactory;
 const ERC20StakingFactoryAddress = Addresses.ERC20StakingFactory;
 
-const NutAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'
+// const NutAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'
+const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
 
 // create non-mintable community
 // use nut as ctoken
