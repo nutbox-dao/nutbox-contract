@@ -28,7 +28,9 @@ async function main() {
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
 
-    const tx = await deployNutContract(env);
+    const contract = new ethers.Contract(NUTAddress, NUTTokenJson.abi, env.wallet)
+    const tx = await contract.enableTransfer();
+    console.log(tx.hash);
 }
 
 main()

@@ -189,7 +189,11 @@ async function main() {
     // communityToken2   0x6065225ACc9a4eaA591ea0688CEDc49807b316E8
     
     // const poolAddress = await createERC20Pool(community, env);
-    const spPool = await createSpPool('0xf234E84e9f1F83105A120351dFEa179AC4Ad8730', env);
+    // const spPool = await createSpPool('0xf234E84e9f1F83105A120351dFEa179AC4Ad8730', env);
+
+    const communityContract = new ethers.Contract('0x760f0abed50cda9f7711698192ff03b2faa5c942', CommunityJson.abi, env.wallet);
+    const tx = await communityContract.adminSetFeeRatio(2000);
+    console.log(tx.hash);
 }
 
 main()

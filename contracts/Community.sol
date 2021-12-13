@@ -60,7 +60,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         lastRewardBlock = 0;
         feeRatio = 0;
     }
-
+    // 0xc10b3aee
     function adminSetFeeRatio(uint16 _ratio) external onlyOwner {
         require(_ratio <= 10000, 'PR>1w');//Pool ratio is exccedd 10000
 
@@ -69,11 +69,11 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         feeRatio = _ratio;
         emit AdminSetFeeRatio(_ratio);
     }
-
+    //  0xa1970fa8
     function adminWithdrawReward(uint256 amount) external onlyOwner {
         releaseERC20(communityToken, msg.sender, amount);
     }
-
+    // 0x207cbd95
     function adminAddPool(string memory poolName, uint16[] memory ratios, address poolFactory, bytes calldata meta) external onlyOwner {
         require((activedPools.length + 1) == ratios.length, 'WPC');//Wrong Pool ratio count
         require(ICommittee(committee).verifyContract(poolFactory) == true, 'UPF');//Unsupported pool factory
@@ -96,7 +96,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         }
         _emitAdminSetPoolRatio(activedPools, poolRatios);
     }
-
+    // 0xf02db122
     function adminClosePool(address poolAddress, address[] memory _activedPools, uint16[] memory ratios) external onlyOwner {
         require(openedPools[poolAddress] == true, 'PIA');// Pool is already inactived
         require(_activedPools.length == activedPools.length - 1, "WAPL");//Wrong activedPools length
@@ -113,7 +113,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         _emitAdminSetPoolRatio(activedPools, ratios);
         emit AdminClosePool(poolAddress);
     }
-
+    // 0xf739a529
     function adminSetPoolRatios(uint16[] memory ratios) external onlyOwner {
         require(activedPools.length == ratios.length, 'WL');//Wrong ratio list length
         _checkRatioSum(ratios);
@@ -264,7 +264,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         for(uint8 i = 0; i < ratios.length; i++) {
             ratioSum += ratios[i];
         }
-        require(ratioSum == 10000, 'RS!=1w');//Ratio summary not equal to 10000
+        require(ratioSum == 10000 || ratioSum == 0, 'RS!=1w');//Ratio summary not equal to 10000
     }
 
     function _unlockOrMintAsset(address recipient, uint256 amount) private {
