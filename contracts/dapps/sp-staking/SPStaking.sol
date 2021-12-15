@@ -70,14 +70,14 @@ contract SPStaking is IPool {
 
     function update(
         uint8 _chainId,
-        string memory _delegatee,
+        bytes32 _delegatee,
         address depositor,
         uint256 amount,
         bytes32 _bindAccount
     ) external {
         require(msg.sender == SPStakingFactory(factory).bridge(), "Only verified bridge can call");
         require(chainId == _chainId, "Wrong chain id");
-        require(keccak256(abi.encodePacked(delegatee)) == keccak256(abi.encodePacked(_delegatee)), "Wrong delegatee account");
+        require(delegatee == _delegatee, "Wrong delegatee account");
 
         uint256 prevAmount = stakingInfo[depositor].amount;
         if (prevAmount == amount) return;
