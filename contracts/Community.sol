@@ -166,7 +166,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
         // the right amount that delegator can award
         uint256 _shareAcc = poolAcc[poolAddress];
-        uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
+        uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(user);
         if (stakedAmount == 0) return userRewards[poolAddress][user];
         uint256 pending = stakedAmount.mul(_shareAcc).div(1e12).sub(userRewards[poolAddress][user]);
         return userRewards[poolAddress][user].add(pending);
