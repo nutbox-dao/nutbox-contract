@@ -105,8 +105,8 @@ contract SPStaking is IPool {
             );
         }
 
-        // trigger community update all pool staking info
-        ICommunity(community).updatePools(depositor);
+        // trigger community update all pool staking info, send factory as fee payer to ignore fee payment.
+        ICommunity(community).updatePools(factory);
 
         if (stakingInfo[depositor].amount > 0) {
             uint256 pending = stakingInfo[depositor]

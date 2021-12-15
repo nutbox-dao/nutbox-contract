@@ -36,7 +36,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     mapping(address => bool) whitelists;
     address[] public activedPools;
     address[] public createdPools;
-    uint16[] public poolRatios;
+    mapping(address => uint16) poolRatios;
     uint256 lastRewardBlock;
     address immutable public communityToken;
     bool immutable public isMintableCommunityToken;
@@ -81,20 +81,18 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
         // create pool imstance
         address pool = IPoolFactory(poolFactory).createPool(address(this), poolName, meta);
+        _updatePoolsWithFee(owner(), pool);
         openedPools[pool] = true;
         whitelists[pool] = true;
         poolAcc[pool] = 0;
         activedPools.push(pool);
         createdPools.push(pool);
-        poolRatios = ratios;
-
-        _updatePoolsWithFee(owner(), pool);
+        _updatePoolRatios(ratios);
 
         if(ICommittee(committee).getFee('CREATING_POOL') > 0) {
             lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_POOL'));
             ICommittee(committee).updateLedger('CREATING_POOL', address(this), pool, msg.sender);
         }
-        _emitAdminSetPoolRatio(activedPools, poolRatios);
     }
     // 0xf02db122
     function adminClosePool(address poolAddress, address[] memory _activedPools, uint16[] memory ratios) external onlyOwner {
@@ -108,9 +106,8 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         // mark as inactived
         openedPools[poolAddress] = false;
         activedPools = _activedPools;
-        poolRatios = ratios;
+        _updatePoolRatios(ratios);
 
-        _emitAdminSetPoolRatio(activedPools, ratios);
         emit AdminClosePool(poolAddress);
     }
     // 0xf739a529
@@ -120,9 +117,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
         _updatePoolsWithFee(owner(), address(0));
 
-        poolRatios = ratios;
-
-        _emitAdminSetPoolRatio(activedPools, ratios);
+        _updatePoolRatios(ratios);
     }
 
     /**
@@ -163,12 +158,14 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         // game has not started
         if (lastRewardBlock == 0) return 0;
 
+        uint256 rewardsReadyToMintedToPools = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, block.number).mul(10000 - feeRatio).div(10000);
         // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
         // the right amount that delegator can award
-        uint256 _shareAcc = poolAcc[poolAddress];
         uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(user);
         if (stakedAmount == 0) return userRewards[poolAddress][user];
-        uint256 pending = stakedAmount.mul(_shareAcc).div(1e12).sub(userRewards[poolAddress][user]);
+        uint256 totalStakedAmount = IPool(poolAddress).getTotalStakedAmount();
+        uint256 _shareAcc = poolAcc[poolAddress].add(rewardsReadyToMintedToPools.mul(poolRatios[poolAddress]).mul(1e8).div(totalStakedAmount));
+        uint256 pending = stakedAmount.mul(_shareAcc).div(1e12).sub(userDebts[poolAddress][user]);
         return userRewards[poolAddress][user].add(pending);
     }
 
@@ -251,8 +248,8 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         for (uint16 i = 0; i < activedPools.length; i++) {
             address poolAddress = activedPools[i];
             uint256 totalStakedAmount = IPool(poolAddress).getTotalStakedAmount();
-            if(totalStakedAmount == 0 || poolRatios[i] == 0) continue;
-            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(poolRatios[i]).div(10000);
+            if(totalStakedAmount == 0 || poolRatios[poolAddress] == 0) continue;
+            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(poolRatios[poolAddress]).div(10000);
             poolAcc[poolAddress] = poolAcc[poolAddress].add(poolRewards.div(totalStakedAmount));
         }
 
@@ -267,15 +264,18 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         require(ratioSum == 10000 || ratioSum == 0, 'RS!=1w');//Ratio summary not equal to 10000
     }
 
+    function _updatePoolRatios(uint16[] memory ratios) private {
+        for (uint16 i = 0; i < activedPools.length; i++) {
+            poolRatios[activedPools[i]] = ratios[i];
+        }
+        emit AdminSetPoolRatio(activedPools, ratios);
+    }
+
     function _unlockOrMintAsset(address recipient, uint256 amount) private {
         if (isMintableCommunityToken) {
             mintERC20(communityToken, address(recipient), amount);
         } else {
             releaseERC20(communityToken, address(recipient), amount);
         }
-    }
-
-    function _emitAdminSetPoolRatio(address[] memory pools, uint16[] memory ratios) private {
-        emit AdminSetPoolRatio(pools, ratios);
     }
 }
