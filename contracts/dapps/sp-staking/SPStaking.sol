@@ -34,12 +34,6 @@ contract SPStaking is IPool {
     // happened including deposit and withdraw asset this field should be updated.
     mapping(address => StakingInfo) stakingInfo;
 
-    // all staked account
-    address[] stakingList;
-
-    // total stakers of this pool
-    uint64 stakerCount;
-
     address immutable factory;
     string public name;
 
@@ -91,8 +85,6 @@ contract SPStaking is IPool {
             stakingInfo[depositor].hasDeposited = true;
             stakingInfo[depositor].amount = 0;
             stakingInfo[depositor].bindAccount = _bindAccount;
-            stakingList.push(depositor);
-            stakerCount += 1;
             accountBindMap[_bindAccount] = depositor;
         } else {
             require(
