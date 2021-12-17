@@ -96,9 +96,13 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
     // 0xf02db122
     function adminClosePool(address poolAddress, address[] memory _activedPools, uint16[] memory ratios) external onlyOwner {
-        require(openedPools[poolAddress] == true, 'PIA');// Pool is already inactived
+        require(openedPools[poolAddress], 'PIA');// Pool is already inactived
         require(_activedPools.length == activedPools.length - 1, "WAPL");//Wrong activedPools length
         require(_activedPools.length == ratios.length, 'LDM');//Length of pools and ratios dismatch
+        // check received actived pools array right
+        for (uint256 i = 0; i < _activedPools.length; i ++) {
+            require(openedPools[_activedPools[i]], "WP"); // Wrong active pool address
+        }
         _checkRatioSum(ratios);
 
         _updatePoolsWithFee(owner(), poolAddress);
