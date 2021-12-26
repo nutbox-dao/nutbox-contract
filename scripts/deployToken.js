@@ -9,8 +9,7 @@ async function deployTokenContract(env, name, symbol) {
         name,
         symbol,
         ethers.utils.parseUnits("20000000.0", 18),
-        env.wallet.address,
-        { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+        env.wallet.address
     );
     await contract.deployed();
     console.log("✓ Token deployed:", name, contract.address);

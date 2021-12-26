@@ -3,7 +3,8 @@ const ethers = require('ethers');
 
 const NUTTokenJson = require('../build/contracts/NUTToken.json');
 // const NUTAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6' // localhost
-const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
+// const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
+const NUTAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306'  // BSC test
 
 async function deployNutContract(env) {
     let factory = new ethers.ContractFactory(NUTTokenJson.abi, NUTTokenJson.bytecode, env.wallet);
@@ -27,6 +28,8 @@ async function main() {
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
+
+    const NUTAddress = await deployNutContract(env)
 
     const contract = new ethers.Contract(NUTAddress, NUTTokenJson.abi, env.wallet)
     const tx = await contract.enableTransfer();
