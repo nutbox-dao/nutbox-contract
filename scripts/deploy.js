@@ -1,4 +1,9 @@
 
+/** 
+ * Walnut contract deploy script
+ * run node deploy
+ * 
+ */
 require('dotenv').config();
 const ethers = require('ethers');
 const fs = require("fs");

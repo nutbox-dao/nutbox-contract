@@ -129,7 +129,6 @@ contract Community is ICommunity, ERC20Helper, Ownable {
      * This function will not only travel actived pools, but also closed pools
      */
     function withdrawPoolsRewards(address[] memory poolAddresses) external {
-
         // game has not started
         if (lastRewardBlock == 0) return;
 
@@ -141,6 +140,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         uint256 totalAvailableRewards = 0;
         for (uint8 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = poolAddresses[i];
+            require(whitelists[poolAddress], "IP"); // Illegal pool
             uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
 
             uint256 pending = stakedAmount.mul(poolAcc[poolAddress]).div(1e12).sub(userDebts[poolAddress][msg.sender]);
@@ -197,17 +197,17 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
 
     function appendUserReward(address pool, address user, uint256 amount) external override {
-        require(whitelists[msg.sender], 'PNIW');//Perssion denied: pool not in whitelist
+        require(whitelists[msg.sender], 'PNIW');// Perssion denied: pool not in whitelist
         userRewards[pool][user] = userRewards[pool][user].add(amount);
     }
 
     function setUserDebt(address pool, address user, uint256 debt) external override {
-        require(whitelists[msg.sender], 'PNIW');
+        require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
         userDebts[pool][user] = debt;
     }
 
     function updatePools(address feePayer) external override {
-        require(whitelists[msg.sender], 'PNIW');
+        require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
         _updatePoolsWithFee(feePayer, msg.sender);
     }
 

@@ -127,7 +127,7 @@ contract ERC20Staking is IPool, ERC20Helper {
             withdrawAmount = stakingInfo[msg.sender].amount;
         else withdrawAmount = amount;
 
-        releaseERC20(stakeToken, address(msg.sender), amount);
+        releaseERC20(stakeToken, address(msg.sender), withdrawAmount);
 
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender]
             .amount
