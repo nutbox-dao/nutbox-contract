@@ -72,6 +72,7 @@ contract SPStaking is IPool {
         require(msg.sender == SPStakingFactory(factory).bridge(), "Only verified bridge can call");
         require(chainId == _chainId, "Wrong chain id");
         require(delegatee == _delegatee, "Wrong delegatee account");
+        require(accountBindMap[_bindAccount] == address(0) || accountBindMap[_bindAccount] == depositor, "Bound bsc account dismatch");
 
         uint256 prevAmount = stakingInfo[depositor].amount;
         if (prevAmount == amount) return;
@@ -93,7 +94,7 @@ contract SPStaking is IPool {
                         stakingInfo[depositor].bindAccount
                     )
                 ) == keccak256(abi.encodePacked(_bindAccount)),
-                "Bound account dismatch"
+                "Bound steem account dismatch"
             );
         }
 

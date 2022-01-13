@@ -16,7 +16,8 @@ const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 
 // const NutAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'  // local host
-const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
+// const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
+const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
