@@ -63,6 +63,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     // 0xc10b3aee
     function adminSetFeeRatio(uint16 _ratio) external onlyOwner {
         require(_ratio <= 10000, 'PR>1w');//Pool ratio is exccedd 10000
+        require(isMintableCommunityToken, "CCNF");// Cant change non-mintable fee ratio
 
         _updatePoolsWithFee(owner(), address(0));
         
