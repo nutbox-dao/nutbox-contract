@@ -34,12 +34,6 @@ contract SPStaking is IPool {
     // happened including deposit and withdraw asset this field should be updated.
     mapping(address => StakingInfo) stakingInfo;
 
-    // all staked account
-    address[] stakingList;
-
-    // total stakers of this pool
-    uint64 stakerCount;
-
     address immutable factory;
     string public name;
 
@@ -70,14 +64,15 @@ contract SPStaking is IPool {
 
     function update(
         uint8 _chainId,
-        string memory _delegatee,
+        bytes32 _delegatee,
         address depositor,
         uint256 amount,
         bytes32 _bindAccount
     ) external {
         require(msg.sender == SPStakingFactory(factory).bridge(), "Only verified bridge can call");
         require(chainId == _chainId, "Wrong chain id");
-        require(keccak256(abi.encodePacked(delegatee)) == keccak256(abi.encodePacked(_delegatee)), "Wrong delegatee account");
+        require(delegatee == _delegatee, "Wrong delegatee account");
+        require(accountBindMap[_bindAccount] == address(0) || accountBindMap[_bindAccount] == depositor, "Bound bsc account dismatch");
 
         uint256 prevAmount = stakingInfo[depositor].amount;
         if (prevAmount == amount) return;
@@ -91,8 +86,6 @@ contract SPStaking is IPool {
             stakingInfo[depositor].hasDeposited = true;
             stakingInfo[depositor].amount = 0;
             stakingInfo[depositor].bindAccount = _bindAccount;
-            stakingList.push(depositor);
-            stakerCount += 1;
             accountBindMap[_bindAccount] = depositor;
         } else {
             require(
@@ -101,12 +94,12 @@ contract SPStaking is IPool {
                         stakingInfo[depositor].bindAccount
                     )
                 ) == keccak256(abi.encodePacked(_bindAccount)),
-                "Bound account dismatch"
+                "Bound steem account dismatch"
             );
         }
 
-        // trigger community update all pool staking info
-        ICommunity(community).updatePools(depositor);
+        // trigger community update all pool staking info, send factory as fee payer to ignore fee payment.
+        ICommunity(community).updatePools(factory);
 
         if (stakingInfo[depositor].amount > 0) {
             uint256 pending = stakingInfo[depositor]

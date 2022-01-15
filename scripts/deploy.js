@@ -1,4 +1,9 @@
 
+/** 
+ * Walnut contract deploy script
+ * run node deploy
+ * 
+ */
 require('dotenv').config();
 const ethers = require('ethers');
 const fs = require("fs");
@@ -11,7 +16,8 @@ const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 
 // const NutAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'  // local host
-const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
+// const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
+const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -62,23 +68,23 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    // env.Committee = '0x78A00B57C1CD729CD1fF0B7C8C0Be8CDD14Ff645';
-    // env.CommunityFactory = '0x576A2002EEc10E34081059e3603dadE56C094C29'
-    // env.SPStakingFactory = '0x7Aa2ae9829E81e2ce3ad388a6C472426976BF8BB'
-    // env.ERC20StakingFactory = '0x2cD047D1Bfec5c8943c546A77af1FdE89769E339'
-    // env.LinearCalculator = '0x083FE5607fcB103A0ba14D3d6A5fa211f567b620'
+    env.Committee = '0xfdAf7185A944a575c9dF7186c0cf879f93806eF8';
+    env.CommunityFactory = '0xF2D0AC8699e84eaA52Db8dd6Af30Eb635EaF2Cb2'
+    env.SPStakingFactory = '0x3C011D3808aE6b456E2f6BDf10b81043e7FA7E6D'
+    env.ERC20StakingFactory = '0x7b448d1213f0d998Adb940b3338D4cAb12a79a5e'
+    env.LinearCalculator = '0xF5E73a003069c51205cDbAd5fdE64710101bed33'
 
-    await deployCommitteeContract(env);
-    await deployCommunityFactoryContract(env);
-    await deploySPStakingFactoryContract(env);
-    await deployERC20StakingFactoryContract(env);
-    await deployLinearCalculatorContract(env);
+    // await deployCommitteeContract(env);
+    // await deployCommunityFactoryContract(env);
+    // await deploySPStakingFactoryContract(env);
+    // await deployERC20StakingFactoryContract(env);
+    // await deployLinearCalculatorContract(env);
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
-    let tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
-    console.log('Admin set factory to committee whitelist');
+    // let tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
+    // console.log('Admin set factory to committee whitelist');
 
-    tx = await committeeContract.adminAddContract(env.LinearCalculator);
+    let tx = await committeeContract.adminAddContract(env.LinearCalculator);
     console.log(`Admin register linear calculator`);
     tx = await committeeContract.adminAddContract(env.SPStakingFactory);
     console.log(`Admin register SPStakingFactory`);

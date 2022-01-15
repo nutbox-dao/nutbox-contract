@@ -20,4 +20,8 @@ interface ICalculator {
     function getCurrentRewardPerBlock(address staking)
         external
         returns (uint256);
+
+    function getStartBlock(address staking)
+        external
+        returns (uint256);
 }

@@ -31,18 +31,13 @@ contract ERC20Staking is IPool, ERC20Helper {
     // happened including deposit and withdraw asset this field should be updated.
     mapping(address => StakingInfo) stakingInfo;
 
-    // all staked account
-    address[] stakingList;
-
-    // total stakers of this pool
-    uint64 stakerCount;
     string public name;
 
     // stakeToken actually is a asset contract entity, it represents the asset user stake of this pool.
     // Bascially, it should be a normal ERC20 token or a lptoken of a specific token exchange pair
-    address immutable stakeToken;
+    address immutable public stakeToken;
     // community that pool belongs to
-    address immutable community;
+    address immutable public community;
 
     // Total staked amount
     uint256 totalStakedAmount;
@@ -65,37 +60,34 @@ contract ERC20Staking is IPool, ERC20Helper {
     }
 
     function deposit(
-        address depositor,
         uint256 amount
-    ) public {
+    ) external {
         require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
         if (amount == 0) return;
 
         // Add to staking list if account hasn't deposited before
-        if (!stakingInfo[depositor].hasDeposited) {
-            stakingInfo[depositor].hasDeposited = true;
-            stakingInfo[depositor].amount = 0;
-            stakingList.push(depositor);
-            stakerCount += 1;
+        if (!stakingInfo[msg.sender].hasDeposited) {
+            stakingInfo[msg.sender].hasDeposited = true;
+            stakingInfo[msg.sender].amount = 0;
         }
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools(depositor);
+        ICommunity(community).updatePools(msg.sender);
 
-        if (stakingInfo[depositor].amount > 0) {
-            uint256 pending = stakingInfo[depositor]
+        if (stakingInfo[msg.sender].amount > 0) {
+            uint256 pending = stakingInfo[msg.sender]
                 .amount
                 .mul(ICommunity(community).getShareAcc(address(this)))
                 .div(1e12)
-                .sub(ICommunity(community).getUserDebt(address(this), depositor));
+                .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
             if (pending > 0) {
-                ICommunity(community).appendUserReward(address(this), depositor, pending);
+                ICommunity(community).appendUserReward(address(this), msg.sender, pending);
             }
         }
 
-        lockERC20(stakeToken, depositor, address(this), amount);
+        lockERC20(stakeToken, msg.sender, address(this), amount);
 
-        stakingInfo[depositor].amount = stakingInfo[depositor]
+        stakingInfo[msg.sender].amount = stakingInfo[msg.sender]
             .amount
             .add(amount);
         totalStakedAmount = totalStakedAmount
@@ -103,42 +95,41 @@ contract ERC20Staking is IPool, ERC20Helper {
 
         ICommunity(community).setUserDebt(
             address(this),
-            depositor,
-            stakingInfo[depositor]
+            msg.sender,
+            stakingInfo[msg.sender]
             .amount
             .mul(ICommunity(community).getShareAcc(address(this)))
             .div(1e12));
 
-        emit Deposited(community, depositor, amount);
+        emit Deposited(community, msg.sender, amount);
     }
 
     function withdraw(
-        address depositor,
         uint256 amount
-    ) public {
+    ) external {
         if (amount == 0) return;
-        if (stakingInfo[depositor].amount == 0) return;
+        if (stakingInfo[msg.sender].amount == 0) return;
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools(depositor);
+        ICommunity(community).updatePools(msg.sender);
 
-        uint256 pending = stakingInfo[depositor]
+        uint256 pending = stakingInfo[msg.sender]
             .amount
             .mul(ICommunity(community).getShareAcc(address(this)))
             .div(1e12)
-            .sub(ICommunity(community).getUserDebt(address(this), depositor));
+            .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
         if (pending > 0) {
-            ICommunity(community).appendUserReward(address(this), depositor, pending);
+            ICommunity(community).appendUserReward(address(this), msg.sender, pending);
         }
 
         uint256 withdrawAmount;
-        if (amount >= stakingInfo[depositor].amount)
-            withdrawAmount = stakingInfo[depositor].amount;
+        if (amount >= stakingInfo[msg.sender].amount)
+            withdrawAmount = stakingInfo[msg.sender].amount;
         else withdrawAmount = amount;
 
-        releaseERC20(stakeToken, address(depositor), amount);
+        releaseERC20(stakeToken, address(msg.sender), withdrawAmount);
 
-        stakingInfo[depositor].amount = stakingInfo[depositor]
+        stakingInfo[msg.sender].amount = stakingInfo[msg.sender]
             .amount
             .sub(withdrawAmount);
         totalStakedAmount = totalStakedAmount
@@ -146,13 +137,13 @@ contract ERC20Staking is IPool, ERC20Helper {
 
         ICommunity(community).setUserDebt(
             address(this),
-            depositor,
-            stakingInfo[depositor]
+            msg.sender,
+            stakingInfo[msg.sender]
             .amount
             .mul(ICommunity(community).getShareAcc(address(this)))
             .div(1e12));
 
-        emit Withdrawn(community, depositor, withdrawAmount);
+        emit Withdrawn(community, msg.sender, withdrawAmount);
     }
 
     function getUserStakedAmount(address user)

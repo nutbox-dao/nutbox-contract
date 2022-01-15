@@ -97,6 +97,10 @@ contract LinearCalculator is ICalculator {
             }
         }
     }
+    
+    function getStartBlock(address staking) external view override returns (uint256) {
+        return distributionErasMap[staking][0].startHeight;
+    }
 
     /**
      * @dev Check and set distribution policy
