@@ -132,6 +132,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     function withdrawPoolsRewards(address[] memory poolAddresses) external {
         // game has not started
         if (lastRewardBlock == 0) return;
+        require(poolAddresses.length > 0, "MHO1"); // Must harvest at least one pool
 
         // There are new blocks created after last updating, so update pools before withdraw
         if(block.number > lastRewardBlock) {
