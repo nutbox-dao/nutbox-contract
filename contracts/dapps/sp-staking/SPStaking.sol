@@ -45,7 +45,7 @@ contract SPStaking is IPool {
     uint8 immutable chainId;
 
     // Total staked amount
-    uint256 totalStakedAmount;
+    uint256 public totalStakedAmount;
 
     event UpdateStaking(
         address indexed community,
@@ -108,7 +108,7 @@ contract SPStaking is IPool {
                 .div(1e12)
                 .sub(ICommunity(community).getUserDebt(address(this), depositor));
             if (pending > 0) {
-                ICommunity(community).appendUserReward(address(this), depositor, pending);
+                ICommunity(community).appendUserReward(depositor, pending);
             }
         }
 
@@ -116,7 +116,6 @@ contract SPStaking is IPool {
         stakingInfo[depositor].amount = amount;
 
         ICommunity(community).setUserDebt(
-            address(this),
             depositor,
             stakingInfo[depositor]
             .amount

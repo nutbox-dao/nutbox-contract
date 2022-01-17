@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/IPool.sol";
 import "../../ERC20Helper.sol";
@@ -15,7 +16,7 @@ import "../../ERC20Helper.sol";
  * The only place that user can deposit and withdraw their staked asset.
  * Also only user themself than withdraw their staked asset
  */
-contract ERC20Staking is IPool, ERC20Helper {
+contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
     using SafeMath for uint256;
 
     struct StakingInfo {
@@ -40,7 +41,7 @@ contract ERC20Staking is IPool, ERC20Helper {
     address immutable public community;
 
     // Total staked amount
-    uint256 totalStakedAmount;
+    uint256 public totalStakedAmount;
 
     event Deposited(
         address indexed community,
@@ -61,7 +62,7 @@ contract ERC20Staking is IPool, ERC20Helper {
 
     function deposit(
         uint256 amount
-    ) external {
+    ) external nonReentrant {
         require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
         if (amount == 0) return;
 
@@ -81,7 +82,7 @@ contract ERC20Staking is IPool, ERC20Helper {
                 .div(1e12)
                 .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
             if (pending > 0) {
-                ICommunity(community).appendUserReward(address(this), msg.sender, pending);
+                ICommunity(community).appendUserReward(msg.sender, pending);
             }
         }
 
@@ -94,7 +95,6 @@ contract ERC20Staking is IPool, ERC20Helper {
             .add(amount);
 
         ICommunity(community).setUserDebt(
-            address(this),
             msg.sender,
             stakingInfo[msg.sender]
             .amount
@@ -106,7 +106,7 @@ contract ERC20Staking is IPool, ERC20Helper {
 
     function withdraw(
         uint256 amount
-    ) external {
+    ) external nonReentrant {
         if (amount == 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
 
@@ -119,7 +119,7 @@ contract ERC20Staking is IPool, ERC20Helper {
             .div(1e12)
             .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
         if (pending > 0) {
-            ICommunity(community).appendUserReward(address(this), msg.sender, pending);
+            ICommunity(community).appendUserReward(msg.sender, pending);
         }
 
         uint256 withdrawAmount;
@@ -136,7 +136,6 @@ contract ERC20Staking is IPool, ERC20Helper {
             .sub(withdrawAmount);
 
         ICommunity(community).setUserDebt(
-            address(this),
             msg.sender,
             stakingInfo[msg.sender]
             .amount

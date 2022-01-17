@@ -18,13 +18,11 @@ interface ICommunity {
         returns (uint256);
 
     function appendUserReward(
-        address pool,
         address user,
         uint256 amount
     ) external;
 
     function setUserDebt(
-        address pool,
         address user,
         uint256 debt
     ) external;

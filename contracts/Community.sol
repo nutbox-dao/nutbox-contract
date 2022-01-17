@@ -25,19 +25,19 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     address immutable committee;
     uint16 public feeRatio;    // actually fee is reward.mult(feeRatio).div(10000)
     // pool => hasOpened
-    mapping(address => bool) openedPools;
+    mapping(address => bool) private openedPools;
     // pool => shareAcc
-    mapping(address => uint256) poolAcc;
+    mapping(address => uint256) private poolAcc;
     // pool => user => amount
-    mapping(address => mapping(address => uint256)) userRewards;
+    mapping(address => mapping(address => uint256)) private userRewards;
     // pool => user => amount
-    mapping(address => mapping(address => uint256)) userDebts;
+    mapping(address => mapping(address => uint256)) private userDebts;
     // pool => canUpdate, all added pools
-    mapping(address => bool) whitelists;
+    mapping(address => bool) private whitelists;
     address[] public activedPools;
     address[] public createdPools;
-    mapping(address => uint16) poolRatios;
-    uint256 lastRewardBlock;
+    mapping(address => uint16) private poolRatios;
+    uint256 private lastRewardBlock;
     address immutable public communityToken;
     bool immutable public isMintableCommunityToken;
     address immutable public rewardCalculator;
@@ -57,8 +57,6 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         communityToken = _communityToken;
         rewardCalculator = _rewardCalculator;
         isMintableCommunityToken = _isMintableCommunityToken;
-        lastRewardBlock = 0;
-        feeRatio = 0;
     }
     // 0xc10b3aee
     function adminSetFeeRatio(uint16 _ratio) external onlyOwner {
@@ -77,7 +75,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     // 0x207cbd95
     function adminAddPool(string memory poolName, uint16[] memory ratios, address poolFactory, bytes calldata meta) external onlyOwner {
         require((activedPools.length + 1) == ratios.length, 'WPC');//Wrong Pool ratio count
-        require(ICommittee(committee).verifyContract(poolFactory) == true, 'UPF');//Unsupported pool factory
+        require(ICommittee(committee).verifyContract(poolFactory), 'UPF');//Unsupported pool factory
         _checkRatioSum(ratios);
 
         // create pool imstance
@@ -198,14 +196,14 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         return userDebts[pool][user];
     }
 
-    function appendUserReward(address pool, address user, uint256 amount) external override {
+    function appendUserReward(address user, uint256 amount) external override {
         require(whitelists[msg.sender], 'PNIW');// Perssion denied: pool not in whitelist
-        userRewards[pool][user] = userRewards[pool][user].add(amount);
+        userRewards[msg.sender][user] = userRewards[msg.sender][user].add(amount);
     }
 
-    function setUserDebt(address pool, address user, uint256 debt) external override {
+    function setUserDebt(address user, uint256 debt) external override {
         require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
-        userDebts[pool][user] = debt;
+        userDebts[msg.sender][user] = debt;
     }
 
     function updatePools(address feePayer) external override {

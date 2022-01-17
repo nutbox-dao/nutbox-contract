@@ -31,6 +31,7 @@ contract CommunityFactory is ERC20Helper {
     event ERC20TokenCreated(address indexed token, address indexed owner, TokenProperties properties);
 
     constructor(address _committee) {
+        require(_committee != address(0), "Invalid committee");
         committee = _committee;
     }
 
@@ -61,7 +62,7 @@ contract CommunityFactory is ERC20Helper {
 
         if(ICommittee(committee).getFee('CREATING_COMMUNITY') > 0){
             lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_COMMUNITY'));
-            ICommittee(committee).updateLedger('CREATING_COMMUNITY', address(this), address(0), msg.sender);
+            ICommittee(committee).updateLedger('CREATING_COMMUNITY', address(community), address(0), msg.sender);
         }
 
         // set staking feast rewarad distribution distributionPolicy

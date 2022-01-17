@@ -12,64 +12,85 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     using SafeMath for uint256;
 
     // treasury account that reserve all revenues
-    address treasury;
+    address public treasury;
     // NUT address
-    address nut;
+    address public nut;
     // feeType => amount
-    mapping(bytes32 => uint256) fees;
+    mapping(bytes32 => uint256) private fees;
     // feeType => amount
-    mapping(bytes32 => uint256) revenues;
+    mapping(bytes32 => uint256) private revenues;
     // community => amount, all fees come from the community
-    mapping(address => uint256) communityFees;
+    mapping(address => uint256) private communityFees;
     // caller => canCall, whitlist of all caller
-    mapping(address => bool) whitelist;
+    mapping(address => bool) private whitelist;
     // caller => canCall, can add or remove address from whitelist
-    mapping(address => bool) whitelistManager;
+    mapping(address => bool) private whitelistManager;
     // contract => isWhilistContract
-    mapping(address => bool) whitelistContracts;
+    mapping(address => bool) private whitelistContracts;
 
     // some address no need to pay fee. eg: steem brigde
-    mapping(address => bool) feeIgnoreList;
+    mapping(address => bool) private feeIgnoreList;
 
     event FeeSet(string indexed feeType, uint256 amount);
     event NewRevenue(string feeType, address indexed community, address indexed pool, address indexed who, uint256 amount);
     event NewAppropriation(address recipient, uint256 amount);
 
+    event AdminAddWhitelistManager(address indexed wm);
+    event AdminRemoveWhitelistManager(address indexed wm);
+    event AdminAddContract(address indexed c);
+    event AdminRemoveContract(address indexed c);
+    event AdminAddFeeIgnoreAddress(address indexed feeIgnore);
+    event AdminRemoveFeeIgnoreAddress(address indexed feeIgnore);
+    event AdminSetTreasury(address indexed treasury);
+    event AdminSetNut(address indexed nut);
+
     constructor(address _treasury, address _nut) {
+        require(_treasury != address(0), "Invalid treasury");
+        require(_nut != address(0), "Invalid nut");
         treasury = _treasury;
         nut = _nut;
     }
 
     function adminAddWhitelistManager(address _m) external onlyOwner {
         whitelistManager[_m] = true;
+        emit AdminAddWhitelistManager(_m);
     }
 
     function adminRemoveWhitelistManager(address _m) external onlyOwner {
         whitelistManager[_m] = false;
+        emit AdminRemoveWhitelistManager(_m);
     }
 
     function adminAddContract(address _c) external onlyOwner {
         whitelistContracts[_c] = true;
+        emit AdminAddContract(_c);
     }
 
     function adminRemoveContract(address _c) external onlyOwner {
-        whitelistContracts[_c] = true;
+        whitelistContracts[_c] = false;
+        emit AdminRemoveContract(_c);
     }
 
     function adminAddFeeIgnoreAddress(address _f) external onlyOwner {
         feeIgnoreList[_f] = true;
+        emit AdminAddFeeIgnoreAddress(_f);
     }
 
     function adminRemoveFeeIgnoreAddress(address _f) external onlyOwner {
         feeIgnoreList[_f] = false;
+        emit AdminRemoveFeeIgnoreAddress(_f);
     }
 
     function adminSetTreasury(address _treasury) external onlyOwner {
+        require(_treasury != address(0), "Invalid treasury");
         treasury = _treasury;
+        emit AdminSetTreasury(_treasury);
     }
 
     function adminSetNut(address _nut) external onlyOwner {
+        require(_nut != address(0), "Invalide address");
         nut = _nut;
+        emit AdminSetNut(_nut);
     }
 
     function adminAppropriate(address recipient, uint256 amount) external onlyOwner {
