@@ -41,6 +41,10 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     address immutable public communityToken;
     bool immutable public isMintableCommunityToken;
     address immutable public rewardCalculator;
+    // DAO fund address
+    address private devFund;
+    // DAO fund balance that havent harvest by admin
+    uint256 private fundBalance; 
 
     // events triggered by community admin
     event AdminSetFeeRatio(uint16 ratio);
@@ -50,13 +54,33 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     event WithdrawRewards(address[] pool, address indexed who, uint256 amount);
     // when user update pool, there may be some fee charge to owner's account
     event PoolUpdated(address indexed who, uint256 amount);
+    event DevChanged(address indexed devFund, address indexed _dev);
+    event HarvestDev(uint256 amount);
 
     constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
         transferOwnership(_admin);
+        devFund = _admin;
         committee = _committee;
         communityToken = _communityToken;
         rewardCalculator = _rewardCalculator;
         isMintableCommunityToken = _isMintableCommunityToken;
+    }
+    function resetDev(address _dev) external onlyOwner {
+        require(_dev != address(0), "IA"); // Invalid address
+        emit DevChanged(devFund, _dev);
+        devFund = _dev;
+    }
+    function harvestDev() external onlyOwner {
+        require(fundBalance > 0);
+        uint256 harvestAmount = fundBalance;
+        if (!isMintableCommunityToken){
+            uint256 balance = ERC20(communityToken).balanceOf(address(this));
+            harvestAmount = balance < fundBalance ? balance : fundBalance;
+        }
+        _unlockOrMintAsset(devFund, harvestAmount);
+        fundBalance = fundBalance.sub(harvestAmount);
+
+        emit HarvestDev(harvestAmount);
     }
     // 0xc10b3aee
     function adminSetFeeRatio(uint16 _ratio) external onlyOwner {
@@ -241,7 +265,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
                 // only send rewards belong to community, reward belong to user would send when
                 // they withdraw reward manually
                 uint256 feeAmount = rewardsReadyToMinted.mul(feeRatio).div(10000);
-                _unlockOrMintAsset(owner(), feeAmount);
+                fundBalance = fundBalance.add(feeAmount);
 
                 // only rewards belong to pools can used to compute shareAcc
                 rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - feeRatio).div(10000);
