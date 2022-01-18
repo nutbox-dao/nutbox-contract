@@ -99,11 +99,18 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     }
 
     /**
-     * type: CREATING_COMMUNITY, STAKING, CREATING_POOL
+     * types: CREATING_COMMUNITY, CREATING_POOL, CLOSING_POOL, ADMIN_SET_FEE_RATIO
+     *       SET_POOL_RATIO, WITHDRAW_REWARDS, ERC20_STAKING, ERC20_WITHDRAW, SP_HIVE_UPDATE
      */
-    function adminSetFee(string memory feeType, uint256 amount) external onlyOwner {
-        fees[keccak256(abi.encodePacked(feeType))] = amount;
-        emit FeeSet(feeType, amount);
+    function adminSetFees(string [] memory feeTypes, uint256 [] memory amounts) external onlyOwner {
+        require(feeTypes.length > 0);
+        require(feeTypes.length == amounts.length, "Invalid params");
+        for (uint i = 0; i < feeTypes.length; i++) {
+            string memory feeType = feeTypes[i];
+            uint256 amount = amounts[i];
+            fees[keccak256(abi.encodePacked(feeType))] = amount;
+            emit FeeSet(feeType, amount);
+        }
     }
 
     function setFeePayer(address payer) override external {

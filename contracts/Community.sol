@@ -87,7 +87,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         require(_ratio <= 10000, 'PR>1w');//Pool ratio is exccedd 10000
         require(isMintableCommunityToken, "CCNF");// Cant change non-mintable fee ratio
 
-        _updatePoolsWithFee("SET_FEE_RATIO", owner(), address(0));
+        _updatePoolsWithFee("ADMIN_SET_FEE_RATIO", owner(), address(0));
         
         feeRatio = _ratio;
         emit AdminSetFeeRatio(_ratio);
@@ -123,7 +123,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         }
         _checkRatioSum(ratios);
 
-        _updatePoolsWithFee("CLOSE_POOL", owner(), poolAddress);
+        _updatePoolsWithFee("CLOSING_POOL", owner(), poolAddress);
 
         // mark as inactived
         openedPools[poolAddress] = false;
