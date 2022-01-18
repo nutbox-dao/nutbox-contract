@@ -65,26 +65,28 @@ async function main() {
     env.privateKey = process.env.TESTKEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
+    console.log(`private: ${env.privateKey}, url: ${env.url}`);
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    env.Committee = '0xfdAf7185A944a575c9dF7186c0cf879f93806eF8';
-    env.CommunityFactory = '0xF2D0AC8699e84eaA52Db8dd6Af30Eb635EaF2Cb2'
-    env.SPStakingFactory = '0x3C011D3808aE6b456E2f6BDf10b81043e7FA7E6D'
-    env.ERC20StakingFactory = '0x7b448d1213f0d998Adb940b3338D4cAb12a79a5e'
-    env.LinearCalculator = '0xF5E73a003069c51205cDbAd5fdE64710101bed33'
+    env.Committee = '0xaAbE8e5087dBA296a61f81Eb82BfFF053b0A3AC0';
+    env.CommunityFactory = '0xDF1FD0C1EfEbcE4847a1d09Ee79D497b6d69EaCb'
+    env.SPStakingFactory = '0x228Bb17bCe5FC4d8212Bfa2Fe61e6CC6e1131772'
+    env.ERC20StakingFactory = '0x25814534Bdbe4BFA876218826Ab4bf063553647D'
+    // env.LinearCalculator = '0x9e23D44f11EbC6bB8016d79B3847bb336951e8fB'
 
     // await deployCommitteeContract(env);
     // await deployCommunityFactoryContract(env);
     // await deploySPStakingFactoryContract(env);
     // await deployERC20StakingFactoryContract(env);
-    // await deployLinearCalculatorContract(env);
+    await deployLinearCalculatorContract(env);
+    let tx;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
-    // let tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
-    // console.log('Admin set factory to committee whitelist');
+    tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
+    console.log('Admin set factory to committee whitelist');
 
-    let tx = await committeeContract.adminAddContract(env.LinearCalculator);
+    tx = await committeeContract.adminAddContract(env.LinearCalculator);
     console.log(`Admin register linear calculator`);
     tx = await committeeContract.adminAddContract(env.SPStakingFactory);
     console.log(`Admin register SPStakingFactory`);
@@ -92,6 +94,31 @@ async function main() {
     console.log(`Admin register ERC20StakingFactory`);
     tx = await committeeContract.adminAddFeeIgnoreAddress(env.SPStakingFactory);
     console.log(`Admin set address:${env.SPStakingFactory} to fee ignore list`);
+
+    // CREATING_COMMUNITY, CREATING_POOL, CLOSING_POOL, ADMIN_SET_FEE_RATIO
+    // SET_POOL_RATIO, WITHDRAW_REWARDS, ERC20_STAKING, ERC20_WITHDRAW, SP_HIVE_UPDATE
+    tx = await committeeContract.adminSetFees([
+        'CREATING_COMMUNITY',
+        'CREATING_POOL',
+        'CLOSING_POOL',
+        'ADMIN_SET_FEE_RATIO',
+        'SET_POOL_RATIO',
+        'WITHDRAW_REWARDS',
+        'ERC20_STAKING',
+        'ERC20_WITHDRAW',
+        'SP_HIVE_UPDATE'
+    ], [
+        ethers.utils.parseUnits('0.1', 18),
+        ethers.utils.parseUnits('0.05', 18),
+        ethers.utils.parseUnits('0.05', 18),
+        ethers.utils.parseUnits('0.02', 18),
+        ethers.utils.parseUnits('0.02', 18),
+        ethers.utils.parseUnits('0.03', 18),
+        ethers.utils.parseUnits('0.01', 18),
+        ethers.utils.parseUnits('0.01', 18),
+        ethers.utils.parseUnits('0.001', 18),
+    ]);
+    console.log(`Admin set fees`);
 
     const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
     tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);

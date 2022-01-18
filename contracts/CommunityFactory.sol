@@ -26,6 +26,7 @@ contract CommunityFactory is ERC20Helper {
     mapping (address => bool) public calculators;
     // owner  =>  community address, can only create one community from an account
     mapping (address => address) public ownerCommunity;
+    mapping (address => bool) private communities;
 
     event CommunityCreated(address indexed creator, address indexed community, address communityToken);
     event ERC20TokenCreated(address indexed token, address indexed owner, TokenProperties properties);
@@ -55,7 +56,7 @@ contract CommunityFactory is ERC20Helper {
             emit ERC20TokenCreated(communityToken, msg.sender, properties);
         }
 
-        Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
+        Community community = new Community(msg.sender, committee, address(this), communityToken, rewardCalculator, isMintable);
         if (isMintable){
             MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
         }
@@ -69,10 +70,17 @@ contract CommunityFactory is ERC20Helper {
         ICalculator(rewardCalculator).setDistributionEra(address(community), distributionPolicy);
 
         ownerCommunity[msg.sender] = address(community);
+        communities[address(community)] = true;
 
         // add community to fee payment whitelist
         ICommittee(committee).setFeePayer(address(community));
 
         emit CommunityCreated(msg.sender, address(community), communityToken);
+    }
+    
+    function updateOwner(address oldOwner, address newOwner) external {
+        require(communities[msg.sender], "OC"); // Only community can call
+        ownerCommunity[oldOwner] = address(0);
+        ownerCommunity[newOwner] = msg.sender;
     }
 }

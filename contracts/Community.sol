@@ -11,6 +11,7 @@ import "./interfaces/IPool.sol";
 import "./interfaces/IPoolFactory.sol";
 import "./interfaces/ICommittee.sol";
 import "./ERC20Helper.sol";
+import "./CommunityFactory.sol";
 
 /**
  * @dev Template contract of Nutbox staking based communnity.
@@ -45,6 +46,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     address private devFund;
     // DAO fund balance that havent harvest by admin
     uint256 private fundBalance; 
+    address private communityFactory;
 
     // events triggered by community admin
     event AdminSetFeeRatio(uint16 ratio);
@@ -57,13 +59,19 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     event DevChanged(address indexed devFund, address indexed _dev);
     event HarvestDev(uint256 amount);
 
-    constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
+    constructor(address _admin, address _committee, address _communityFactory, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
         transferOwnership(_admin);
         devFund = _admin;
         committee = _committee;
+        communityFactory = _communityFactory;
         communityToken = _communityToken;
         rewardCalculator = _rewardCalculator;
         isMintableCommunityToken = _isMintableCommunityToken;
+        emit DevChanged(address(0), _admin);
+    }
+    function transferOwnership(address newOwner) public onlyOwner override {
+        CommunityFactory(communityFactory).updateOwner(msg.sender, newOwner);
+        super.transferOwnership(newOwner);
     }
     function resetDev(address _dev) external onlyOwner {
         require(_dev != address(0), "IA"); // Invalid address
