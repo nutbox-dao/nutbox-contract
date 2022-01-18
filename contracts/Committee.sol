@@ -49,6 +49,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         require(_nut != address(0), "Invalid nut");
         treasury = _treasury;
         nut = _nut;
+        emit AdminSetTreasury(_treasury);
+        emit AdminSetNut(_nut);
     }
 
     function adminAddWhitelistManager(address _m) external onlyOwner {
