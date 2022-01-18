@@ -27,5 +27,5 @@ interface ICommunity {
         uint256 debt
     ) external;
 
-    function updatePools(address feePayer) external;
+    function updatePools(string memory feeType, address feePayer) external;
 }

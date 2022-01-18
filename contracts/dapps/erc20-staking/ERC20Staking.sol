@@ -73,7 +73,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         }
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools(msg.sender);
+        ICommunity(community).updatePools("ERC20_STAKING", msg.sender);
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
@@ -111,7 +111,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         if (stakingInfo[msg.sender].amount == 0) return;
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools(msg.sender);
+        ICommunity(community).updatePools("ERC20_WITHDRAW", msg.sender);
 
         uint256 pending = stakingInfo[msg.sender]
             .amount

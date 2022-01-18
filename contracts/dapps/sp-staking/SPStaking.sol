@@ -99,7 +99,7 @@ contract SPStaking is IPool {
         }
 
         // trigger community update all pool staking info, send factory as fee payer to ignore fee payment.
-        ICommunity(community).updatePools(factory);
+        ICommunity(community).updatePools("SP_HIVE_UPDATE", factory);
 
         if (stakingInfo[depositor].amount > 0) {
             uint256 pending = stakingInfo[depositor]

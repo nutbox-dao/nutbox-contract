@@ -98,6 +98,9 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit NewAppropriation(recipient, amount);
     }
 
+    /**
+     * type: CREATING_COMMUNITY, STAKING, CREATING_POOL
+     */
     function adminSetFee(string memory feeType, uint256 amount) external onlyOwner {
         fees[keccak256(abi.encodePacked(feeType))] = amount;
         emit FeeSet(feeType, amount);
