@@ -1,8 +1,10 @@
 require('dotenv').config();
 const ethers = require('ethers');
-const fs = require("fs");
 
 const NUTTokenJson = require('../build/contracts/NUTToken.json');
+// const NUTAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6' // localhost
+// const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
+const NUTAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306'  // BSC test
 
 async function deployNutContract(env) {
     let factory = new ethers.ContractFactory(NUTTokenJson.abi, NUTTokenJson.bytecode, env.wallet);
@@ -10,38 +12,28 @@ async function deployNutContract(env) {
         'Nutbox',
         'NUT',
         ethers.utils.parseUnits("20000000.0", 18),
-        '0x7b1941AE388f62d5Caf20D4f709Aafd74001ff58',
+        env.wallet.address,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );
     await contract.deployed();
     console.log("✓ NUTToken contract deployed", contract.address);
     return contract.address;
 }
-
-async function addAddressToWhiteList(address, env) {
-    const contract = new ethers.Contract('0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745', NUTTokenJson.abi, env.wallet);
-    const res = await contract.setWhiteList(address);
-    console.log(`Add ${address} to NUT whiteList`);
-}
-
-async function removeAddressToWhiteList(address, env) {
-    const contract = new ethers.Contract('0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745', NUTTokenJson.abi, env.wallet);
-    const res = await contract.removeWhiteList(address);
-    console.log(`Remove ${address} to NUT whiteList`);
-}
-
 async function main() {
     let env = {};
-    env.url = process.env.ENDPOINT || 'http://localhost:8545';
-    env.privateKey = process.env.KEY;
+    env.url = process.env.TESTENDPOINT || 'http://localhost:8545';
+    env.privateKey = process.env.TESTKEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     console.log(`private: ${env.privateKey}, url: ${env.url}`);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
 
-    // const NUT = await deployNutContract(env);
-    await addAddressToWhiteList('0xAF33cBE3F52C159f9408a2b87Aed65826ac47258', env);
+    const NUTAddress = await deployNutContract(env)
+
+    const contract = new ethers.Contract(NUTAddress, NUTTokenJson.abi, env.wallet)
+    const tx = await contract.enableTransfer();
+    console.log(tx.hash);
 }
 
 main()
