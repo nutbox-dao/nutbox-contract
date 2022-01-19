@@ -99,7 +99,7 @@ contract SPStaking is IPool {
         }
 
         // trigger community update all pool staking info, send factory as fee payer to ignore fee payment.
-        ICommunity(community).updatePools("SP_HIVE_UPDATE", factory);
+        ICommunity(community).updatePools("USER", factory);
 
         if (stakingInfo[depositor].amount > 0) {
             uint256 pending = stakingInfo[depositor]
@@ -123,6 +123,10 @@ contract SPStaking is IPool {
             .div(1e12));
         
         emit UpdateStaking(community, depositor, prevAmount, amount);
+    }
+
+    function getFactory() external view override returns (address) {
+        return factory;
     }
 
     function getUserStakedAmount(address user)

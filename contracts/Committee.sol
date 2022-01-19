@@ -19,8 +19,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     mapping(bytes32 => uint256) private fees;
     // feeType => amount
     mapping(bytes32 => uint256) private revenues;
-    // community => amount, all fees come from the community
-    mapping(address => uint256) private communityFees;
+    // pool address => amount
+    mapping(address => uint256) private poolTotalFee; 
     // caller => canCall, whitlist of all caller
     mapping(address => bool) private whitelist;
     // caller => canCall, can add or remove address from whitelist
@@ -29,7 +29,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     mapping(address => bool) private whitelistContracts;
 
     // some address no need to pay fee. eg: steem brigde
-    mapping(address => bool) private feeIgnoreList;
+    mapping(address => bool) private feeFreeList;
 
     event FeeSet(string indexed feeType, uint256 amount);
     event NewRevenue(string feeType, address indexed community, address indexed pool, address indexed who, uint256 amount);
@@ -39,8 +39,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     event AdminRemoveWhitelistManager(address indexed wm);
     event AdminAddContract(address indexed c);
     event AdminRemoveContract(address indexed c);
-    event AdminAddFeeIgnoreAddress(address indexed feeIgnore);
-    event AdminRemoveFeeIgnoreAddress(address indexed feeIgnore);
+    event AdminAddFeeFreeAddress(address indexed feeFree);
+    event AdminRemoveFeeFreeAddress(address indexed feeFree);
     event AdminSetTreasury(address indexed treasury);
     event AdminSetNut(address indexed nut);
 
@@ -73,14 +73,14 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit AdminRemoveContract(_c);
     }
 
-    function adminAddFeeIgnoreAddress(address _f) external onlyOwner {
-        feeIgnoreList[_f] = true;
-        emit AdminAddFeeIgnoreAddress(_f);
+    function adminAddFeeFreeAddress(address _f) external onlyOwner {
+        feeFreeList[_f] = true;
+        emit AdminAddFeeFreeAddress(_f);
     }
 
-    function adminRemoveFeeIgnoreAddress(address _f) external onlyOwner {
-        feeIgnoreList[_f] = false;
-        emit AdminRemoveFeeIgnoreAddress(_f);
+    function adminRemoveFeeFreeAddress(address _f) external onlyOwner {
+        feeFreeList[_f] = false;
+        emit AdminRemoveFeeFreeAddress(_f);
     }
 
     function adminSetTreasury(address _treasury) external onlyOwner {
@@ -100,19 +100,10 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit NewAppropriation(recipient, amount);
     }
 
-    /**
-     * types: CREATING_COMMUNITY, CREATING_POOL, CLOSING_POOL, ADMIN_SET_FEE_RATIO
-     *       SET_POOL_RATIO, WITHDRAW_REWARDS, ERC20_STAKING, ERC20_WITHDRAW, SP_HIVE_UPDATE
-     */
-    function adminSetFees(string [] memory feeTypes, uint256 [] memory amounts) external onlyOwner {
-        require(feeTypes.length > 0);
-        require(feeTypes.length == amounts.length, "Invalid params");
-        for (uint i = 0; i < feeTypes.length; i++) {
-            string memory feeType = feeTypes[i];
-            uint256 amount = amounts[i];
-            fees[keccak256(abi.encodePacked(feeType))] = amount;
-            emit FeeSet(feeType, amount);
-        }
+    // fee type: COMMUNITY USER
+    function adminSetFee(string memory feeType, uint256 amount) external onlyOwner {
+        fees[keccak256(abi.encodePacked(feeType))] = amount;
+        emit FeeSet(feeType, amount);
     }
 
     function setFeePayer(address payer) override external {
@@ -133,13 +124,15 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     }
 
     function updateLedger(string memory feeType, address community, address pool, address who) external override {
-        if(feeIgnoreList[who]) return;
+        if(feeFreeList[who]) return;
         require(whitelistManager[msg.sender] || whitelist[msg.sender], 'Permission denied: caller is not in whitelist');
         bytes32 ft = keccak256(abi.encodePacked(feeType));
         uint256 amount = fees[ft];
         if (amount == 0) return;
         revenues[ft] = revenues[ft].add(amount);
-        communityFees[community] = communityFees[community].add(amount);
+        if (pool != address(0)) {
+            poolTotalFee[pool] = poolTotalFee[pool].add(amount);
+        }
         emit NewRevenue(feeType, community, pool, who, amount);
     }
 
@@ -151,7 +144,11 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         return whitelistContracts[c];
     }
 
-    function getFeeIgnore(address ignoreAddress) external view override returns (bool) {
-        return feeIgnoreList[ignoreAddress];
+    function getFeeFree(address freeAddress) external view override returns (bool) {
+        return feeFreeList[freeAddress];
+    }
+
+    function getPoolFees(address pool) external view override returns (uint256) {
+        return poolTotalFee[pool];
     }
 }

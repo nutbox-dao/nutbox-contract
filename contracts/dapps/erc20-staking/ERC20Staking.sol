@@ -25,6 +25,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         // User staked amount
         uint256 amount;
     }
+    address immutable factory;
 
     // stakingInfo used to save every user's staking information,
     // including how many they deposited and its external chain account
@@ -55,6 +56,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
     );
 
     constructor(address _community, string memory _name, address _stakeToken) {
+        factory = msg.sender;
         community = _community;
         name = _name;
         stakeToken = _stakeToken;
@@ -73,7 +75,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         }
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools("ERC20_STAKING", msg.sender);
+        ICommunity(community).updatePools("USER", msg.sender);
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
@@ -111,7 +113,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         if (stakingInfo[msg.sender].amount == 0) return;
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools("ERC20_WITHDRAW", msg.sender);
+        ICommunity(community).updatePools("USER", msg.sender);
 
         uint256 pending = stakingInfo[msg.sender]
             .amount
@@ -143,6 +145,10 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
             .div(1e12));
 
         emit Withdrawn(community, msg.sender, withdrawAmount);
+    }
+
+    function getFactory() external view override returns (address) {
+        return factory;
     }
 
     function getUserStakedAmount(address user)

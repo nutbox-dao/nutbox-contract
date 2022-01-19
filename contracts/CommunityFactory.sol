@@ -24,9 +24,6 @@ contract CommunityFactory is ERC20Helper {
 
     address immutable committee;
     mapping (address => bool) public calculators;
-    // owner  =>  community address, can only create one community from an account
-    mapping (address => address) public ownerCommunity;
-    mapping (address => bool) private communities;
 
     event CommunityCreated(address indexed creator, address indexed community, address communityToken);
     event ERC20TokenCreated(address indexed token, address indexed owner, TokenProperties properties);
@@ -45,7 +42,6 @@ contract CommunityFactory is ERC20Helper {
         bytes calldata distributionPolicy
     ) external {
         require(ICommittee(committee).verifyContract(rewardCalculator), 'UC'); // Unsupported calculator
-        require(ownerCommunity[msg.sender] == address(0), "HC"); // Have created a community
         bool isMintable = false;
 
         // we would create a new mintable token for community
@@ -56,31 +52,22 @@ contract CommunityFactory is ERC20Helper {
             emit ERC20TokenCreated(communityToken, msg.sender, properties);
         }
 
-        Community community = new Community(msg.sender, committee, address(this), communityToken, rewardCalculator, isMintable);
+        Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
         if (isMintable){
             MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
         }
 
-        if(ICommittee(committee).getFee('CREATING_COMMUNITY') > 0){
+        if(ICommittee(committee).getFee('COMMUNITY') > 0){
             lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_COMMUNITY'));
-            ICommittee(committee).updateLedger('CREATING_COMMUNITY', address(community), address(0), msg.sender);
+            ICommittee(committee).updateLedger('COMMUNITY', address(community), address(0), msg.sender);
         }
 
         // set staking feast rewarad distribution distributionPolicy
         ICalculator(rewardCalculator).setDistributionEra(address(community), distributionPolicy);
 
-        ownerCommunity[msg.sender] = address(community);
-        communities[address(community)] = true;
-
         // add community to fee payment whitelist
         ICommittee(committee).setFeePayer(address(community));
 
         emit CommunityCreated(msg.sender, address(community), communityToken);
-    }
-    
-    function updateOwner(address oldOwner, address newOwner) external {
-        require(communities[msg.sender], "OC"); // Only community can call
-        ownerCommunity[oldOwner] = address(0);
-        ownerCommunity[newOwner] = msg.sender;
     }
 }

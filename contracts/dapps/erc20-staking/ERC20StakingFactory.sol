@@ -15,8 +15,7 @@ contract ERC20StakingFactory is IPoolFactory {
     using BytesLib for bytes;
 
     constructor() {
-    }   
-
+    }
 
     event ERC20StakingCreated(
         address indexed pool,
