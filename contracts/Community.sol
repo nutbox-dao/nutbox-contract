@@ -24,7 +24,12 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     using SafeMath for uint256;
 
     address immutable committee;
-    uint16 public feeRatio;    // actually fee is reward.mult(feeRatio).div(10000)
+    // DAO fund ratio
+    uint16 public feeRatio;
+    // DAO fund address
+    address private devFund;
+    // Revenue can be withdrawn by community so far
+    uint256 private retainedRevenue; 
     // pool => hasOpened
     mapping(address => bool) private openedPools;
     // pool => shareAcc
@@ -35,17 +40,16 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     mapping(address => mapping(address => uint256)) private userDebts;
     // pool => canUpdate, all added pools
     mapping(address => bool) private whitelists;
-    address[] public activedPools;
-    address[] public createdPools;
+    // pool => ratios
     mapping(address => uint16) private poolRatios;
+    // actived pools right now
+    address[] public activedPools;
+    // all created pools include closed pools
+    address[] public createdPools;
     uint256 private lastRewardBlock;
     address immutable public communityToken;
     bool immutable public isMintableCommunityToken;
     address immutable public rewardCalculator;
-    // DAO fund address
-    address private devFund;
-    // Revenue can be withdrawn by community so far
-    uint256 private retainedReveue; 
 
     // events triggered by community admin
     event AdminSetFeeRatio(uint16 ratio);
@@ -75,14 +79,14 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
     
     function adminWithdrawRevenue() external onlyOwner {
-        require(retainedReveue > 0);
-        uint256 harvestAmount = retainedReveue;
+        require(retainedRevenue > 0);
+        uint256 harvestAmount = retainedRevenue;
         if (!isMintableCommunityToken){
             uint256 balance = ERC20(communityToken).balanceOf(address(this));
-            harvestAmount = balance < retainedReveue ? balance : retainedReveue;
+            harvestAmount = balance < retainedRevenue ? balance : retainedRevenue;
         }
         _unlockOrMintAsset(devFund, harvestAmount);
-        retainedReveue = retainedReveue.sub(harvestAmount);
+        retainedRevenue = retainedRevenue.sub(harvestAmount);
 
         emit RevenueWithdrawn(devFund, harvestAmount);
     }
@@ -266,7 +270,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
                 // only send rewards belong to community, reward belong to user would send when
                 // they withdraw reward manually
                 uint256 feeAmount = rewardsReadyToMinted.mul(feeRatio).div(10000);
-                retainedReveue = retainedReveue.add(feeAmount);
+                retainedRevenue = retainedRevenue.add(feeAmount);
 
                 // only rewards belong to pools can used to compute shareAcc
                 rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - feeRatio).div(10000);
