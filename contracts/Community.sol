@@ -55,7 +55,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     event WithdrawRewards(address[] pool, address indexed who, uint256 amount);
     // when user update pool, there may be some fee charge to owner's account
     event PoolUpdated(address indexed who, uint256 amount);
-    event DevChanged(address indexed devFund, address indexed _dev);
+    event DevChanged(address indexed oldDev, address indexed newDev);
     event RevenueWithdrawn(address indexed devFund, uint256 amount);
 
     constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
