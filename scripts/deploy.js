@@ -15,13 +15,15 @@ const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
 const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 
-// const NutAddress = '0x926E99b548e5D48Ca4C6215878b954ABd0f5D1f6'  // local host
+// const NutAddress = '0x52cF8235e4e01Ca9089093eEac7e6cC7377853aA'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
-    let contract = await factory.deploy(env.wallet.address, NutAddress);
+    let contract = await factory.deploy(env.wallet.address, NutAddress, {
+        gasPrice: env.gasPrice
+    });
     await contract.deployed();
     console.log("✓ Committee contract deployed", contract.address);
     env.Committee = contract.address;
@@ -29,7 +31,9 @@ async function deployCommitteeContract(env) {
 
 async function deploySPStakingFactoryContract(env) {
     let factory = new ethers.ContractFactory(SPStakingFactoryJson.abi, SPStakingFactoryJson.bytecode, env.wallet);
-    let contract = await factory.deploy();
+    let contract = await factory.deploy({
+        gasPrice: env.gasPrice
+    });
     await contract.deployed();
     console.log("✓ SPStakingFactory contract deployed", contract.address);
     env.SPStakingFactory = contract.address
@@ -37,7 +41,9 @@ async function deploySPStakingFactoryContract(env) {
 
 async function deployERC20StakingFactoryContract(env) {
     let factory = new ethers.ContractFactory(ERC20StakingFactoryJson.abi, ERC20StakingFactoryJson.bytecode, env.wallet);
-    let contract = await factory.deploy();
+    let contract = await factory.deploy({
+        gasPrice: env.gasPrice
+    });
     await contract.deployed();
     console.log("✓ ERC20StakingFactory contract deployed", contract.address);
     env.ERC20StakingFactory = contract.address
@@ -45,7 +51,9 @@ async function deployERC20StakingFactoryContract(env) {
 
 async function deployCommunityFactoryContract(env) {
     let factory = new ethers.ContractFactory(CommunityFactoryJson.abi, CommunityFactoryJson.bytecode, env.wallet);
-    let contract = await factory.deploy(env.Committee);
+    let contract = await factory.deploy(env.Committee, {
+        gasPrice: env.gasPrice
+    });
     await contract.deployed();
     env.CommunityFactory = contract.address;
     console.log("✓ CommunityFactory contract deployed", contract.address);
@@ -53,7 +61,9 @@ async function deployCommunityFactoryContract(env) {
 
 async function deployLinearCalculatorContract(env) {
     let factory = new ethers.ContractFactory(LinearCalculatorJson.abi, LinearCalculatorJson.bytecode, env.wallet);
-    let contract = await factory.deploy(env.CommunityFactory);
+    let contract = await factory.deploy(env.CommunityFactory, {
+        gasPrice: env.gasPrice
+    });
     await contract.deployed();
     env.LinearCalculator = contract.address;
     console.log("✓ LinearCalculator contract deployed", contract.address);
@@ -65,20 +75,22 @@ async function main() {
     env.privateKey = process.env.TESTKEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
+    env.gasPrice = await env.provider.getGasPrice();
+    env.gasPrice = env.gasPrice * 1.5
     console.log(`private: ${env.privateKey}, url: ${env.url}`);
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    env.Committee = '0xaAbE8e5087dBA296a61f81Eb82BfFF053b0A3AC0';
-    env.CommunityFactory = '0xDF1FD0C1EfEbcE4847a1d09Ee79D497b6d69EaCb'
-    env.SPStakingFactory = '0x228Bb17bCe5FC4d8212Bfa2Fe61e6CC6e1131772'
-    env.ERC20StakingFactory = '0x25814534Bdbe4BFA876218826Ab4bf063553647D'
-    // env.LinearCalculator = '0x9e23D44f11EbC6bB8016d79B3847bb336951e8fB'
+    // env.Committee = '0x72d67B28E16f8629C4C9eAe3441369bb42460f26';
+    // env.CommunityFactory = '0x8adAf21Ca4D170d0c12DD6501B80f3f97DB158C3'
+    // env.SPStakingFactory = '0x228Bb17bCe5FC4d8212Bfa2Fe61e6CC6e1131772'
+    // env.ERC20StakingFactory = '0xe8924F73a236439B2512f2Bb92EA8e7100b743BD'
+    // env.LinearCalculator = '0x7281e39F77418356950A62BA944a79Db9310c69e'
 
-    // await deployCommitteeContract(env);
-    // await deployCommunityFactoryContract(env);
-    // await deploySPStakingFactoryContract(env);
-    // await deployERC20StakingFactoryContract(env);
+    await deployCommitteeContract(env);
+    await deployCommunityFactoryContract(env);
+    await deploySPStakingFactoryContract(env);
+    await deployERC20StakingFactoryContract(env);
     await deployLinearCalculatorContract(env);
     let tx;
 
@@ -92,32 +104,16 @@ async function main() {
     console.log(`Admin register SPStakingFactory`);
     tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
     console.log(`Admin register ERC20StakingFactory`);
-    tx = await committeeContract.adminAddFeeIgnoreAddress(env.SPStakingFactory);
-    console.log(`Admin set address:${env.SPStakingFactory} to fee ignore list`);
+    tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
+    console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
 
-    // CREATING_COMMUNITY, CREATING_POOL, CLOSING_POOL, ADMIN_SET_FEE_RATIO
-    // SET_POOL_RATIO, WITHDRAW_REWARDS, ERC20_STAKING, ERC20_WITHDRAW, SP_HIVE_UPDATE
-    tx = await committeeContract.adminSetFees([
-        'CREATING_COMMUNITY',
-        'CREATING_POOL',
-        'CLOSING_POOL',
-        'ADMIN_SET_FEE_RATIO',
-        'SET_POOL_RATIO',
-        'WITHDRAW_REWARDS',
-        'ERC20_STAKING',
-        'ERC20_WITHDRAW',
-        'SP_HIVE_UPDATE'
-    ], [
-        ethers.utils.parseUnits('0.1', 18),
-        ethers.utils.parseUnits('0.05', 18),
-        ethers.utils.parseUnits('0.05', 18),
-        ethers.utils.parseUnits('0.02', 18),
-        ethers.utils.parseUnits('0.02', 18),
-        ethers.utils.parseUnits('0.03', 18),
-        ethers.utils.parseUnits('0.01', 18),
-        ethers.utils.parseUnits('0.01', 18),
-        ethers.utils.parseUnits('0.001', 18),
-    ]);
+    tx = await committeeContract.adminSetFee(
+        'COMMUNITY', 
+        ethers.utils.parseUnits('0.1', 18));
+    tx = await committeeContract.adminSetFee(
+        'USER', 
+        ethers.utils.parseUnits('0.01', 18));
+
     console.log(`Admin set fees`);
 
     const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
