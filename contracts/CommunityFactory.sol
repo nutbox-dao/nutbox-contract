@@ -23,7 +23,7 @@ contract CommunityFactory is ERC20Helper {
     }
 
     address immutable committee;
-    mapping (address => bool) public calculators;
+    mapping (address => bool) public createdCommunity;
 
     event CommunityCreated(address indexed creator, address indexed community, address communityToken);
     event ERC20TokenCreated(address indexed token, address indexed owner, TokenProperties properties);
@@ -58,7 +58,8 @@ contract CommunityFactory is ERC20Helper {
         }
 
         if(ICommittee(committee).getFee('COMMUNITY') > 0){
-            lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('CREATING_COMMUNITY'));
+            require(ERC20(ICommittee(committee).getNut()).allowance(msg.sender, address(this)) >= ICommittee(committee).getFee('COMMUNITY'), "need");
+            lockERC20(ICommittee(committee).getNut(), msg.sender, ICommittee(committee).getTreasury(), ICommittee(committee).getFee('COMMUNITY'));
             ICommittee(committee).updateLedger('COMMUNITY', address(community), address(0), msg.sender);
         }
 
@@ -67,6 +68,8 @@ contract CommunityFactory is ERC20Helper {
 
         // add community to fee payment whitelist
         ICommittee(committee).setFeePayer(address(community));
+
+        createdCommunity[address(community)] = true;
 
         emit CommunityCreated(msg.sender, address(community), communityToken);
     }
