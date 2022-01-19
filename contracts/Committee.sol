@@ -20,7 +20,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     // feeType => amount
     mapping(bytes32 => uint256) private revenues;
     // pool address => amount
-    mapping(address => uint256) private poolTotalFee; 
+    mapping(address => uint256) private feeFromPool; 
     // caller => canCall, whitlist of all caller
     mapping(address => bool) private whitelist;
     // caller => canCall, can add or remove address from whitelist
@@ -131,7 +131,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         if (amount == 0) return;
         revenues[ft] = revenues[ft].add(amount);
         if (pool != address(0)) {
-            poolTotalFee[pool] = poolTotalFee[pool].add(amount);
+            feeFromPool[pool] = feeFromPool[pool].add(amount);
         }
         emit NewRevenue(feeType, community, pool, who, amount);
     }
@@ -149,6 +149,6 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     }
 
     function getPoolFees(address pool) external view override returns (uint256) {
-        return poolTotalFee[pool];
+        return feeFromPool[pool];
     }
 }
