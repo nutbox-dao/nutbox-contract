@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -45,7 +45,7 @@ contract SPStaking is IPool {
     uint8 immutable chainId;
 
     // Total staked amount
-    uint256 totalStakedAmount;
+    uint256 public totalStakedAmount;
 
     event UpdateStaking(
         address indexed community,
@@ -99,7 +99,7 @@ contract SPStaking is IPool {
         }
 
         // trigger community update all pool staking info, send factory as fee payer to ignore fee payment.
-        ICommunity(community).updatePools(factory);
+        ICommunity(community).updatePools("USER", factory);
 
         if (stakingInfo[depositor].amount > 0) {
             uint256 pending = stakingInfo[depositor]
@@ -108,7 +108,7 @@ contract SPStaking is IPool {
                 .div(1e12)
                 .sub(ICommunity(community).getUserDebt(address(this), depositor));
             if (pending > 0) {
-                ICommunity(community).appendUserReward(address(this), depositor, pending);
+                ICommunity(community).appendUserReward(depositor, pending);
             }
         }
 
@@ -116,7 +116,6 @@ contract SPStaking is IPool {
         stakingInfo[depositor].amount = amount;
 
         ICommunity(community).setUserDebt(
-            address(this),
             depositor,
             stakingInfo[depositor]
             .amount
@@ -124,6 +123,10 @@ contract SPStaking is IPool {
             .div(1e12));
         
         emit UpdateStaking(community, depositor, prevAmount, amount);
+    }
+
+    function getFactory() external view override returns (address) {
+        return factory;
     }
 
     function getUserStakedAmount(address user)

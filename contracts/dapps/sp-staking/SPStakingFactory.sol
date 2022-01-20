@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "../../interfaces/IPoolFactory.sol";
@@ -27,6 +27,8 @@ contract SPStakingFactory is IPoolFactory, Ownable {
         bytes32 delegatee
     );
 
+    event BridgeChange(address indexed oldBridge, address indexed newBridge);
+
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
         uint8 chainId = meta.toUint8(0);
@@ -38,6 +40,7 @@ contract SPStakingFactory is IPoolFactory, Ownable {
 
     function adminSetBridge(address _bridge) external onlyOwner {
         require(_bridge != address(0), "Invalid address");
+        emit BridgeChange(bridge, _bridge);
         bridge = _bridge;
     }
 }

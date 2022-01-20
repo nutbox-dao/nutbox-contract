@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "solidity-bytes-utils/contracts/BytesLib.sol";
@@ -15,8 +15,7 @@ contract ERC20StakingFactory is IPoolFactory {
     using BytesLib for bytes;
 
     constructor() {
-    }   
-
+    }
 
     event ERC20StakingCreated(
         address indexed pool,

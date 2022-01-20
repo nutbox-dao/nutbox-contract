@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
@@ -34,11 +34,11 @@ contract LinearCalculator is ICalculator {
     using SafeMath for uint256;
     using BytesLib for bytes;
 
-    address communityFactory;
+    address immutable communityFactory;
     mapping (address => Distribution[]) public distributionErasMap;
     mapping (address => uint8) public distributionCountMap;
 
-    event DistributionEraSet(address staking, bytes policy);
+    event DistributionEraSet(address indexed community, bytes policy);
 
     modifier onlyFactory() {
         require(msg.sender == communityFactory, "Account is not the community factory");
@@ -46,20 +46,21 @@ contract LinearCalculator is ICalculator {
     }
 
     constructor(address _communityFactory) {
+        require(_communityFactory != address(0), "Invalid address");
         communityFactory = _communityFactory;
     }
 
-    function setDistributionEra(address staking, bytes calldata policy) onlyFactory external override returns(bool) {
-        require(staking != address(0), 'Invalid address');
-        _applyDistributionEras(staking, policy);
-        emit DistributionEraSet(staking, policy);
+    function setDistributionEra(address community, bytes calldata policy) onlyFactory external override returns(bool) {
+        require(community != address(0), 'Invalid address');
+        _applyDistributionEras(community, policy);
+        emit DistributionEraSet(community, policy);
         return true;
     }
 
-    function calculateReward(address staking, uint256 from, uint256 to) external view override returns(uint256) {
+    function calculateReward(address community, uint256 from, uint256 to) external view override returns(uint256) {
         uint256 rewardedBlock = from - 1;
         uint256 rewards = 0;
-        Distribution[] memory eras = distributionErasMap[staking];
+        Distribution[] memory eras = distributionErasMap[community];
 
         if (eras.length == 0 || block.number <= eras[0].startHeight) {
             return rewards;
@@ -84,13 +85,13 @@ contract LinearCalculator is ICalculator {
         return rewards;
     }
     
-    function getCurrentRewardPerBlock(address staking) external view override returns (uint256) {
-        return getCurrentDistributionEra(staking).amount;
+    function getCurrentRewardPerBlock(address community) external view override returns (uint256) {
+        return getCurrentDistributionEra(community).amount;
     }
 
-    function getCurrentDistributionEra(address staking) public view returns (Distribution memory era) {
-        Distribution[] memory eras = distributionErasMap[staking];
-        for(uint8 i = 0; i < distributionCountMap[staking]; i++) {
+    function getCurrentDistributionEra(address community) public view returns (Distribution memory era) {
+        Distribution[] memory eras = distributionErasMap[community];
+        for(uint8 i = 0; i < distributionCountMap[community]; i++) {
             if (block.number >= eras[i].startHeight && block.number <= eras[i].stopHeight) {
                 era = eras[i];
                 return era;
@@ -98,8 +99,8 @@ contract LinearCalculator is ICalculator {
         }
     }
     
-    function getStartBlock(address staking) external view override returns (uint256) {
-        return distributionErasMap[staking][0].startHeight;
+    function getStartBlock(address community) external view override returns (uint256) {
+        return distributionErasMap[community][0].startHeight;
     }
 
     /**
@@ -109,7 +110,7 @@ contract LinearCalculator is ICalculator {
      * 2) first distrubtion startHeight should greater than current block height
      * 3) startHeight shold less than stopHeight
      */
-    function _applyDistributionEras(address staking, bytes calldata policy) private {
+    function _applyDistributionEras(address community, bytes calldata policy) private {
         uint8 erasLength = policy.toUint8(0);
         require(erasLength >= 1, 'At least one distribution era is needed');
 
@@ -131,12 +132,12 @@ contract LinearCalculator is ICalculator {
             // check 3)
             require(start < stop, 'Invalid stop height of distribution');
             // set distribution policy
-            distributionErasMap[staking].push(Distribution ({
+            distributionErasMap[community].push(Distribution ({
                 startHeight: start,
                 stopHeight: stop,
                 amount: amount
             }));
-            distributionCountMap[staking] = distributionCountMap[staking] + 1;
+            distributionCountMap[community] = distributionCountMap[community] + 1;
         }
     }
 }

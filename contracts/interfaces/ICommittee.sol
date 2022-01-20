@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -26,5 +26,10 @@ interface ICommittee {
 
     function verifyContract(address factory) external view returns (bool);
 
-    function getFeeIgnore(address ignoreAddress) external view returns (bool);
+    function getFeeFree(address freeAddress) external view returns (bool);
+
+    function getPoolFees(address pool) 
+            external 
+            view 
+            returns (uint256);
 }

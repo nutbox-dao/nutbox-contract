@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -12,64 +12,87 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     using SafeMath for uint256;
 
     // treasury account that reserve all revenues
-    address treasury;
+    address public treasury;
     // NUT address
-    address nut;
+    address public nut;
     // feeType => amount
-    mapping(bytes32 => uint256) fees;
+    mapping(bytes32 => uint256) private fees;
     // feeType => amount
-    mapping(bytes32 => uint256) revenues;
-    // community => amount, all fees come from the community
-    mapping(address => uint256) communityFees;
+    mapping(bytes32 => uint256) private revenues;
+    // pool address => amount
+    mapping(address => uint256) private feeFromPool; 
     // caller => canCall, whitlist of all caller
-    mapping(address => bool) whitelist;
+    mapping(address => bool) private whitelist;
     // caller => canCall, can add or remove address from whitelist
-    mapping(address => bool) whitelistManager;
+    mapping(address => bool) private whitelistManager;
     // contract => isWhilistContract
-    mapping(address => bool) whitelistContracts;
+    mapping(address => bool) private whitelistContracts;
 
     // some address no need to pay fee. eg: steem brigde
-    mapping(address => bool) feeIgnoreList;
+    mapping(address => bool) private feeFreeList;
 
     event FeeSet(string indexed feeType, uint256 amount);
     event NewRevenue(string feeType, address indexed community, address indexed pool, address indexed who, uint256 amount);
     event NewAppropriation(address recipient, uint256 amount);
 
+    event AdminAddWhitelistManager(address indexed wm);
+    event AdminRemoveWhitelistManager(address indexed wm);
+    event AdminAddContract(address indexed c);
+    event AdminRemoveContract(address indexed c);
+    event AdminAddFeeFreeAddress(address indexed feeFree);
+    event AdminRemoveFeeFreeAddress(address indexed feeFree);
+    event AdminSetTreasury(address indexed treasury);
+    event AdminSetNut(address indexed nut);
+
     constructor(address _treasury, address _nut) {
+        require(_treasury != address(0), "Invalid treasury");
+        require(_nut != address(0), "Invalid nut");
         treasury = _treasury;
         nut = _nut;
+        emit AdminSetTreasury(_treasury);
+        emit AdminSetNut(_nut);
     }
 
     function adminAddWhitelistManager(address _m) external onlyOwner {
         whitelistManager[_m] = true;
+        emit AdminAddWhitelistManager(_m);
     }
 
     function adminRemoveWhitelistManager(address _m) external onlyOwner {
         whitelistManager[_m] = false;
+        emit AdminRemoveWhitelistManager(_m);
     }
 
     function adminAddContract(address _c) external onlyOwner {
         whitelistContracts[_c] = true;
+        emit AdminAddContract(_c);
     }
 
     function adminRemoveContract(address _c) external onlyOwner {
-        whitelistContracts[_c] = true;
+        whitelistContracts[_c] = false;
+        emit AdminRemoveContract(_c);
     }
 
-    function adminAddFeeIgnoreAddress(address _f) external onlyOwner {
-        feeIgnoreList[_f] = true;
+    function adminAddFeeFreeAddress(address _f) external onlyOwner {
+        feeFreeList[_f] = true;
+        emit AdminAddFeeFreeAddress(_f);
     }
 
-    function adminRemoveFeeIgnoreAddress(address _f) external onlyOwner {
-        feeIgnoreList[_f] = false;
+    function adminRemoveFeeFreeAddress(address _f) external onlyOwner {
+        feeFreeList[_f] = false;
+        emit AdminRemoveFeeFreeAddress(_f);
     }
 
     function adminSetTreasury(address _treasury) external onlyOwner {
+        require(_treasury != address(0), "Invalid treasury");
         treasury = _treasury;
+        emit AdminSetTreasury(_treasury);
     }
 
     function adminSetNut(address _nut) external onlyOwner {
+        require(_nut != address(0), "Invalide address");
         nut = _nut;
+        emit AdminSetNut(_nut);
     }
 
     function adminAppropriate(address recipient, uint256 amount) external onlyOwner {
@@ -77,6 +100,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit NewAppropriation(recipient, amount);
     }
 
+    // fee type: COMMUNITY USER
     function adminSetFee(string memory feeType, uint256 amount) external onlyOwner {
         fees[keccak256(abi.encodePacked(feeType))] = amount;
         emit FeeSet(feeType, amount);
@@ -100,13 +124,15 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     }
 
     function updateLedger(string memory feeType, address community, address pool, address who) external override {
-        if(feeIgnoreList[who]) return;
+        if(feeFreeList[who]) return;
         require(whitelistManager[msg.sender] || whitelist[msg.sender], 'Permission denied: caller is not in whitelist');
         bytes32 ft = keccak256(abi.encodePacked(feeType));
         uint256 amount = fees[ft];
         if (amount == 0) return;
         revenues[ft] = revenues[ft].add(amount);
-        communityFees[community] = communityFees[community].add(amount);
+        if (pool != address(0)) {
+            feeFromPool[pool] = feeFromPool[pool].add(amount);
+        }
         emit NewRevenue(feeType, community, pool, who, amount);
     }
 
@@ -118,7 +144,11 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         return whitelistContracts[c];
     }
 
-    function getFeeIgnore(address ignoreAddress) external view override returns (bool) {
-        return feeIgnoreList[ignoreAddress];
+    function getFeeFree(address freeAddress) external view override returns (bool) {
+        return feeFreeList[freeAddress];
+    }
+
+    function getPoolFees(address pool) external view override returns (uint256) {
+        return feeFromPool[pool];
     }
 }

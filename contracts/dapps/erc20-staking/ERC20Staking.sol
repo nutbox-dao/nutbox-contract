@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/IPool.sol";
 import "../../ERC20Helper.sol";
@@ -15,7 +16,7 @@ import "../../ERC20Helper.sol";
  * The only place that user can deposit and withdraw their staked asset.
  * Also only user themself than withdraw their staked asset
  */
-contract ERC20Staking is IPool, ERC20Helper {
+contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
     using SafeMath for uint256;
 
     struct StakingInfo {
@@ -24,6 +25,7 @@ contract ERC20Staking is IPool, ERC20Helper {
         // User staked amount
         uint256 amount;
     }
+    address immutable factory;
 
     // stakingInfo used to save every user's staking information,
     // including how many they deposited and its external chain account
@@ -40,7 +42,7 @@ contract ERC20Staking is IPool, ERC20Helper {
     address immutable public community;
 
     // Total staked amount
-    uint256 totalStakedAmount;
+    uint256 public totalStakedAmount;
 
     event Deposited(
         address indexed community,
@@ -54,6 +56,7 @@ contract ERC20Staking is IPool, ERC20Helper {
     );
 
     constructor(address _community, string memory _name, address _stakeToken) {
+        factory = msg.sender;
         community = _community;
         name = _name;
         stakeToken = _stakeToken;
@@ -61,7 +64,7 @@ contract ERC20Staking is IPool, ERC20Helper {
 
     function deposit(
         uint256 amount
-    ) external {
+    ) external nonReentrant {
         require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
         if (amount == 0) return;
 
@@ -72,7 +75,7 @@ contract ERC20Staking is IPool, ERC20Helper {
         }
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools(msg.sender);
+        ICommunity(community).updatePools("USER", msg.sender);
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
@@ -81,7 +84,7 @@ contract ERC20Staking is IPool, ERC20Helper {
                 .div(1e12)
                 .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
             if (pending > 0) {
-                ICommunity(community).appendUserReward(address(this), msg.sender, pending);
+                ICommunity(community).appendUserReward(msg.sender, pending);
             }
         }
 
@@ -94,7 +97,6 @@ contract ERC20Staking is IPool, ERC20Helper {
             .add(amount);
 
         ICommunity(community).setUserDebt(
-            address(this),
             msg.sender,
             stakingInfo[msg.sender]
             .amount
@@ -106,12 +108,12 @@ contract ERC20Staking is IPool, ERC20Helper {
 
     function withdraw(
         uint256 amount
-    ) external {
+    ) external nonReentrant {
         if (amount == 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools(msg.sender);
+        ICommunity(community).updatePools("USER", msg.sender);
 
         uint256 pending = stakingInfo[msg.sender]
             .amount
@@ -119,7 +121,7 @@ contract ERC20Staking is IPool, ERC20Helper {
             .div(1e12)
             .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
         if (pending > 0) {
-            ICommunity(community).appendUserReward(address(this), msg.sender, pending);
+            ICommunity(community).appendUserReward(msg.sender, pending);
         }
 
         uint256 withdrawAmount;
@@ -127,7 +129,7 @@ contract ERC20Staking is IPool, ERC20Helper {
             withdrawAmount = stakingInfo[msg.sender].amount;
         else withdrawAmount = amount;
 
-        releaseERC20(stakeToken, address(msg.sender), amount);
+        releaseERC20(stakeToken, address(msg.sender), withdrawAmount);
 
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender]
             .amount
@@ -136,7 +138,6 @@ contract ERC20Staking is IPool, ERC20Helper {
             .sub(withdrawAmount);
 
         ICommunity(community).setUserDebt(
-            address(this),
             msg.sender,
             stakingInfo[msg.sender]
             .amount
@@ -144,6 +145,10 @@ contract ERC20Staking is IPool, ERC20Helper {
             .div(1e12));
 
         emit Withdrawn(community, msg.sender, withdrawAmount);
+    }
+
+    function getFactory() external view override returns (address) {
+        return factory;
     }
 
     function getUserStakedAmount(address user)

@@ -111,7 +111,7 @@ module.exports = {
   ],
 
   api_keys: {
-    bscscan: 'YS5EV5ETHJ96KPAFZV358YFQ5MKJYMQTMY'
+    bscscan: process.env.BSC_KEY
   },
 
   // Truffle DB is currently disabled by default; to enable it, change enabled: false to enabled: true

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 /**
@@ -18,16 +18,14 @@ interface ICommunity {
         returns (uint256);
 
     function appendUserReward(
-        address pool,
         address user,
         uint256 amount
     ) external;
 
     function setUserDebt(
-        address pool,
         address user,
         uint256 debt
     ) external;
 
-    function updatePools(address feePayer) external;
+    function updatePools(string memory feeType, address feePayer) external;
 }

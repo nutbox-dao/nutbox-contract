@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
-contract NUTToken is Ownable, AccessControlEnumerable, ERC20Burnable, ERC20Pausable {
+contract NUTToken is Ownable, AccessControlEnumerable, ERC20Burnable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     // address => hasWhitelisted
     mapping (address => bool) public whiteList;
-    bool public transferOpened = false;
+    bool public transferOpened;
 
     event SetWhiteList(address indexed contractAddress);
     event RemoveWhiteList(address indexed contractAddress);
+    event EnableTransfer();
+    event DisableTransfer();
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
@@ -31,9 +30,9 @@ contract NUTToken is Ownable, AccessControlEnumerable, ERC20Burnable, ERC20Pausa
         uint256 initialSupply,
         address owner
     ) ERC20(name, symbol) {
+        require(owner != address(0), "Receive address cant be 0");
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
         _mint(owner, initialSupply);
     }
 
@@ -65,17 +64,19 @@ contract NUTToken is Ownable, AccessControlEnumerable, ERC20Burnable, ERC20Pausa
 
     function enableTransfer() external onlyOwner {
         transferOpened = true;
+        emit EnableTransfer();
     }
 
     function disableTransfer() external onlyOwner {
         transferOpened = false;
+        emit DisableTransfer();
     }
 
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 amount
-    ) internal virtual override(ERC20, ERC20Pausable) {
+    ) internal virtual override(ERC20) {
         super._beforeTokenTransfer(from, to, amount);
     }
 
