@@ -17,7 +17,7 @@ const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 
 // const NutAddress = '0x52cF8235e4e01Ca9089093eEac7e6cC7377853aA'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
-const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test
+const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -110,9 +110,9 @@ async function main() {
     tx = await committeeContract.adminSetFee(
         'COMMUNITY', 
         ethers.utils.parseUnits('0.1', 18));
-    tx = await committeeContract.adminSetFee(
-        'USER', 
-        ethers.utils.parseUnits('0.01', 18));
+    // tx = await committeeContract.adminSetFee(
+    //     'USER', 
+    //     ethers.utils.parseUnits('0.01', 18));
 
     console.log(`Admin set fees`);
 
