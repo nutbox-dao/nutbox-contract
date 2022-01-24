@@ -15,6 +15,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     address public treasury;
     // NUT address
     address public nut;
+    // DappToolkitFacotry address
+    address public dappToolkitFactory;
     // feeType => amount
     mapping(bytes32 => uint256) private fees;
     // feeType => amount
@@ -43,6 +45,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     event AdminRemoveFeeFreeAddress(address indexed feeFree);
     event AdminSetTreasury(address indexed treasury);
     event AdminSetNut(address indexed nut);
+    event AdminSetDappToolkitFacotry(address indexed factory);
 
     constructor(address _treasury, address _nut) {
         require(_treasury != address(0), "Invalid treasury");
@@ -81,6 +84,11 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     function adminRemoveFeeFreeAddress(address _f) external onlyOwner {
         feeFreeList[_f] = false;
         emit AdminRemoveFeeFreeAddress(_f);
+    }
+
+    function adminSetDappToolkitFacotry(address _factory) external onlyOwner {
+        dappToolkitFactory = _factory;
+        emit AdminSetDappToolkitFacotry(_factory);
     }
 
     function adminSetTreasury(address _treasury) external onlyOwner {

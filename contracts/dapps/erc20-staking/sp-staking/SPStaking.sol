@@ -129,6 +129,10 @@ contract SPStaking is IPool {
         return factory;
     }
 
+    function getCommunity() external view override returns (address) {
+        return community;
+    }
+
     function getUserStakedAmount(address user)
         external
         view

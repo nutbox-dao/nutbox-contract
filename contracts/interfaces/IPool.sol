@@ -9,6 +9,8 @@ pragma experimental ABIEncoderV2;
 interface IPool {
     function getFactory() external view returns (address);
 
+    function getCommunity() external view returns (address);
+
     function getUserStakedAmount(address user) external view returns (uint256);
 
     function getTotalStakedAmount() external view returns (uint256);
