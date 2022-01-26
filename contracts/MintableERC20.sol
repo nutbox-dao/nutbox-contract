@@ -3,7 +3,7 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 /**
@@ -18,8 +18,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  *
  * _Available since v3.4._
  */
-contract MintableERC20 is Context, AccessControlEnumerable, ERC20Burnable {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+contract MintableERC20 is Context, Ownable, ERC20Burnable {
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
@@ -31,8 +30,6 @@ contract MintableERC20 is Context, AccessControlEnumerable, ERC20Burnable {
     string memory symbol, 
     uint256 initialSupply,
     address owner) ERC20(name, symbol) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MINTER_ROLE, _msgSender());
         _mint(owner, initialSupply);
     }
     /**
@@ -44,8 +41,7 @@ contract MintableERC20 is Context, AccessControlEnumerable, ERC20Burnable {
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(address to, uint256 amount) external virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have minter role to mint");
+    function mint(address to, uint256 amount) external virtual onlyOwner {
         _mint(to, amount);
     }
 

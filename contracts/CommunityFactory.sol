@@ -33,7 +33,7 @@ contract CommunityFactory is ERC20Helper {
         committee = _committee;
     }
 
-    // If communityToken == 0, we would create a mintable token for cummunity,
+    // If communityToken == address(0), we would create a mintable token for cummunity,
     // thus caller should give arguments: name, symbol, initialSupply, owner
     function createCommunity (
         address communityToken,
@@ -54,7 +54,7 @@ contract CommunityFactory is ERC20Helper {
 
         Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
         if (isMintable){
-            MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
+            MintableERC20(communityToken).transferOwnership(address(community));
         }
 
         if(ICommittee(committee).getFee('COMMUNITY') > 0){
