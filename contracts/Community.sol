@@ -46,7 +46,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     // all created pools include closed pools
     address[] public createdPools;
     uint256 private lastRewardBlock;
-    address immutable public communityToken;
+    address immutable communityToken;
     bool immutable public isMintableCommunityToken;
     address immutable public rewardCalculator;
 
@@ -212,6 +212,10 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
     function getShareAcc(address pool) external view override returns (uint256) {
         return poolAcc[pool];
+    }
+
+    function getCommunityToken() external view override returns (address) {
+        return communityToken;
     }
 
     function getUserDebt(address pool, address user)
