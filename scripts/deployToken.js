@@ -25,10 +25,10 @@ async function main() {
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
 
-    let tx = await deployTokenContract(env, 'Wrapped BNB', 'WBNB');
-    await deployTokenContract(env, 'Ethereum Token', 'ETH');
-    await deployTokenContract(env, 'PancakeSwap Token', 'CAKE');
-    await deployTokenContract(env, 'BTCB Token', 'BTCB')
+    let tx = await deployTokenContract(env, 'Wrapped ETH', 'WETH');
+    // await deployTokenContract(env, 'Ethereum Token', 'ETH');
+    // await deployTokenContract(env, 'PancakeSwap Token', 'CAKE');
+    // await deployTokenContract(env, 'BTCB Token', 'BTCB')
 }
 
 main()

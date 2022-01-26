@@ -11,7 +11,6 @@ import "./interfaces/IPool.sol";
 import "./interfaces/IPoolFactory.sol";
 import "./interfaces/ICommittee.sol";
 import "./ERC20Helper.sol";
-import "./CommunityFactory.sol";
 
 /**
  * @dev Template contract of Nutbox staking based communnity.
@@ -222,21 +221,25 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         return userDebts[pool][user];
     }
 
+    modifier onlyPool {
+        require(whitelists[msg.sender], 'PNIW');
+        _;
+    }
+
     // Pool callable only
-    function appendUserReward(address user, uint256 amount) external override {
-        require(whitelists[msg.sender], 'PNIW');// Perssion denied: pool not in whitelist
+    function appendUserReward(address user, uint256 amount) external override onlyPool {
         userRewards[msg.sender][user] = userRewards[msg.sender][user].add(amount);
     }
 
     // Pool callable only
-    function setUserDebt(address user, uint256 debt) external override {
-        require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
+    function setUserDebt(address user, uint256 debt) external override onlyPool {
+        // require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
         userDebts[msg.sender][user] = debt;
     }
 
     // Pool callable only
-    function updatePools(string memory feeType, address feePayer) external override {
-        require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
+    function updatePools(string memory feeType, address feePayer) external override onlyPool {
+        // require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
         _updatePoolsWithFee(feeType, feePayer, msg.sender);
     }
 

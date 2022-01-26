@@ -15,9 +15,9 @@ const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
 const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 
-// const NutAddress = '0x52cF8235e4e01Ca9089093eEac7e6cC7377853aA'  // local host
+const NutAddress = '0xCdEC3cDA9733378835d8472291BFf94818BA0859'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
-const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
+// const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -31,7 +31,7 @@ async function deployCommitteeContract(env) {
 
 async function deploySPStakingFactoryContract(env) {
     let factory = new ethers.ContractFactory(SPStakingFactoryJson.abi, SPStakingFactoryJson.bytecode, env.wallet);
-    let contract = await factory.deploy({
+    let contract = await factory.deploy(env.CommunityFactory, {
         gasPrice: env.gasPrice
     });
     await contract.deployed();
@@ -41,7 +41,7 @@ async function deploySPStakingFactoryContract(env) {
 
 async function deployERC20StakingFactoryContract(env) {
     let factory = new ethers.ContractFactory(ERC20StakingFactoryJson.abi, ERC20StakingFactoryJson.bytecode, env.wallet);
-    let contract = await factory.deploy({
+    let contract = await factory.deploy(env.CommunityFactory, {
         gasPrice: env.gasPrice
     });
     await contract.deployed();
