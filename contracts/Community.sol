@@ -10,6 +10,7 @@ import "./interfaces/ICommunity.sol";
 import "./interfaces/IPool.sol";
 import "./interfaces/IPoolFactory.sol";
 import "./interfaces/ICommittee.sol";
+import "./interfaces/IDappToolkit.sol";
 import "./ERC20Helper.sol";
 
 /**
@@ -47,6 +48,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     address[] public createdPools;
     uint256 private lastRewardBlock;
     address immutable communityToken;
+    address public toolkit;
     bool immutable public isMintableCommunityToken;
     address immutable public rewardCalculator;
 
@@ -60,6 +62,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     event PoolUpdated(address indexed who, uint256 amount);
     event DevChanged(address indexed oldDev, address indexed newDev);
     event RevenueWithdrawn(address indexed devFund, uint256 amount);
+    event ToolKitChanged(address indexed oldToolkit, address indexed newToolkit);
 
     constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
         transferOwnership(_admin);
@@ -75,6 +78,12 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         require(_dev != address(0), "IA"); // Invalid address
         emit DevChanged(devFund, _dev);
         devFund = _dev;
+    }
+
+    function adminSetToolkit(address _toolkit) external onlyOwner {
+        // can set _toolkit to address(0), this means close the toolkit function
+        emit ToolKitChanged(toolkit, _toolkit);
+        toolkit = _toolkit;
     }
     
     function adminWithdrawRevenue() external onlyOwner {
@@ -163,12 +172,28 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         }
 
         uint256 totalAvailableRewards = 0;
+        uint256 needTransferToToolkit = 0;
         for (uint8 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = poolAddresses[i];
             require(whitelists[poolAddress], "IP"); // Illegal pool
             uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
 
             uint256 pending = stakedAmount.mul(poolAcc[poolAddress]).div(1e12).sub(userDebts[poolAddress][msg.sender]);
+            uint256 pendingToToolkit = 0;
+            // toolkit function online
+            if (toolkit != address(0) && IDappToolkit(toolkit).toolCreated(poolAddress)) {
+                uint256 ratio = IDappToolkit(toolkit).getDappToolsRatio();
+                if (ratio > 0) {
+                    pendingToToolkit = pending.mul(10000 - ratio).div(10000);
+                    pending = pending.sub(needTransferToToolkit);
+                }
+            }
+
+            if (pendingToToolkit > 0){
+                IDappToolkit(toolkit).updateLedger(address(this), poolAddress, pendingToToolkit);
+                needTransferToToolkit = needTransferToToolkit.add(pendingToToolkit);
+            }
+
             if(pending > 0) {
                 userRewards[poolAddress][msg.sender] = userRewards[poolAddress][msg.sender].add(pending);
             }
@@ -178,6 +203,10 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             userRewards[poolAddress][msg.sender] = 0;
         }
 
+        // toolkit function not available
+        if (needTransferToToolkit > 0) {
+            _unlockOrMintAsset(toolkit, needTransferToToolkit);
+        }
         // transfer rewards to user
         _unlockOrMintAsset(msg.sender, totalAvailableRewards);
         emit WithdrawRewards(poolAddresses, msg.sender, totalAvailableRewards);

@@ -76,8 +76,8 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
     mapping (address => Toolkit) private toolkits;
 
     // reward nut distribute to community and tool dev
-    mapping (address => uint256) public communityTotalStakedNut;
-    mapping (address => uint256) public poolFactoryTotalStakedNut;
+    mapping (address => uint256) public communityTotalStakedEvNut;
+    mapping (address => uint256) public poolFactoryTotalStakedEvNut;
     mapping (address => uint256) private communityAvailable;
     mapping (address => uint256) private poolFactoryAvailable;
     mapping (address => uint256) private communityDebt;
@@ -120,8 +120,14 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
         emit AdminSetDappToolkitRatio(_revenueRatio);
     }
 
+    function getDappToolsRatio() external view override returns (uint256) {
+        return revenueRatio;
+    }
+
     function adminSetNutDistributionRatio(DistributionRatio memory ratios) external onlyOwner {
         require(ratios.community + ratios.poolFactory + ratios.user == 10000, "Sum of ratios should be 10000");
+        // update accs before reset the ratios
+        _updateNutAcc();
         distributionRatio.community = ratios.community;
         distributionRatio.poolFactory = ratios.poolFactory;
         distributionRatio.user = ratios.user;
@@ -166,7 +172,8 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
             toolkits[pool].users[msg.sender].hasDeposited = true;
         }
 
-        _updateToolkit();
+        _updateNutAcc();
+        _updatePoolAcc(pool);
 
         address community = toolkits[pool].community;
         address factory = toolkits[pool].factory;
@@ -178,14 +185,14 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
             toolkits[pool].users[msg.sender].nutAvailable = toolkits[pool].users[msg.sender].nutAvailable.add(pendingNut);
             toolkits[pool].users[msg.sender].cTokenAvailable = toolkits[pool].users[msg.sender].cTokenAvailable.add(pendingCToken);
         }
-        if (communityTotalStakedNut[community] > 0) {
+        if (communityTotalStakedEvNut[community] > 0) {
             // update community's reward only nut
-            uint256 commmunityPending = communityTotalStakedNut[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
+            uint256 commmunityPending = communityTotalStakedEvNut[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
             communityAvailable[community] = communityAvailable[community].add(commmunityPending);
         }
-        if (poolFactoryTotalStakedNut[factory] > 0) {
+        if (poolFactoryTotalStakedEvNut[factory] > 0) {
             // update tool dev's reward only nut
-            uint256 poolFactoryPending = poolFactoryTotalStakedNut[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
+            uint256 poolFactoryPending = poolFactoryTotalStakedEvNut[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
             poolFactoryAvailable[factory] = poolFactoryAvailable[factory].add(poolFactoryPending);
         }
 
@@ -195,15 +202,15 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
         // update amount
         toolkits[pool].users[msg.sender].amount = toolkits[pool].users[msg.sender].amount.add(amount);
         toolkits[pool].totalStakedEvNut = toolkits[pool].totalStakedEvNut.add(amount);
-        communityTotalStakedNut[community] = communityTotalStakedNut[community].add(amount);
-        poolFactoryTotalStakedNut[factory] = poolFactoryTotalStakedNut[factory].add(amount);
+        communityTotalStakedEvNut[community] = communityTotalStakedEvNut[community].add(amount);
+        poolFactoryTotalStakedEvNut[factory] = poolFactoryTotalStakedEvNut[factory].add(amount);
         totalEvNUTStaked = totalEvNUTStaked.add(amount);
 
         // update debt
         toolkits[pool].users[msg.sender].nutDebt = toolkits[pool].users[msg.sender].amount.mul(userNutAcc).div(1e12);
         toolkits[pool].users[msg.sender].cTokenDebt = toolkits[pool].users[msg.sender].amount.mul(toolkits[pool].cTokenAcc).div(1e12);
-        communityDebt[community] = communityTotalStakedNut[community].mul(communityNutAcc).div(1e12);
-        poolFactoryDebt[factory] = poolFactoryTotalStakedNut[factory].mul(poolFactoryNutAcc).div(1e12);
+        communityDebt[community] = communityTotalStakedEvNut[community].mul(communityNutAcc).div(1e12);
+        poolFactoryDebt[factory] = poolFactoryTotalStakedEvNut[factory].mul(poolFactoryNutAcc).div(1e12);
 
         emit Deposited(community, factory, pool, msg.sender, amount);
     }
@@ -212,7 +219,8 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
         require(toolkits[pool].users[msg.sender].hasDeposited, "Caller not a depositor");
         if (amount == 0) return;
 
-        _updateToolkit();
+        _updateNutAcc();
+        _updatePoolAcc(pool);
 
         address community = toolkits[pool].community;
         address factory = toolkits[pool].factory;
@@ -226,14 +234,14 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
             toolkits[pool].users[msg.sender].nutAvailable = toolkits[pool].users[msg.sender].nutAvailable.add(pendingNut);
             toolkits[pool].users[msg.sender].cTokenAvailable = toolkits[pool].users[msg.sender].cTokenAvailable.add(pendingCToken);
         }
-        if (communityTotalStakedNut[community] > 0) {
+        if (communityTotalStakedEvNut[community] > 0) {
             // update community's reward only nut
-            uint256 commmunityPending = communityTotalStakedNut[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
+            uint256 commmunityPending = communityTotalStakedEvNut[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
             communityAvailable[community] = communityAvailable[community].add(commmunityPending);
         }
-        if (poolFactoryTotalStakedNut[factory] > 0) {
+        if (poolFactoryTotalStakedEvNut[factory] > 0) {
             // update tool dev's reward only nut
-            uint256 poolFactoryPending = poolFactoryTotalStakedNut[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
+            uint256 poolFactoryPending = poolFactoryTotalStakedEvNut[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
             poolFactoryAvailable[factory] = poolFactoryAvailable[factory].add(poolFactoryPending);
         }
 
@@ -242,15 +250,15 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
         // update amount
         toolkits[pool].users[msg.sender].amount = toolkits[pool].users[msg.sender].amount.sub(amount);
         toolkits[pool].totalStakedEvNut = toolkits[pool].totalStakedEvNut.sub(amount);
-        communityTotalStakedNut[community] = communityTotalStakedNut[community].sub(amount);
-        poolFactoryTotalStakedNut[factory] = poolFactoryTotalStakedNut[factory].sub(amount);
+        communityTotalStakedEvNut[community] = communityTotalStakedEvNut[community].sub(amount);
+        poolFactoryTotalStakedEvNut[factory] = poolFactoryTotalStakedEvNut[factory].sub(amount);
         totalEvNUTStaked = totalEvNUTStaked.sub(amount);
 
         // update debt
         toolkits[pool].users[msg.sender].nutDebt = toolkits[pool].users[msg.sender].amount.mul(userNutAcc).div(1e12);
         toolkits[pool].users[msg.sender].cTokenDebt = toolkits[pool].users[msg.sender].amount.mul(toolkits[pool].cTokenAcc).div(1e12);
-        communityDebt[community] = communityTotalStakedNut[community].mul(communityNutAcc).div(1e12);
-        poolFactoryDebt[factory] = poolFactoryTotalStakedNut[factory].mul(poolFactoryNutAcc).div(1e12);
+        communityDebt[community] = communityTotalStakedEvNut[community].mul(communityNutAcc).div(1e12);
+        poolFactoryDebt[factory] = poolFactoryTotalStakedEvNut[factory].mul(poolFactoryNutAcc).div(1e12);
 
         emit Withdrawn(community, factory, pool, msg.sender, amount);
     }
@@ -258,7 +266,8 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
     function userWithdrawReward(address pool) external nonReentrant {
         require(toolkits[pool].users[msg.sender].hasDeposited, "Caller not a depositor");
 
-        _updateToolkit();
+        _updateNutAcc();
+        _updatePoolAcc(pool);
 
         // calculate reward
         uint256 pendingNut = toolkits[pool].users[msg.sender].amount.mul(userNutAcc).div(1e12).sub(toolkits[pool].users[msg.sender].nutDebt);
@@ -286,10 +295,10 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
     function communityWithdrawNut(address community) external nonReentrant {
         require(Ownable(community).owner() == msg.sender, "Only community owner can withdraw");
     
-        _updateToolkit();
+        _updateNutAcc();
 
         // calculate reward
-        uint256 pendingNut = communityTotalStakedNut[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
+        uint256 pendingNut = communityTotalStakedEvNut[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
         uint256 rewardNut = communityAvailable[community].add(pendingNut);
 
         // transfer nut
@@ -298,7 +307,7 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
 
         //update community data
         communityAvailable[community] = 0;
-        communityDebt[community] = communityTotalStakedNut[community].mul(communityNutAcc).div(1e12);
+        communityDebt[community] = communityTotalStakedEvNut[community].mul(communityNutAcc).div(1e12);
 
         emit CommunityWithdrawnNut(community, msg.sender, rewardNut); 
     }
@@ -306,10 +315,10 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
     function poolFactoryWithdrawNut(address factory) external nonReentrant {
         require(Ownable(factory).owner() == msg.sender, "Only poolFactory owner can withdraw");
     
-        _updateToolkit();
+        _updateNutAcc();
 
         // calculate reward
-        uint256 pendingNut = poolFactoryTotalStakedNut[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
+        uint256 pendingNut = poolFactoryTotalStakedEvNut[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
         uint256 rewardNut = poolFactoryAvailable[factory].add(pendingNut);
 
         // transfer nut
@@ -318,7 +327,7 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
 
         //update poolFactory data
         poolFactoryAvailable[factory] = 0;
-        poolFactoryDebt[factory] = poolFactoryTotalStakedNut[factory].mul(poolFactoryNutAcc).div(1e12);
+        poolFactoryDebt[factory] = poolFactoryTotalStakedEvNut[factory].mul(poolFactoryNutAcc).div(1e12);
 
         emit PoolFactoryWithdrawnNut(factory, msg.sender, rewardNut); 
     }
@@ -330,47 +339,89 @@ contract DappToolkit is IDappToolkit, Ownable, ERC20Helper, ReentrancyGuard {
             rewardNut = 0;
             rewardCToken = 0;
         }else {
-            uint256 userReward;
-            (,,userReward) = _cuclateNutReward();
-
             if (totalEvNUTStaked == 0)
                 rewardNut = toolkits[pool].users[user].nutAvailable;
-            else
-                rewardNut = userReward.mul(toolkits[pool].users[user].amount).div(totalEvNUTStaked).add(toolkits[pool].users[user].nutAvailable);
-            
+            else {
+                (,,uint256 _userNutAcc) = _cuclateNutAcc();
+                rewardNut = toolkits[pool].users[user].amount.mul(_userNutAcc).div(1e12).sub(toolkits[pool].users[user].nutDebt).add(toolkits[pool].users[user].nutAvailable);
+            }
+
             if (toolkits[pool].totalStakedEvNut == 0) 
                 rewardCToken = toolkits[pool].users[user].cTokenAvailable;
             else {
                 uint256 _cTokenAcc = toolkits[pool].cTokenAcc.add(toolkits[pool].cTokenRevenue.sub(toolkits[pool].lastCTokenRevenue).mul(1e12).div(toolkits[pool].totalStakedEvNut));
-                rewardCToken = toolkits[pool].users[user].amount.mul(_cTokenAcc).div(1e12).add(toolkits[pool].users[user].cTokenAvailable);
+                rewardCToken = toolkits[pool].users[user].amount.mul(_cTokenAcc).div(1e12).sub(toolkits[pool].users[user].cTokenDebt).add(toolkits[pool].users[user].cTokenAvailable);
             }
         }
     }
 
     function getCommunityPendingRewardNut(address community) external view
-        returns (uint256 rewardNut) 
+        returns (uint256 rewardNut)
     {
-        rewardNut = 0;
+        uint256 communityStakedEvNut = communityTotalStakedEvNut[community];
+        if (communityStakedEvNut == 0)
+            rewardNut = communityAvailable[community];
+        else {
+            (uint256 _communityNutAcc,,) = _cuclateNutAcc();
+            rewardNut = communityStakedEvNut.mul(_communityNutAcc).div(1e12).sub(communityDebt[community]).add(communityAvailable[community]);
+        }
     }
 
     function getPoolFactoryPendingRewardNut(address factory) external view
         returns (uint256 rewardNut) 
     {
-        rewardNut = 0;
+        uint256 poolFactoryStakedEvNut = poolFactoryTotalStakedEvNut[factory];
+        if (poolFactoryStakedEvNut == 0)
+            rewardNut = poolFactoryAvailable[factory];
+        else {
+            (,uint256 _poolFactoryAcc,) = _cuclateNutAcc();
+            rewardNut = poolFactoryStakedEvNut.mul(_poolFactoryAcc).div(1e12).sub(poolFactoryDebt[factory]).add(poolFactoryAvailable[factory]);
+        }
     }
 
-    function _updateToolkit() private {
+    function _updateNutAcc() private {
         // start game when the first operation
         if (0 == lastRewardBlock) {
             lastRewardBlock = block.number;
         }
+
+        if (block.number <= lastRewardBlock) return;
+
+        (communityNutAcc, poolFactoryNutAcc, userNutAcc) = _cuclateNutAcc();
+
+        lastRewardBlock = block.number;
     }
 
-    function _cuclateNutReward() private view returns (uint256 communityReward, uint256 poolFactoryReward, uint256 userReward) {
-        uint256 readyToMint = (block.number - lastRewardBlock + 1).mul(rewardNUTPerBlock);
-        communityReward = readyToMint.mul(distributionRatio.community).div(10000);
-        poolFactoryReward = readyToMint.mul(distributionRatio.poolFactory).div(10000);
-        userReward = readyToMint.mul(distributionRatio.user).div(10000);
+    function _updatePoolAcc(address pool) private {
+        if (!toolkits[pool].hasCreated) return;
+        if (toolkits[pool].lastCTokenRevenue == 0) 
+            toolkits[pool].lastCTokenRevenue = toolkits[pool].cTokenRevenue;
+        
+        if (toolkits[pool].lastCTokenRevenue == toolkits[pool].cTokenRevenue) return;
+
+        toolkits[pool].cTokenAcc = toolkits[pool].cTokenAcc.add(toolkits[pool].cTokenRevenue.sub(toolkits[pool].lastCTokenRevenue).mul(1e12).div(toolkits[pool].totalStakedEvNut));
+
+        toolkits[pool].lastCTokenRevenue = toolkits[pool].cTokenRevenue;
+    }
+
+    function _cuclateNutAcc() private view returns (uint256 _communityNutAcc, uint256 _poolFactoryNutAcc, uint256 _userNutAcc) {
+        if (totalEvNUTStaked == 0) {
+            _communityNutAcc = communityNutAcc;
+            _poolFactoryNutAcc = poolFactoryNutAcc;
+            _userNutAcc = userNutAcc;
+        }else {
+            (uint256 communityReadyToMint, uint256 poolFactoryReadyToMint, uint256 userReadyToMint) = _cuclateNutReadyToMint();
+            _communityNutAcc = communityNutAcc.add(communityReadyToMint.mul(1e12).div(totalEvNUTStaked));
+            _poolFactoryNutAcc = poolFactoryNutAcc.add(poolFactoryReadyToMint.mul(1e12).div(totalEvNUTStaked));
+            _userNutAcc = userNutAcc.add(userReadyToMint.mul(1e12).div(totalEvNUTStaked));
+        }
+    }
+
+    function _cuclateNutReadyToMint() private view returns (uint256 communityReadyToMint, uint256 poolFactoryReadyToMint, uint256 userReadyToMint) {
+        uint256 readyToMint = (block.number - lastRewardBlock).mul(rewardNUTPerBlock);
+        communityReadyToMint = readyToMint.mul(distributionRatio.community).div(10000);
+        poolFactoryReadyToMint = readyToMint.mul(distributionRatio.poolFactory).div(10000);
+        userReadyToMint = readyToMint.mul(distributionRatio.user).div(10000);
     }
 }
 
