@@ -7,12 +7,13 @@ import "solidity-bytes-utils/contracts/BytesLib.sol";
 import "../../interfaces/IPoolFactory.sol";
 import "./ERC20Staking.sol";
 import "../../CommunityFactory.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @dev Factory contract of Nutbox ERC20 staking pool.
  *x
  */
-contract ERC20StakingFactory is IPoolFactory {
+contract ERC20StakingFactory is IPoolFactory, Ownable {
     using BytesLib for bytes;
     address public immutable communityFactory;
 
