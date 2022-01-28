@@ -17,6 +17,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     address public nut;
     // DappToolkitFacotry address
     address public dappToolkitFactory;
+    // toolkit setted by committee
+    address private toolkit;
     // feeType => amount
     mapping(bytes32 => uint256) private fees;
     // feeType => amount
@@ -45,6 +47,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     event AdminRemoveFeeFreeAddress(address indexed feeFree);
     event AdminSetTreasury(address indexed treasury);
     event AdminSetNut(address indexed nut);
+    event AdminSetToolkit(address indexed toolkit);
     event AdminSetDappToolkitFacotry(address indexed factory);
 
     constructor(address _treasury, address _nut) {
@@ -103,6 +106,12 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit AdminSetNut(_nut);
     }
 
+    function adminSetToolkit(address _toolkit) external onlyOwner {
+        // toolkit can be set to address(0), that means shut down this function
+        toolkit = _toolkit;
+        emit AdminSetToolkit(toolkit);
+    }
+
     function adminAppropriate(address recipient, uint256 amount) external onlyOwner {
         releaseERC20(nut, recipient, amount);
         emit NewAppropriation(recipient, amount);
@@ -125,6 +134,10 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
 
     function getTreasury() external view override returns (address) {
         return treasury;
+    }
+
+    function getToolkit() external view override returns (address) {
+        return toolkit;
     }
 
     function getFee(string memory feeType) external view override returns (uint256) {
