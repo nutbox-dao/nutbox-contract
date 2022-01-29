@@ -1,6 +1,7 @@
 require('dotenv').config();
 const ethers = require('ethers');
 const fs = require("fs");
+const { utf8ToHex } = require('./utils')
 
 const CommunityJson = require("../build/contracts/Community.json");
 const CommunityFactoryJson = require("../build/contracts/CommunityFactory.json");
@@ -15,8 +16,9 @@ const CommunityFactoryAddress = Addresses.CommunityFactory;
 const LinearCalculatorAddress = Addresses.LinearCalculator;
 const SPStakingFactoryAddress = Addresses.SPStakingFactory;
 const ERC20StakingFactoryAddress = Addresses.ERC20StakingFactory;
+const SimpleMintableERC20FactoryAddress = Addresses.SimpleMintableERC20Factory;
 
-const NutAddress = '0xCdEC3cDA9733378835d8472291BFf94818BA0859'  // local
+const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local
 // const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test
 
@@ -68,12 +70,8 @@ async function createSimpleCommunity(env) {
                 await createSpPool(community, env);
                 resolve({ community, communityToken });
             })
-            const tx = await contract.createCommunity(NutAddress, {
-                name: '',
-                symbol: '',
-                supply: ethers.utils.parseUnits('0', 18),
-                owner: env.wallet.address
-            }, LinearCalculatorAddress, policy, 
+            const tx = await contract.createCommunity(NutAddress, 
+                ethers.constants.AddressZero, '0x', LinearCalculatorAddress, policy, 
                 {
                     gasLimit: process.env.GASLIMIT,
                     gasPrice: await env.provider.getGasPrice()
@@ -115,22 +113,37 @@ async function createMintableCommunity(env) {
             contract.on('CommunityCreated', async (creator, community, communityToken) => {
                 console.log(`New community created by: ${creator}, community: ${community}, c-token: ${communityToken}`);
                 contract.removeAllListeners('CommunityCreated');
+                const erc20 = new ethers.Contract(communityToken, NUTTokenJson.abi, env.wallet);
+                const [name, symbol, supply, balance, owner] = await Promise.all([erc20.name(), erc20.symbol(), erc20.totalSupply(), erc20.balanceOf(env.wallet.address), erc20.owner()])
+                console.log(`C-Token infos, name:${name}, symbol: ${symbol}, supply: ${supply.toString() / 1e18}, balance: ${balance.toString() / 1e18}, owner: ${owner}`);
+                await approveCommunity(community, env);
+                await createERC20Pool(community, env);
+                await createSpPool(community, env);
                 resolve({ community, communityToken });
             })
-            const tx = await contract.createCommunity('0x0000000000000000000000000000000000000000', {
-                name: 'Nutbox',
-                symbol: 'NUT', 
-                supply: ethers.utils.parseUnits('100000', 18),
-                owner: env.wallet.address
-            }, LinearCalculatorAddress, policy, 
+
+            const tx = await contract.createCommunity('0x0000000000000000000000000000000000000000', 
+            SimpleMintableERC20FactoryAddress,
+            makeSimpleMintableERC20Metadata('Mintable', 'MINT', 10000, env.wallet.address), 
+            LinearCalculatorAddress, policy, 
                 {
                     gasLimit: process.env.GASLIMIT,
                     gasPrice: await env.provider.getGasPrice()
                 });
         } catch (e) {
-            console.log('Create simple community fail:', e);
+            console.log('Create mintable community fail:', e);
         }
     }) 
+}
+
+function makeSimpleMintableERC20Metadata(name, symbol, supply, recipient) {
+    const meta = '0x' + ethers.utils.hexZeroPad(ethers.utils.hexlify(name.length), 1).substring(2)
+     + utf8ToHex(name)
+     + ethers.utils.hexZeroPad(ethers.utils.hexlify(symbol.length), 1).substring(2)
+     + utf8ToHex(symbol)
+     + ethers.utils.hexZeroPad(ethers.utils.parseUnits(supply.toString(), 18), 32).substring(2)
+     + recipient.substring(2)
+     return meta
 }
 
 async function createERC20Pool(community, env) {
@@ -203,7 +216,8 @@ async function main() {
     // return;
     await approveFactory(env);
     // return;
-    const { community, communityToken } = await createSimpleCommunity(env);
+    // const { community, communityToken } = await createSimpleCommunity(env);
+    const { c, ct } = await createMintableCommunity(env)
     // console.log(community);// 0x204b4d96E8C72bc30A1c544223FF43331222eeb7
     // const contract1 = new ethers.Contract('0x204b4d96E8C72bc30A1c544223FF43331222eeb7', CommunityJson.abi, env.wallet)
     // const tx1 = await contract1.adminSetFeeRatio(1000);

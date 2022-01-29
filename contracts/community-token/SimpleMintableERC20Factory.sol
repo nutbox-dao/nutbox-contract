@@ -24,7 +24,7 @@ contract SimpleMintableERC20Factory is ICommunityTokenFactory {
         string memory symbol = string(meta.slice(nameLength + 2, symbolLength));
         uint256 supply = meta.toUint256(nameLength + symbolLength + 2);
         address recipient = meta.toAddress(nameLength + symbolLength + 34);
-        SimpleMintableERC20 token = new SimpleMintableERC20(name, symbol, supply, recipient);
+        SimpleMintableERC20 token = new SimpleMintableERC20(name, symbol, supply, recipient, msg.sender);
         return address(token);
     }
 }

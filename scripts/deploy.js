@@ -14,8 +14,9 @@ const CommunityFactoryJson = require('../build/contracts/CommunityFactory.json')
 const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
 const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
+const SimpleMintableERC20FactoryJson = require('../build/contracts/SimpleMintableERC20Factory.json')
 
-const NutAddress = '0xCdEC3cDA9733378835d8472291BFf94818BA0859'  // local host
+const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 
@@ -27,6 +28,14 @@ async function deployCommitteeContract(env) {
     await contract.deployed();
     console.log("✓ Committee contract deployed", contract.address);
     env.Committee = contract.address;
+}
+
+async function deploySimpleMintableERC20FactoryContract(env) {
+    let factory = new ethers.ContractFactory(SimpleMintableERC20FactoryJson.abi, SimpleMintableERC20FactoryJson.bytecode, env.wallet);
+    let contract = await factory.deploy({ gasPrice: env.gasPrice })
+    await contract.deployed();
+    console.log("✓ Simple Mintable ERC20 contract deployed", contract.address);
+    env.SimpleMintableERC20Factory = contract.address;
 }
 
 async function deploySPStakingFactoryContract(env) {
@@ -88,6 +97,7 @@ async function main() {
     // env.LinearCalculator = '0x7281e39F77418356950A62BA944a79Db9310c69e'
 
     await deployCommitteeContract(env);
+    await deploySimpleMintableERC20FactoryContract(env);
     await deployCommunityFactoryContract(env);
     await deploySPStakingFactoryContract(env);
     await deployERC20StakingFactoryContract(env);
@@ -98,12 +108,15 @@ async function main() {
     tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
     console.log('Admin set factory to committee whitelist');
 
+    tx = await committeeContract.adminAddContract(env.SimpleMintableERC20Factory);
+    console.log(`Admin register lSimpleMintableERC20Factory`);
     tx = await committeeContract.adminAddContract(env.LinearCalculator);
     console.log(`Admin register linear calculator`);
     tx = await committeeContract.adminAddContract(env.SPStakingFactory);
     console.log(`Admin register SPStakingFactory`);
     tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
     console.log(`Admin register ERC20StakingFactory`);
+
     tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
     console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
 
@@ -126,6 +139,7 @@ async function main() {
 
     const output = {
         Committee: env.Committee ?? "Not Deployed",
+        SimpleMintableERC20Factory: env.SimpleMintableERC20Factory ?? 'Not Deployed',
         CommunityFactory: env.CommunityFactory ?? "Not Deployed",
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         SPStakingFactory: env.SPStakingFactory ?? 'Not Deployed',
@@ -146,6 +160,8 @@ async function main() {
         Contract Addresses:
         ===============================================================
         Committee:              ${env.Committee ?? "Not Deployed"}
+        ---------------------------------------------------------------
+        SimpleMintableERC20Factory: ${env.SimpleMintableERC20Factory ?? "Not Deployed"}
         ---------------------------------------------------------------
         CommunityFactory:       ${env.CommunityFactory ?? "Not Deployed"}
         ---------------------------------------------------------------

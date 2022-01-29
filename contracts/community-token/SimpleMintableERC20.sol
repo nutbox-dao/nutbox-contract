@@ -20,7 +20,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  */
 contract SimpleMintableERC20 is Context, Ownable, ERC20Burnable {
 
-    event SimpleMintableERC20Created(address indexed recipient, string name, string symbol, uint256 supply);
+    event SimpleMintableERC20Created(address indexed recipient, string name, string symbol, uint256 supply, address indexed owner);
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
@@ -31,9 +31,11 @@ contract SimpleMintableERC20 is Context, Ownable, ERC20Burnable {
     constructor(string memory name, 
     string memory symbol, 
     uint256 initialSupply,
-    address recipient) ERC20(name, symbol) {
+    address recipient,
+    address owner) ERC20(name, symbol) {
         _mint(recipient, initialSupply);
-        emit SimpleMintableERC20Created(recipient, name, symbol, initialSupply);
+        transferOwnership(owner);
+        emit SimpleMintableERC20Created(recipient, name, symbol, initialSupply, owner);
     }
     /**
      * @dev Creates `amount` new tokens for `to`.

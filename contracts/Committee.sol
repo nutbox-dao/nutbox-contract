@@ -15,8 +15,6 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     address public treasury;
     // NUT address
     address public nut;
-    // DappGaugeFacotry address
-    address public dappGaugeFactory;
     // gauge setted by committee
     address private gauge;
     // feeType => amount
@@ -48,7 +46,6 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     event AdminSetTreasury(address indexed treasury);
     event AdminSetNut(address indexed nut);
     event AdminSetGauge(address indexed gauge);
-    event AdminSetDappGaugeFacotry(address indexed factory);
 
     constructor(address _treasury, address _nut) {
         require(_treasury != address(0), "Invalid treasury");
@@ -87,11 +84,6 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     function adminRemoveFeeFreeAddress(address _f) external onlyOwner {
         feeFreeList[_f] = false;
         emit AdminRemoveFeeFreeAddress(_f);
-    }
-
-    function adminSetDappGaugeFacotry(address _factory) external onlyOwner {
-        dappGaugeFactory = _factory;
-        emit AdminSetDappGaugeFacotry(_factory);
     }
 
     function adminSetTreasury(address _treasury) external onlyOwner {
