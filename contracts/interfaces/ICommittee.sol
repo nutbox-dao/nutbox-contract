@@ -15,7 +15,7 @@ interface ICommittee {
 
     function getTreasury() external view returns (address);
 
-    function getToolkit() external view returns (address);
+    function getGauge() external view returns (address);
 
     function updateLedger(
         string memory feeType,

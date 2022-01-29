@@ -3,10 +3,10 @@
 pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "./MintableERC20.sol";
 import './Community.sol';
 import './interfaces/ICalculator.sol';
 import './interfaces/ICommittee.sol';
+import "./interfaces/ICommunityTokenFactory.sol";
 import "./ERC20Helper.sol";
 
 /**
@@ -15,29 +15,23 @@ import "./ERC20Helper.sol";
  * This is the entry contract that user start to create their own staking economy.
  */
 contract CommunityFactory is ERC20Helper {
-    struct TokenProperties {
-        string name;
-        string symbol;
-        uint256 supply;
-        address owner;
-    }
 
     address immutable committee;
     mapping (address => bool) public createdCommunity;
 
     event CommunityCreated(address indexed creator, address indexed community, address communityToken);
-    event ERC20TokenCreated(address indexed token, address indexed owner, TokenProperties properties);
 
     constructor(address _committee) {
         require(_committee != address(0), "Invalid committee");
         committee = _committee;
     }
 
-    // If communityToken == address(0), we would create a mintable token for cummunity,
-    // thus caller should give arguments: name, symbol, initialSupply, owner
+    // If communityToken == address(0), we would create a mintable token for cummunity by token factory,
+    // thus caller should give arguments bytes
     function createCommunity (
         address communityToken,
-        TokenProperties memory properties,
+        address communityTokenFactory,
+        bytes calldata tokenMeta,
         address rewardCalculator,
         bytes calldata distributionPolicy
     ) external {
@@ -46,15 +40,14 @@ contract CommunityFactory is ERC20Helper {
 
         // we would create a new mintable token for community
         if (communityToken == address(0)){
+            require(ICommittee(committee).verifyContract(communityTokenFactory), 'UTC'); // Unsupported token factory
             isMintable = true;
-            MintableERC20 mintableERC20 = new MintableERC20(properties.name, properties.symbol, properties.supply, properties.owner);
-            communityToken = address(mintableERC20);
-            emit ERC20TokenCreated(communityToken, msg.sender, properties);
+            address communityToken = ICommunityTokenFactory(communityTokenFactory).createCommunityToken(tokenMeta);
         }
 
         Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
         if (isMintable){
-            MintableERC20(communityToken).transferOwnership(address(community));
+            Ownable(communityToken).transferOwnership(address(community));
         }
 
         if(ICommittee(committee).getFee('COMMUNITY') > 0){

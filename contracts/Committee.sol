@@ -15,10 +15,10 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     address public treasury;
     // NUT address
     address public nut;
-    // DappToolkitFacotry address
-    address public dappToolkitFactory;
-    // toolkit setted by committee
-    address private toolkit;
+    // DappGaugeFacotry address
+    address public dappGaugeFactory;
+    // gauge setted by committee
+    address private gauge;
     // feeType => amount
     mapping(bytes32 => uint256) private fees;
     // feeType => amount
@@ -47,8 +47,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     event AdminRemoveFeeFreeAddress(address indexed feeFree);
     event AdminSetTreasury(address indexed treasury);
     event AdminSetNut(address indexed nut);
-    event AdminSetToolkit(address indexed toolkit);
-    event AdminSetDappToolkitFacotry(address indexed factory);
+    event AdminSetGauge(address indexed gauge);
+    event AdminSetDappGaugeFacotry(address indexed factory);
 
     constructor(address _treasury, address _nut) {
         require(_treasury != address(0), "Invalid treasury");
@@ -89,9 +89,9 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit AdminRemoveFeeFreeAddress(_f);
     }
 
-    function adminSetDappToolkitFacotry(address _factory) external onlyOwner {
-        dappToolkitFactory = _factory;
-        emit AdminSetDappToolkitFacotry(_factory);
+    function adminSetDappGaugeFacotry(address _factory) external onlyOwner {
+        dappGaugeFactory = _factory;
+        emit AdminSetDappGaugeFacotry(_factory);
     }
 
     function adminSetTreasury(address _treasury) external onlyOwner {
@@ -106,10 +106,10 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit AdminSetNut(_nut);
     }
 
-    function adminSetToolkit(address _toolkit) external onlyOwner {
-        // toolkit can be set to address(0), that means shut down this function
-        toolkit = _toolkit;
-        emit AdminSetToolkit(toolkit);
+    function adminSetGauge(address _gauge) external onlyOwner {
+        // gauge can be set to address(0), that means shut down this function
+        gauge = _gauge;
+        emit AdminSetGauge(gauge);
     }
 
     function adminAppropriate(address recipient, uint256 amount) external onlyOwner {
@@ -136,8 +136,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         return treasury;
     }
 
-    function getToolkit() external view override returns (address) {
-        return toolkit;
+    function getGauge() external view override returns (address) {
+        return gauge;
     }
 
     function getFee(string memory feeType) external view override returns (uint256) {

@@ -10,7 +10,7 @@ import "./interfaces/ICommunity.sol";
 import "./interfaces/IPool.sol";
 import "./interfaces/IPoolFactory.sol";
 import "./interfaces/ICommittee.sol";
-import "./interfaces/IDappToolkit.sol";
+import "./interfaces/IDappGauge.sol";
 import "./ERC20Helper.sol";
 
 /**
@@ -164,27 +164,27 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         }
 
         uint256 totalAvailableRewards = 0;
-        uint256 needTransferToToolkit = 0;
-        address toolkit = ICommittee(committee).getToolkit();
+        uint256 needTransferToGauge = 0;
+        address gauge = ICommittee(committee).getGauge();
         for (uint8 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = poolAddresses[i];
             require(whitelists[poolAddress], "IP"); // Illegal pool
             uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
 
             uint256 pending = stakedAmount.mul(poolAcc[poolAddress]).div(1e12).sub(userDebts[poolAddress][msg.sender]);
-            uint256 pendingToToolkit = 0;
-            // toolkit function online
-            if (toolkit != address(0) && IDappToolkit(toolkit).toolCreated(poolAddress)) {
-                uint256 ratio = IDappToolkit(toolkit).getDappToolsRatio();
+            uint256 pendingToGauge = 0;
+            // gauge function online
+            if (gauge != address(0) && IDappGauge(gauge).gaugeCreated(poolAddress)) {
+                uint256 ratio = IDappGauge(gauge).getGaugesRatio();
                 if (ratio > 0) {
-                    pendingToToolkit = pending.mul(10000 - ratio).div(10000);
-                    pending = pending.sub(needTransferToToolkit);
+                    pendingToGauge = pending.mul(10000 - ratio).div(10000);
+                    pending = pending.sub(needTransferToGauge);
                 }
             }
 
-            if (pendingToToolkit > 0){
-                IDappToolkit(toolkit).updateLedger(address(this), poolAddress, pendingToToolkit);
-                needTransferToToolkit = needTransferToToolkit.add(pendingToToolkit);
+            if (pendingToGauge > 0){
+                IDappGauge(gauge).updateLedger(address(this), poolAddress, pendingToGauge);
+                needTransferToGauge = needTransferToGauge.add(pendingToGauge);
             }
 
             if(pending > 0) {
@@ -196,9 +196,9 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             userRewards[poolAddress][msg.sender] = 0;
         }
 
-        // toolkit function not available
-        if (needTransferToToolkit > 0) {
-            _unlockOrMintAsset(toolkit, needTransferToToolkit);
+        // gauge function not available
+        if (needTransferToGauge > 0) {
+            _unlockOrMintAsset(gauge, needTransferToGauge);
         }
         // transfer rewards to user
         _unlockOrMintAsset(msg.sender, totalAvailableRewards);
