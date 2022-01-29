@@ -42,7 +42,7 @@ contract CommunityFactory is ERC20Helper {
         if (communityToken == address(0)){
             require(ICommittee(committee).verifyContract(communityTokenFactory), 'UTC'); // Unsupported token factory
             isMintable = true;
-            address communityToken = ICommunityTokenFactory(communityTokenFactory).createCommunityToken(tokenMeta);
+            communityToken = ICommunityTokenFactory(communityTokenFactory).createCommunityToken(tokenMeta);
         }
 
         Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
