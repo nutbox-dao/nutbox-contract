@@ -183,7 +183,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             uint256 pendingRewardsToGauge = 0;
             // if this pool's gauge enabled, calculate the reward and transfer c-token to gauge
             if (gauge != address(0) && IGauge(gauge).hasGaugeEnabled(poolAddress)) {
-                uint16 ratio = IGauge(gauge).getGaugesRatio();
+                uint16 ratio = IGauge(gauge).getGaugeRatio();
                 if (ratio > 0) {
                     pendingRewardsToGauge = pending.mul(CONSTANTS_10000.sub(ratio)).div(CONSTANTS_10000);
                     pending = pending.sub(amountTransferToGauge);
