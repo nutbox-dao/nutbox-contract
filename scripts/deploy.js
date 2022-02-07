@@ -14,28 +14,28 @@ const CommunityFactoryJson = require('../build/contracts/CommunityFactory.json')
 const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
 const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
-const SimpleMintableERC20FactoryJson = require('../build/contracts/SimpleMintableERC20Factory.json')
+const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factory.json')
 
-const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
+// const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
-// const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
+const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
     let contract = await factory.deploy(env.wallet.address, NutAddress, {
         gasPrice: env.gasPrice
     });
-    await contract.deployed();
+    await contract.deployed();s
     console.log("✓ Committee contract deployed", contract.address);
     env.Committee = contract.address;
 }
 
-async function deploySimpleMintableERC20FactoryContract(env) {
-    let factory = new ethers.ContractFactory(SimpleMintableERC20FactoryJson.abi, SimpleMintableERC20FactoryJson.bytecode, env.wallet);
+async function deployMintableERC20FactoryContract(env) {
+    let factory = new ethers.ContractFactory(MintableERC20FactoryJson.abi, MintableERC20FactoryJson.bytecode, env.wallet);
     let contract = await factory.deploy({ gasPrice: env.gasPrice })
     await contract.deployed();
     console.log("✓ Simple Mintable ERC20 contract deployed", contract.address);
-    env.SimpleMintableERC20Factory = contract.address;
+    env.MintableERC20Factory = contract.address;
 }
 
 async function deploySPStakingFactoryContract(env) {
@@ -97,7 +97,7 @@ async function main() {
     // env.LinearCalculator = '0x7281e39F77418356950A62BA944a79Db9310c69e'
 
     await deployCommitteeContract(env);
-    await deploySimpleMintableERC20FactoryContract(env);
+    await deployMintableERC20FactoryContract(env);
     await deployCommunityFactoryContract(env);
     await deploySPStakingFactoryContract(env);
     await deployERC20StakingFactoryContract(env);
@@ -108,8 +108,8 @@ async function main() {
     tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
     console.log('Admin set factory to committee whitelist');
 
-    tx = await committeeContract.adminAddContract(env.SimpleMintableERC20Factory);
-    console.log(`Admin register lSimpleMintableERC20Factory`);
+    tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
+    console.log(`Admin register lMintableERC20Factory`);
     tx = await committeeContract.adminAddContract(env.LinearCalculator);
     console.log(`Admin register linear calculator`);
     tx = await committeeContract.adminAddContract(env.SPStakingFactory);
@@ -120,9 +120,9 @@ async function main() {
     tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
     console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
 
-    tx = await committeeContract.adminSetFee(
-        'COMMUNITY', 
-        ethers.utils.parseUnits('0.1', 18));
+    // tx = await committeeContract.adminSetFee(
+    //     'COMMUNITY', 
+    //     ethers.utils.parseUnits('0.1', 18));
     // tx = await committeeContract.adminSetFee(
     //     'USER', 
     //     ethers.utils.parseUnits('0.01', 18));
@@ -139,7 +139,7 @@ async function main() {
 
     const output = {
         Committee: env.Committee ?? "Not Deployed",
-        SimpleMintableERC20Factory: env.SimpleMintableERC20Factory ?? 'Not Deployed',
+        MintableERC20Factory: env.MintableERC20Factory ?? 'Not Deployed',
         CommunityFactory: env.CommunityFactory ?? "Not Deployed",
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         SPStakingFactory: env.SPStakingFactory ?? 'Not Deployed',
@@ -161,7 +161,7 @@ async function main() {
         ===============================================================
         Committee:              ${env.Committee ?? "Not Deployed"}
         ---------------------------------------------------------------
-        SimpleMintableERC20Factory: ${env.SimpleMintableERC20Factory ?? "Not Deployed"}
+        MintableERC20Factory: ${env.MintableERC20Factory ?? "Not Deployed"}
         ---------------------------------------------------------------
         CommunityFactory:       ${env.CommunityFactory ?? "Not Deployed"}
         ---------------------------------------------------------------

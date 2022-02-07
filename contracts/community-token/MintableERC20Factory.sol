@@ -6,11 +6,11 @@
 pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "./SimpleMintableERC20.sol";
+import "./MintableERC20.sol";
 import "solidity-bytes-utils/contracts/BytesLib.sol";
 import "../interfaces/ICommunityTokenFactory.sol";
 
-contract SimpleMintableERC20Factory is ICommunityTokenFactory {
+contract MintableERC20Factory is ICommunityTokenFactory {
 
     using BytesLib for bytes;
 
@@ -24,7 +24,7 @@ contract SimpleMintableERC20Factory is ICommunityTokenFactory {
         string memory symbol = string(meta.slice(nameLength + 2, symbolLength));
         uint256 supply = meta.toUint256(nameLength + symbolLength + 2);
         address recipient = meta.toAddress(nameLength + symbolLength + 34);
-        SimpleMintableERC20 token = new SimpleMintableERC20(name, symbol, supply, recipient, msg.sender);
+        MintableERC20 token = new MintableERC20(name, symbol, supply, recipient, msg.sender);
         return address(token);
     }
 }
