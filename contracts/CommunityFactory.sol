@@ -41,13 +41,21 @@ contract CommunityFactory is ERC20Helper {
 
         // we would create a new mintable token for community
         if (communityToken == address(0)){
+            isMintable = true;
             require(ICommittee(committee).verifyContract(communityTokenFactory), 'UTC'); // Unsupported token factory
             communityToken = ICommunityTokenFactory(communityTokenFactory).createCommunityToken(tokenMeta);
         }
 
         Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
+       
         if (isMintable){
-            MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
+            // Token deployed by walnut need to grant mint role from community factory to sepecify community.
+            if (communityToken == address(0)) {
+                MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
+            }          
+            // Token provided by user need user to grant mint role to community
+            // if user set isMintable to true,
+            // this action will be executed after this method completed.
         }
 
         if(ICommittee(committee).getFee('COMMUNITY') > 0){

@@ -16,7 +16,7 @@ const CommunityFactoryAddress = Addresses.CommunityFactory;
 const LinearCalculatorAddress = Addresses.LinearCalculator;
 const SPStakingFactoryAddress = Addresses.SPStakingFactory;
 const ERC20StakingFactoryAddress = Addresses.ERC20StakingFactory;
-const SimpleMintableERC20FactoryAddress = Addresses.SimpleMintableERC20Factory;
+const MintableERC20FactoryAddress = Addresses.MintableERC20Factory;
 
 const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local
 // const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
@@ -70,7 +70,7 @@ async function createSimpleCommunity(env) {
                 await createSpPool(community, env);
                 resolve({ community, communityToken });
             })
-            const tx = await contract.createCommunity(NutAddress, 
+            const tx = await contract.createCommunity(false, NutAddress, 
                 ethers.constants.AddressZero, '0x', LinearCalculatorAddress, policy, 
                 {
                     gasLimit: process.env.GASLIMIT,
@@ -114,16 +114,16 @@ async function createMintableCommunity(env) {
                 console.log(`New community created by: ${creator}, community: ${community}, c-token: ${communityToken}`);
                 contract.removeAllListeners('CommunityCreated');
                 const erc20 = new ethers.Contract(communityToken, NUTTokenJson.abi, env.wallet);
-                const [name, symbol, supply, balance, owner] = await Promise.all([erc20.name(), erc20.symbol(), erc20.totalSupply(), erc20.balanceOf(env.wallet.address), erc20.owner()])
-                console.log(`C-Token infos, name:${name}, symbol: ${symbol}, supply: ${supply.toString() / 1e18}, balance: ${balance.toString() / 1e18}, owner: ${owner}`);
+                const [name, symbol, supply, balance] = await Promise.all([erc20.name(), erc20.symbol(), erc20.totalSupply(), erc20.balanceOf(env.wallet.address)])
+                console.log(`C-Token infos, name:${name}, symbol: ${symbol}, supply: ${supply.toString() / 1e18}, balance: ${balance.toString() / 1e18}`);
                 await approveCommunity(community, env);
                 await createERC20Pool(community, env);
                 await createSpPool(community, env);
                 resolve({ community, communityToken });
             })
 
-            const tx = await contract.createCommunity('0x0000000000000000000000000000000000000000', 
-            SimpleMintableERC20FactoryAddress,
+            const tx = await contract.createCommunity(true, '0x0000000000000000000000000000000000000000', 
+            MintableERC20FactoryAddress,
             makeSimpleMintableERC20Metadata('Mintable', 'MINT', 10000, env.wallet.address), 
             LinearCalculatorAddress, policy, 
                 {

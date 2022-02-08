@@ -23,8 +23,8 @@ contract MintableERC20Factory is ICommunityTokenFactory {
         uint8 symbolLength = meta.toUint8(nameLength + 1);
         string memory symbol = string(meta.slice(nameLength + 2, symbolLength));
         uint256 supply = meta.toUint256(nameLength + symbolLength + 2);
-        address recipient = meta.toAddress(nameLength + symbolLength + 34);
-        MintableERC20 token = new MintableERC20(name, symbol, supply, recipient, msg.sender);
+        address owner = meta.toAddress(nameLength + symbolLength + 34);
+        MintableERC20 token = new MintableERC20(name, symbol, supply, owner, msg.sender);
         return address(token);
     }
 }

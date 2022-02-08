@@ -16,16 +16,16 @@ const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factory.json')
 
-// const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
+const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
-const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
+// const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
     let contract = await factory.deploy(env.wallet.address, NutAddress, {
         gasPrice: env.gasPrice
     });
-    await contract.deployed();s
+    await contract.deployed();
     console.log("✓ Committee contract deployed", contract.address);
     env.Committee = contract.address;
 }
