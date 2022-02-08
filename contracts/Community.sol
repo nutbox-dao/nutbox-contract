@@ -185,7 +185,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             if (gauge != address(0) && IGauge(gauge).hasGaugeEnabled(poolAddress)) {
                 uint16 ratio = IGauge(gauge).getGaugeRatio();
                 if (ratio > 0) {
-                    pendingRewardsToGauge = pending.mul(CONSTANTS_10000.sub(ratio)).div(CONSTANTS_10000);
+                    pendingRewardsToGauge = pending.mul(ratio).div(CONSTANTS_10000);
                     pending = pending.sub(amountTransferToGauge);
                 }
             }

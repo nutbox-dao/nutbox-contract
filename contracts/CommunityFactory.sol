@@ -48,11 +48,9 @@ contract CommunityFactory is ERC20Helper {
 
         Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
        
-        if (isMintable){
+        if (isMintable && communityToken == address(0)){
             // Token deployed by walnut need to grant mint role from community factory to sepecify community.
-            if (communityToken == address(0)) {
-                MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
-            }          
+            MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
             // Token provided by user need user to grant mint role to community
             // if user set isMintable to true,
             // this action will be executed after this method completed.
