@@ -40,7 +40,9 @@ contract CommunityFactory is ERC20Helper {
         require(ICommittee(committee).verifyContract(rewardCalculator), 'UC'); // Unsupported calculator
 
         // we would create a new mintable token for community
+        bool needGrantRole = false;
         if (communityToken == address(0)){
+            needGrantRole = true;
             isMintable = true;
             require(ICommittee(committee).verifyContract(communityTokenFactory), 'UTC'); // Unsupported token factory
             communityToken = ICommunityTokenFactory(communityTokenFactory).createCommunityToken(tokenMeta);
@@ -48,7 +50,7 @@ contract CommunityFactory is ERC20Helper {
 
         Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
        
-        if (isMintable && communityToken == address(0)){
+        if (needGrantRole){
             // Token deployed by walnut need to grant mint role from community factory to sepecify community.
             MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
             // Token provided by user need user to grant mint role to community
