@@ -127,7 +127,7 @@ async function main() {
     //     'USER', 
     //     ethers.utils.parseUnits('0.01', 18));
 
-    console.log(`Admin set fees`);
+    // console.log(`Admin set fees`);
 
     const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
     tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
