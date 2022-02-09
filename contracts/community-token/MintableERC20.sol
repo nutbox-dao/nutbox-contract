@@ -22,17 +22,19 @@ contract MintableERC20 is Context, AccessControlEnumerable, ERC20Burnable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /**
-     * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
-     * account that deploys the contract.
+     * @dev Grants `DEFAULT_ADMIN_ROLE` to the
+     * owner account and community factory contract,
+     * community factory will grant mint role to the community.
      *
      * See {ERC20-constructor}.
      */
     constructor(string memory name, 
     string memory symbol, 
     uint256 initialSupply,
-    address owner) ERC20(name, symbol) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MINTER_ROLE, _msgSender());
+    address owner,
+    address communityFactory) ERC20(name, symbol) {
+        _setupRole(DEFAULT_ADMIN_ROLE, owner);
+        _setupRole(DEFAULT_ADMIN_ROLE, communityFactory);
         _mint(owner, initialSupply);
     }
     /**

@@ -7,6 +7,7 @@ import "../../interfaces/IPoolFactory.sol";
 import "./SPStaking.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "solidity-bytes-utils/contracts/BytesLib.sol";
+import "../../CommunityFactory.sol";
 
 /**
  * @dev Factory contract of Nutbox ERC20 staking pool.
@@ -15,8 +16,11 @@ import "solidity-bytes-utils/contracts/BytesLib.sol";
 contract SPStakingFactory is IPoolFactory, Ownable {
     using BytesLib for bytes;
     address public bridge;
+    address public immutable communityFactory;
 
-    constructor() {
+    constructor(address _communityFactory) {
+        require(_communityFactory != address(0), "Invalid address");
+        communityFactory = _communityFactory;
     }
 
     event SPStakingCreated(
@@ -31,6 +35,7 @@ contract SPStakingFactory is IPoolFactory, Ownable {
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
+        require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
         uint8 chainId = meta.toUint8(0);
         bytes32 delegatee = meta.toBytes32(1);
         SPStaking pool = new SPStaking(community, name, chainId, delegatee);

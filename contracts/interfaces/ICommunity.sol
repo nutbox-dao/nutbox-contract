@@ -12,6 +12,8 @@ interface ICommunity {
 
     function getShareAcc(address pool) external view returns (uint256);
 
+    function getCommunityToken() external view returns (address);
+
     function getUserDebt(address pool, address user)
         external
         view

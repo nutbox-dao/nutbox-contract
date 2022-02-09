@@ -1,6 +1,7 @@
 require('dotenv').config();
 const ethers = require('ethers');
 const fs = require("fs");
+const { utf8ToHex } = require('./utils')
 
 const CommunityJson = require("../build/contracts/Community.json");
 const CommunityFactoryJson = require("../build/contracts/CommunityFactory.json");
@@ -15,17 +16,24 @@ const CommunityFactoryAddress = Addresses.CommunityFactory;
 const LinearCalculatorAddress = Addresses.LinearCalculator;
 const SPStakingFactoryAddress = Addresses.SPStakingFactory;
 const ERC20StakingFactoryAddress = Addresses.ERC20StakingFactory;
+const MintableERC20FactoryAddress = Addresses.MintableERC20Factory;
 
-// const NutAddress = '0x52cF8235e4e01Ca9089093eEac7e6cC7377853aA'  // local
+const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local
 // const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
-const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test
+// const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test
 
 async function approveFactory(env) {
     const contract = new ethers.Contract(NutAddress, NUTTokenJson.abi, env.wallet);
     console.log('Approve factory');
     const tx = await contract.approve(CommunityFactoryAddress, ethers.constants.MaxUint256);
-    console.log('Approve community factory tx:', tx);
-    console.log(await tx.wait());
+    console.log('Approve community factory tx:', tx.hash);
+}
+
+async function approveCommunity(community, env) {
+    const contract = new ethers.Contract(NutAddress, NUTTokenJson.abi, env.wallet);
+    console.log('Approve community');
+    const tx = await contract.approve(community, ethers.constants.MaxUint256);
+    console.log('Approve community tx:', tx.hash);
 }
  
 // create non-mintable community
@@ -57,14 +65,13 @@ async function createSimpleCommunity(env) {
             contract.on('CommunityCreated', async (creator, community, communityToken) => {
                 console.log(`New community created by: ${creator}, community: ${community}, c-token: ${communityToken}`);
                 contract.removeAllListeners('CommunityCreated');
+                await approveCommunity(community, env);
+                await createERC20Pool(community, env);
+                await createSpPool(community, env);
                 resolve({ community, communityToken });
             })
-            const tx = await contract.createCommunity(NutAddress, {
-                name: '',
-                symbol: '',
-                supply: ethers.utils.parseUnits('0', 18),
-                owner: env.wallet.address
-            }, LinearCalculatorAddress, policy, 
+            const tx = await contract.createCommunity(false, NutAddress, 
+                ethers.constants.AddressZero, '0x', LinearCalculatorAddress, policy, 
                 {
                     gasLimit: process.env.GASLIMIT,
                     gasPrice: await env.provider.getGasPrice()
@@ -106,22 +113,37 @@ async function createMintableCommunity(env) {
             contract.on('CommunityCreated', async (creator, community, communityToken) => {
                 console.log(`New community created by: ${creator}, community: ${community}, c-token: ${communityToken}`);
                 contract.removeAllListeners('CommunityCreated');
+                const erc20 = new ethers.Contract(communityToken, NUTTokenJson.abi, env.wallet);
+                const [name, symbol, supply, balance] = await Promise.all([erc20.name(), erc20.symbol(), erc20.totalSupply(), erc20.balanceOf(env.wallet.address)])
+                console.log(`C-Token infos, name:${name}, symbol: ${symbol}, supply: ${supply.toString() / 1e18}, balance: ${balance.toString() / 1e18}`);
+                await approveCommunity(community, env);
+                await createERC20Pool(community, env);
+                await createSpPool(community, env);
                 resolve({ community, communityToken });
             })
-            const tx = await contract.createCommunity('0x0000000000000000000000000000000000000000', {
-                name: 'Nutbox',
-                symbol: 'NUT', 
-                supply: ethers.utils.parseUnits('100000', 18),
-                owner: env.wallet.address
-            }, LinearCalculatorAddress, policy, 
+
+            const tx = await contract.createCommunity(true, '0x0000000000000000000000000000000000000000', 
+            MintableERC20FactoryAddress,
+            makeSimpleMintableERC20Metadata('Mintable', 'MINT', 10000, env.wallet.address), 
+            LinearCalculatorAddress, policy, 
                 {
                     gasLimit: process.env.GASLIMIT,
                     gasPrice: await env.provider.getGasPrice()
                 });
         } catch (e) {
-            console.log('Create simple community fail:', e);
+            console.log('Create mintable community fail:', e);
         }
     }) 
+}
+
+function makeSimpleMintableERC20Metadata(name, symbol, supply, recipient) {
+    const meta = '0x' + ethers.utils.hexZeroPad(ethers.utils.hexlify(name.length), 1).substring(2)
+     + utf8ToHex(name)
+     + ethers.utils.hexZeroPad(ethers.utils.hexlify(symbol.length), 1).substring(2)
+     + utf8ToHex(symbol)
+     + ethers.utils.hexZeroPad(ethers.utils.parseUnits(supply.toString(), 18), 32).substring(2)
+     + recipient.substring(2)
+     return meta
 }
 
 async function createERC20Pool(community, env) {
@@ -129,11 +151,11 @@ async function createERC20Pool(community, env) {
         try{
             const communityContract = new ethers.Contract(community, CommunityJson.abi, env.wallet);
             const ERC20StakingFactoryContract = new ethers.Contract(ERC20StakingFactoryAddress, ERC20StakingFactoryJson.abi, env.wallet);
-            // ERC20StakingFactoryContract.on('ERC20StakingCreated', (pool, community, token) => {
-            //     console.log(`Create new pool: ${pool}, community:${community}, token: ${token}`);
-            //     resolve(pool);
-            //     ERC20StakingFactoryContract.removeAllListeners('ERC20StakingCreated');
-            // })
+            ERC20StakingFactoryContract.on('ERC20StakingCreated', (pool, community, name, token) => {
+                console.log(`Create new pool: ${pool}, community:${community}, name:${name}, token: ${token}`);
+                resolve(pool);
+                ERC20StakingFactoryContract.removeAllListeners('ERC20StakingCreated');
+            })
             communityContract.on('AdminSetPoolRatio', (pools, ratios) => {
                 console.log("Admin set pool ratios: ", pools, ratios);
                 communityContract.removeAllListeners('AdminSetPoolRatio')
@@ -155,19 +177,19 @@ async function createERC20Pool(community, env) {
 }
 
 async function createSpPool(community, env) {
-    return new Promise(async (resolve) => {
+    return new Promise(async (resolve, reject) => {
         try{
             const communityContract = new ethers.Contract(community, CommunityJson.abi, env.wallet);
             const SPStakingFactoryContract = new ethers.Contract(SPStakingFactoryAddress, SPStakingFactoryJson.abi, env.wallet);
-            SPStakingFactoryContract.on('SPStakingCreated', (pool, community, chainId, delegatee) => {
-                console.log(`Create new pool: ${pool}, community:${community}, chainId: ${chainId}, delegatee: ${ethers.utils.parseBytes32String(delegatee)}`);
+            SPStakingFactoryContract.on('SPStakingCreated', (pool, community, name, chainId, delegatee) => {
+                console.log(`Create new pool: ${pool}, community:${community}, name:${name}, chainId: ${chainId}, delegatee: ${ethers.utils.parseBytes32String(delegatee)}`);
                 resolve(pool);
                 SPStakingFactoryContract.removeAllListeners('SPStakingCreated');
             })
             const delegatee = ethers.utils.formatBytes32String('nutbox.mine');
             const tx = await communityContract.adminAddPool("Delegate sp for nut", [4000, 6000],
             SPStakingFactoryAddress,
-            '0x01' + delegatee.substr(2),
+            '0x01' + delegatee.substring(2),
             {
                 gasLimit: process.env.GASLIMIT,
                 gasPrice: await env.provider.getGasPrice()
@@ -192,9 +214,10 @@ async function main() {
     // console.log(tx);
     // console.log(await tx.wait());
     // return;
-    // await approveFactory(env);
+    await approveFactory(env);
     // return;
-    const { community, communityToken } = await createSimpleCommunity(env);
+    // const { community, communityToken } = await createSimpleCommunity(env);
+    const { c, ct } = await createMintableCommunity(env)
     // console.log(community);// 0x204b4d96E8C72bc30A1c544223FF43331222eeb7
     // const contract1 = new ethers.Contract('0x204b4d96E8C72bc30A1c544223FF43331222eeb7', CommunityJson.abi, env.wallet)
     // const tx1 = await contract1.adminSetFeeRatio(1000);

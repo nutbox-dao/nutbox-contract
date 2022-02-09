@@ -15,6 +15,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     address public treasury;
     // NUT address
     address public nut;
+    // gauge setted by committee
+    address private gauge;
     // feeType => amount
     mapping(bytes32 => uint256) private fees;
     // feeType => amount
@@ -43,6 +45,7 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     event AdminRemoveFeeFreeAddress(address indexed feeFree);
     event AdminSetTreasury(address indexed treasury);
     event AdminSetNut(address indexed nut);
+    event AdminSetGauge(address indexed gauge);
 
     constructor(address _treasury, address _nut) {
         require(_treasury != address(0), "Invalid treasury");
@@ -95,6 +98,12 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit AdminSetNut(_nut);
     }
 
+    function adminSetGauge(address _gauge) external onlyOwner {
+        // gauge can be set to address(0), that means shut down this function
+        gauge = _gauge;
+        emit AdminSetGauge(gauge);
+    }
+
     function adminAppropriate(address recipient, uint256 amount) external onlyOwner {
         releaseERC20(nut, recipient, amount);
         emit NewAppropriation(recipient, amount);
@@ -117,6 +126,10 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
 
     function getTreasury() external view override returns (address) {
         return treasury;
+    }
+
+    function getGauge() external view override returns (address) {
+        return gauge;
     }
 
     function getFee(string memory feeType) external view override returns (uint256) {

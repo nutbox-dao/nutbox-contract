@@ -2,7 +2,7 @@ require('dotenv').config();
 const ethers = require('ethers');
 
 const NUTTokenJson = require('../build/contracts/NUTToken.json');
-const NUTAddress = '0x52cF8235e4e01Ca9089093eEac7e6cC7377853aA' // localhost
+const NUTAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4' // localhost
 // const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
 // const NUTAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306'  // BSC test
 
@@ -11,7 +11,7 @@ async function deployNutContract(env) {
     let contract = await factory.deploy(
         'Nutbox',
         'NUT',
-        ethers.utils.parseUnits("20000000.0", 18),
+        ethers.utils.parseUnits("200000000.0", 18),
         env.wallet.address,
         { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
     );

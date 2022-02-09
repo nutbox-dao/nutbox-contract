@@ -10,8 +10,8 @@ import "./interfaces/ICommunity.sol";
 import "./interfaces/IPool.sol";
 import "./interfaces/IPoolFactory.sol";
 import "./interfaces/ICommittee.sol";
+import "./interfaces/IGauge.sol";
 import "./ERC20Helper.sol";
-import "./CommunityFactory.sol";
 
 /**
  * @dev Template contract of Nutbox staking based communnity.
@@ -22,6 +22,9 @@ import "./CommunityFactory.sol";
 contract Community is ICommunity, ERC20Helper, Ownable {
 
     using SafeMath for uint256;
+    using SafeMath for uint16;
+
+    uint16 constant CONSTANTS_10000 = 10000;
 
     address immutable committee;
     // DAO fund ratio
@@ -47,7 +50,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     // all created pools include closed pools
     address[] public createdPools;
     uint256 private lastRewardBlock;
-    address immutable public communityToken;
+    address immutable communityToken;
     bool immutable public isMintableCommunityToken;
     address immutable public rewardCalculator;
 
@@ -61,6 +64,11 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     event PoolUpdated(address indexed who, uint256 amount);
     event DevChanged(address indexed oldDev, address indexed newDev);
     event RevenueWithdrawn(address indexed devFund, uint256 amount);
+
+    modifier onlyPool {
+        require(whitelists[msg.sender], 'PNIW'); // Pool is not in white list
+        _;
+    }
 
     constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
         transferOwnership(_admin);
@@ -92,7 +100,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
     
     function adminSetFeeRatio(uint16 _ratio) external onlyOwner {
-        require(_ratio <= 10000, 'PR>1w');//Pool ratio exceeds 10000
+        require(_ratio <= CONSTANTS_10000, 'PR>1w');//Pool ratio exceeds 10000
 
         _updatePoolsWithFee("COMMUNITY", owner(), address(0));
         
@@ -164,12 +172,29 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         }
 
         uint256 totalAvailableRewards = 0;
+        uint256 amountTransferToGauge = 0;
+        address gauge = ICommittee(committee).getGauge();
         for (uint8 i = 0; i < poolAddresses.length; i++) {
             address poolAddress = poolAddresses[i];
             require(whitelists[poolAddress], "IP"); // Illegal pool
             uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
 
             uint256 pending = stakedAmount.mul(poolAcc[poolAddress]).div(1e12).sub(userDebts[poolAddress][msg.sender]);
+            uint256 pendingRewardsToGauge = 0;
+            // if this pool's gauge enabled, calculate the reward and transfer c-token to gauge
+            if (gauge != address(0) && IGauge(gauge).hasGaugeEnabled(poolAddress)) {
+                uint16 ratio = IGauge(gauge).getGaugeRatio();
+                if (ratio > 0) {
+                    pendingRewardsToGauge = pending.mul(ratio).div(CONSTANTS_10000);
+                    pending = pending.sub(amountTransferToGauge);
+                }
+            }
+
+            if (pendingRewardsToGauge > 0){
+                IGauge(gauge).updateLedger(address(this), poolAddress, pendingRewardsToGauge);
+                amountTransferToGauge = amountTransferToGauge.add(pendingRewardsToGauge);
+            }
+
             if(pending > 0) {
                 userRewards[poolAddress][msg.sender] = userRewards[poolAddress][msg.sender].add(pending);
             }
@@ -179,6 +204,9 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             userRewards[poolAddress][msg.sender] = 0;
         }
 
+        if (amountTransferToGauge > 0) {
+            _unlockOrMintAsset(gauge, amountTransferToGauge);
+        }
         // transfer rewards to user
         _unlockOrMintAsset(msg.sender, totalAvailableRewards);
         emit WithdrawRewards(poolAddresses, msg.sender, totalAvailableRewards);
@@ -215,6 +243,10 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         return poolAcc[pool];
     }
 
+    function getCommunityToken() external view override returns (address) {
+        return communityToken;
+    }
+
     function getUserDebt(address pool, address user)
         external
         view
@@ -223,20 +255,17 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
 
     // Pool callable only
-    function appendUserReward(address user, uint256 amount) external override {
-        require(whitelists[msg.sender], 'PNIW');// Perssion denied: pool not in whitelist
+    function appendUserReward(address user, uint256 amount) external override onlyPool {
         userRewards[msg.sender][user] = userRewards[msg.sender][user].add(amount);
     }
 
     // Pool callable only
-    function setUserDebt(address user, uint256 debt) external override {
-        require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
+    function setUserDebt(address user, uint256 debt) external override onlyPool {
         userDebts[msg.sender][user] = debt;
     }
 
     // Pool callable only
-    function updatePools(string memory feeType, address feePayer) external override {
-        require(whitelists[msg.sender], 'PNIW'); // Perssion denied: pool not in whitelist
+    function updatePools(string memory feeType, address feePayer) external override onlyPool {
         _updatePoolsWithFee(feeType, feePayer, msg.sender);
     }
 
@@ -269,11 +298,11 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             if (feeRatio > 0) {
                 // only send rewards belong to community, reward belong to user would send when
                 // they withdraw reward manually
-                uint256 feeAmount = rewardsReadyToMinted.mul(feeRatio).div(10000);
+                uint256 feeAmount = rewardsReadyToMinted.mul(feeRatio).div(CONSTANTS_10000);
                 retainedRevenue = retainedRevenue.add(feeAmount);
 
                 // only rewards belong to pools can used to compute shareAcc
-                rewardsReadyToMinted = rewardsReadyToMinted.mul(10000 - feeRatio).div(10000);
+                rewardsReadyToMinted = rewardsReadyToMinted.mul(CONSTANTS_10000.sub(feeRatio)).div(CONSTANTS_10000);
                 emit PoolUpdated(feePayer, feeAmount);
             }
         }
@@ -282,7 +311,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             address poolAddress = activedPools[i];
             uint256 totalStakedAmount = IPool(poolAddress).getTotalStakedAmount();
             if(totalStakedAmount == 0 || poolRatios[poolAddress] == 0) continue;
-            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(poolRatios[poolAddress]).div(10000);
+            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(poolRatios[poolAddress]).div(CONSTANTS_10000);
             poolAcc[poolAddress] = poolAcc[poolAddress].add(poolRewards.div(totalStakedAmount));
         }
 
@@ -294,7 +323,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         for(uint8 i = 0; i < ratios.length; i++) {
             ratioSum += ratios[i];
         }
-        require(ratioSum == 10000 || ratioSum == 0, 'RS!=1w');//Ratio summary not equal to 10000
+        require(ratioSum == CONSTANTS_10000 || ratioSum == 0, 'RS!=1w');//Ratio summary not equal to 10000
     }
 
     function _updatePoolRatios(uint16[] memory ratios) private {

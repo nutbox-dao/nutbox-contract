@@ -3,11 +3,12 @@
 pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "./MintableERC20.sol";
 import './Community.sol';
 import './interfaces/ICalculator.sol';
 import './interfaces/ICommittee.sol';
+import "./interfaces/ICommunityTokenFactory.sol";
 import "./ERC20Helper.sol";
+import "./community-token/MintableERC20.sol";
 
 /**
  * @dev Factory contract to create an StakingTemplate entity
@@ -15,46 +16,44 @@ import "./ERC20Helper.sol";
  * This is the entry contract that user start to create their own staking economy.
  */
 contract CommunityFactory is ERC20Helper {
-    struct TokenProperties {
-        string name;
-        string symbol;
-        uint256 supply;
-        address owner;
-    }
 
     address immutable committee;
     mapping (address => bool) public createdCommunity;
 
     event CommunityCreated(address indexed creator, address indexed community, address communityToken);
-    event ERC20TokenCreated(address indexed token, address indexed owner, TokenProperties properties);
 
     constructor(address _committee) {
         require(_committee != address(0), "Invalid committee");
         committee = _committee;
     }
 
-    // If communityToken == 0, we would create a mintable token for cummunity,
-    // thus caller should give arguments: name, symbol, initialSupply, owner
+    // If communityToken == address(0), we would create a mintable token for cummunity by token factory,
+    // thus caller should give arguments bytes
     function createCommunity (
+        bool isMintable,
         address communityToken,
-        TokenProperties memory properties,
+        address communityTokenFactory,
+        bytes calldata tokenMeta,
         address rewardCalculator,
         bytes calldata distributionPolicy
     ) external {
         require(ICommittee(committee).verifyContract(rewardCalculator), 'UC'); // Unsupported calculator
-        bool isMintable = false;
 
         // we would create a new mintable token for community
         if (communityToken == address(0)){
             isMintable = true;
-            MintableERC20 mintableERC20 = new MintableERC20(properties.name, properties.symbol, properties.supply, properties.owner);
-            communityToken = address(mintableERC20);
-            emit ERC20TokenCreated(communityToken, msg.sender, properties);
+            require(ICommittee(committee).verifyContract(communityTokenFactory), 'UTC'); // Unsupported token factory
+            communityToken = ICommunityTokenFactory(communityTokenFactory).createCommunityToken(tokenMeta);
         }
 
         Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
-        if (isMintable){
+       
+        if (isMintable && communityToken == address(0)){
+            // Token deployed by walnut need to grant mint role from community factory to sepecify community.
             MintableERC20(communityToken).grantRole(MintableERC20(communityToken).MINTER_ROLE(), address(community));
+            // Token provided by user need user to grant mint role to community
+            // if user set isMintable to true,
+            // this action will be executed after this method completed.
         }
 
         if(ICommittee(committee).getFee('COMMUNITY') > 0){

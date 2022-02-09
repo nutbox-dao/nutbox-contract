@@ -39,7 +39,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
     // Bascially, it should be a normal ERC20 token or a lptoken of a specific token exchange pair
     address immutable public stakeToken;
     // community that pool belongs to
-    address immutable public community;
+    address immutable community;
 
     // Total staked amount
     uint256 public totalStakedAmount;
@@ -149,6 +149,10 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
 
     function getFactory() external view override returns (address) {
         return factory;
+    }
+
+    function getCommunity() external view override returns (address) {
+        return community;
     }
 
     function getUserStakedAmount(address user)
