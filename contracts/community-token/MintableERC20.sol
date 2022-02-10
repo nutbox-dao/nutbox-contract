@@ -23,8 +23,8 @@ contract MintableERC20 is Context, AccessControlEnumerable, ERC20Burnable {
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE` to the
-     * owner account and community factory contract,
-     * community factory will grant mint role to the community.
+     * community factory contract,
+     * then community factory will grant mint role to the community.
      *
      * See {ERC20-constructor}.
      */
@@ -33,7 +33,6 @@ contract MintableERC20 is Context, AccessControlEnumerable, ERC20Burnable {
     uint256 initialSupply,
     address owner,
     address communityFactory) ERC20(name, symbol) {
-        _setupRole(DEFAULT_ADMIN_ROLE, owner);
         _setupRole(DEFAULT_ADMIN_ROLE, communityFactory);
         _mint(owner, initialSupply);
     }
