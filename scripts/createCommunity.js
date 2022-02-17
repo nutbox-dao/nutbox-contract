@@ -7,6 +7,7 @@ const CommunityJson = require("../build/contracts/Community.json");
 const CommunityFactoryJson = require("../build/contracts/CommunityFactory.json");
 const SPStakingFactoryJson = require("../build/contracts/SPStakingFactory.json");
 const ERC20StakingFactoryJson = require("../build/contracts/ERC20StakingFactory.json")
+const CosmosStakingFactoryJson = require("../build/contracts/CosmosStakingFactory.json")
 const NUTTokenJson = require("../build/contracts/NUTToken.json")
 const Addresses = require("./contracts.json");
 const { waitForTx } = require('./utils');
@@ -16,6 +17,7 @@ const CommunityFactoryAddress = Addresses.CommunityFactory;
 const LinearCalculatorAddress = Addresses.LinearCalculator;
 const SPStakingFactoryAddress = Addresses.SPStakingFactory;
 const ERC20StakingFactoryAddress = Addresses.ERC20StakingFactory;
+const CosmosStakingFactoryAddress = Addresses.CosmosStakingFactory;
 const MintableERC20FactoryAddress = Addresses.MintableERC20Factory;
 
 const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local
@@ -119,6 +121,7 @@ async function createMintableCommunity(env) {
                 await approveCommunity(community, env);
                 await createERC20Pool(community, env);
                 await createSpPool(community, env);
+                await createAtomPool(community, env);
                 resolve({ community, communityToken });
             })
 
@@ -198,6 +201,33 @@ async function createSpPool(community, env) {
             console.log('Create pool tx', tx.hash);
         }catch(err) {
             console.log('Create sp pool fail', err);
+            reject(err);
+        }
+    })
+}
+
+async function createAtomPool(community, env) {
+    return new Promise(async (resolve, reject) => {
+        try{
+            const communityContract = new ethers.Contract(community, CommunityJson.abi, env.wallet);
+            const CosmosStakingFactoryContract = new ethers.Contract(CosmosStakingFactoryAddress, CosmosStakingFactoryJson.abi, env.wallet);
+            CosmosStakingFactoryContract.on('CosmosStakingCreated', (pool, community, name, chainId, delegatee) => {
+                console.log(`Create new pool: ${pool}, community:${community}, name:${name}, chainId: ${chainId}, delegatee: ${delegatee}`);
+                resolve(pool);
+                CosmosStakingFactoryContract.removeAllListeners('CosmosStakingCreated');
+            })
+            const delegatee = env.wallet.address;
+            const tx = await communityContract.adminAddPool("Delegate atom for nut", [4000, 4000, 2000],
+            CosmosStakingFactoryAddress,
+            '0x03' + delegatee.substring(2),
+            {
+                gasLimit: process.env.GASLIMIT,
+                gasPrice: await env.provider.getGasPrice()
+            }
+            );
+            console.log('Create pool tx', tx.hash);
+        }catch(err) {
+            console.log('Create cosmos pool fail', err);
             reject(err);
         }
     })

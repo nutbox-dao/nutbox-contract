@@ -13,6 +13,7 @@ const CommitteeJson = require('../build/contracts/Committee.json')
 const CommunityFactoryJson = require('../build/contracts/CommunityFactory.json')
 const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
 const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
+const CosmosStakingFactoryJson = require('../build/contracts/CosmosStakingFactory.json')
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factory.json')
 
@@ -58,6 +59,16 @@ async function deployERC20StakingFactoryContract(env) {
     env.ERC20StakingFactory = contract.address
 }
 
+async function deployCosmosStakingFactoryContract(env) {
+    let factory = new ethers.ContractFactory(CosmosStakingFactoryJson.abi, CosmosStakingFactoryJson.bytecode, env.wallet);
+    let contract = await factory.deploy(env.CommunityFactory, {
+        gasPrice: env.gasPrice
+    });
+    await contract.deployed();
+    console.log("✓ CosmosStakingFactory contract deployed", contract.address);
+    env.CosmosStakingFactory = contract.address
+}
+
 async function deployCommunityFactoryContract(env) {
     let factory = new ethers.ContractFactory(CommunityFactoryJson.abi, CommunityFactoryJson.bytecode, env.wallet);
     let contract = await factory.deploy(env.Committee, {
@@ -100,6 +111,7 @@ async function main() {
     await deployMintableERC20FactoryContract(env);
     await deployCommunityFactoryContract(env);
     await deploySPStakingFactoryContract(env);
+    await deployCosmosStakingFactoryContract(env);
     await deployERC20StakingFactoryContract(env);
     await deployLinearCalculatorContract(env);
     let tx;
@@ -116,6 +128,8 @@ async function main() {
     console.log(`Admin register SPStakingFactory`);
     tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
     console.log(`Admin register ERC20StakingFactory`);
+    tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
+    console.log(`Admin register CosmosStakingFactory`);
 
     tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
     console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
@@ -133,6 +147,10 @@ async function main() {
     tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
     console.log(`Admin set sp staking bridge`);
 
+    const cosmosStakingFactoryContract = new ethers.Contract(env.CosmosStakingFactory, CosmosStakingFactoryJson.abi, env.wallet);
+    tx = await cosmosStakingFactoryContract.adminSetBridge(env.wallet.address);
+    console.log(`Admin set cosmos staking bridge`);
+
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
     const blockNum = await env.provider.getBlockNumber();
@@ -143,7 +161,8 @@ async function main() {
         CommunityFactory: env.CommunityFactory ?? "Not Deployed",
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         SPStakingFactory: env.SPStakingFactory ?? 'Not Deployed',
-        ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed"
+        ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed",
+        CosmosStakingFactory: env.CosmosStakingFactory ?? "Not Deployed"
     }
 
     const outfile = "./scripts/contracts.json";
@@ -170,6 +189,8 @@ async function main() {
         SPStakingFactory:       ${env.SPStakingFactory ?? "Not Deployed"}
         ---------------------------------------------------------------
         ERC20StakingFactory:     ${env.ERC20StakingFactory ?? "Not Deployed"}
+        ---------------------------------------------------------------
+        CosmosStakingFactory:     ${env.CosmosStakingFactory ?? "Not Deployed"}
         ===============================================================
     `);
 }
