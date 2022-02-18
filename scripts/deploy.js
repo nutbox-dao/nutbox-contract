@@ -120,6 +120,7 @@ async function main() {
     tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
     console.log('Admin set factory to committee whitelist');
 
+    // committee set contracts whitelist
     tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
     console.log(`Admin register lMintableERC20Factory`);
     tx = await committeeContract.adminAddContract(env.LinearCalculator);
@@ -130,10 +131,19 @@ async function main() {
     console.log(`Admin register ERC20StakingFactory`);
     tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
     console.log(`Admin register CosmosStakingFactory`);
-
+    // committee set fee free list
     tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
     console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
-
+    tx = await committeeContract.adminAddFeeFreeAddress(env.CosmosStakingFactory);
+    console.log(`Admin set address:${env.CosmosStakingFactory} to fee free list`);
+    // staking factory set bridge
+    const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
+    tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
+    console.log(`Admin set sp staking bridge`);
+    const cosmosStakingFactoryContract = new ethers.Contract(env.CosmosStakingFactory, CosmosStakingFactoryJson.abi, env.wallet);
+    tx = await cosmosStakingFactoryContract.adminAddBridge(env.wallet.address);
+    console.log(`Admin set cosmos staking bridge`);
+    // set transaction fee
     // tx = await committeeContract.adminSetFee(
     //     'COMMUNITY', 
     //     ethers.utils.parseUnits('0.1', 18));
@@ -142,14 +152,6 @@ async function main() {
     //     ethers.utils.parseUnits('0.01', 18));
 
     // console.log(`Admin set fees`);
-
-    const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
-    tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
-    console.log(`Admin set sp staking bridge`);
-
-    const cosmosStakingFactoryContract = new ethers.Contract(env.CosmosStakingFactory, CosmosStakingFactoryJson.abi, env.wallet);
-    tx = await cosmosStakingFactoryContract.adminSetBridge(env.wallet.address);
-    console.log(`Admin set cosmos staking bridge`);
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 

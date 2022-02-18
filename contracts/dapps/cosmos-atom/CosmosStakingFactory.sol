@@ -16,7 +16,7 @@ import "../../CommunityFactory.sol";
  */
 contract CosmosStakingFactory is IPoolFactory, Ownable {
     using BytesLib for bytes;
-    address public bridge;
+    mapping (address => bool) public isBridge;
     address public immutable communityFactory;
 
     constructor(address _communityFactory) {
@@ -32,7 +32,8 @@ contract CosmosStakingFactory is IPoolFactory, Ownable {
         address delegatee
     );
 
-    event BridgeChange(address indexed oldBridge, address indexed newBridge);
+    event AdminAddBridge(address indexed bridge);
+    event AdminRemoveBridge(address indexed bridge);
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
@@ -44,9 +45,15 @@ contract CosmosStakingFactory is IPoolFactory, Ownable {
         return address(pool);
     }
 
-    function adminSetBridge(address _bridge) external onlyOwner {
+    function adminAddBridge(address _bridge) external onlyOwner {
         require(_bridge != address(0), "Invalid address");
-        emit BridgeChange(bridge, _bridge);
-        bridge = _bridge;
+        isBridge[_bridge] = true;
+        emit AdminAddBridge(_bridge);
+    }
+
+    function adminRemoveBridge(address _bridge) external onlyOwner {
+        require(_bridge != address(0), "Invalid address");
+        isBridge[_bridge] = false;
+        emit AdminRemoveBridge(_bridge);
     }
 }

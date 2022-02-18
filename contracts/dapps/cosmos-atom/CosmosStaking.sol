@@ -10,7 +10,7 @@ import "./CosmosStakingFactory.sol";
 
 /**
  * @dev Template contract of Atom staking pool.
- * Delegation only can be updated through update().
+ * Delegation only can be updated through update() by bridge.
  *
  */
 contract CosmosStaking is IPool {
@@ -39,7 +39,8 @@ contract CosmosStaking is IPool {
 
     // community that pool belongs to
     address immutable community;
-    // delegatee account
+    // delegatee account,the pubkey of cosmos is bytes20, so here encode it to address
+    // It should be convert to specify format to the corresponding blockchain
     address public delegatee;
     // chain id: atom: 3
     uint8 immutable chainId;
@@ -69,7 +70,7 @@ contract CosmosStaking is IPool {
         uint256 amount,
         address _bindAccount
     ) external {
-        require(msg.sender == CosmosStakingFactory(factory).bridge(), "Only verified bridge can call");
+        require(CosmosStakingFactory(factory).isBridge(msg.sender), "Only verified bridge can call");
         require(chainId == _chainId, "Wrong chain id");
         require(delegatee == _delegatee, "Wrong delegatee account");
         require(accountBindMap[_bindAccount] == address(0) || accountBindMap[_bindAccount] == depositor, "Bound bsc account dismatch");
@@ -84,7 +85,6 @@ contract CosmosStaking is IPool {
         // Add to staking list if account hasn't deposited before
         if (!stakingInfo[depositor].hasDeposited) {
             stakingInfo[depositor].hasDeposited = true;
-            stakingInfo[depositor].amount = 0;
             stakingInfo[depositor].bindAccount = _bindAccount;
             accountBindMap[_bindAccount] = depositor;
         } else {
