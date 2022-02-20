@@ -16,9 +16,10 @@ const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factory.json')
 
-const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
+// const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
+const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745'   // bsc mainnet
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -80,12 +81,12 @@ async function deployLinearCalculatorContract(env) {
 
 async function main() {
     let env = {}
-    env.url = process.env.TESTENDPOINT;
-    env.privateKey = process.env.TESTKEY;
+    env.url = process.env.ENDPOINT;
+    env.privateKey = process.env.KEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasPrice = await env.provider.getGasPrice();
-    env.gasPrice = env.gasPrice * 1.5
+    env.gasPrice = env.gasPrice * 1.2
     console.log(`private: ${env.privateKey}, url: ${env.url}`);
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
@@ -109,7 +110,7 @@ async function main() {
     console.log('Admin set factory to committee whitelist');
 
     tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
-    console.log(`Admin register lMintableERC20Factory`);
+    console.log(`Admin register MintableERC20Factory`);
     tx = await committeeContract.adminAddContract(env.LinearCalculator);
     console.log(`Admin register linear calculator`);
     tx = await committeeContract.adminAddContract(env.SPStakingFactory);
@@ -132,6 +133,11 @@ async function main() {
     const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
     tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
     console.log(`Admin set sp staking bridge`);
+    tx = await sPStakingFactoryContract.transferOwnership('0x8E0Efb9e6f0dc5c7f1AfDbFd0186C6cDa700B5B2');
+    console.log('Transfer sp factory ownership to committee', tx.hash)
+
+    tx = await committeeContract.transferOwnership('0x8E0Efb9e6f0dc5c7f1AfDbFd0186C6cDa700B5B2');
+    console.log('Transfer committee ownership to gnosis contract', tx.hash);
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
