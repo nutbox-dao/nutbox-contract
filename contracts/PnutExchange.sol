@@ -51,4 +51,6 @@ contract PnutExchange is Ownable {
         _newPnut.transfer(msg.sender, amount.mul(1e12));
         emit UserExchangePnut(msg.sender, amount);
     }
+
+    // TO-DO: need to close this function when the exchange ending block
 }
