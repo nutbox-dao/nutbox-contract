@@ -19,7 +19,8 @@ const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factor
 // const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
-const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745'   // bsc mainnet
+// const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745'   // bsc mainnet
+const NutAddress = '0xd10e4C1e301A13A9B874bd1757c135Eda075769D'     // Astar
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -100,7 +101,7 @@ async function main() {
     await deployCommitteeContract(env);
     await deployMintableERC20FactoryContract(env);
     await deployCommunityFactoryContract(env);
-    await deploySPStakingFactoryContract(env);
+    // await deploySPStakingFactoryContract(env);
     await deployERC20StakingFactoryContract(env);
     await deployLinearCalculatorContract(env);
     let tx;
@@ -113,13 +114,13 @@ async function main() {
     console.log(`Admin register MintableERC20Factory`);
     tx = await committeeContract.adminAddContract(env.LinearCalculator);
     console.log(`Admin register linear calculator`);
-    tx = await committeeContract.adminAddContract(env.SPStakingFactory);
-    console.log(`Admin register SPStakingFactory`);
+    // tx = await committeeContract.adminAddContract(env.SPStakingFactory);
+    // console.log(`Admin register SPStakingFactory`);
     tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
     console.log(`Admin register ERC20StakingFactory`);
 
-    tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
-    console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
+    // tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
+    // console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
 
     // tx = await committeeContract.adminSetFee(
     //     'COMMUNITY', 
@@ -130,14 +131,14 @@ async function main() {
 
     // console.log(`Admin set fees`);
 
-    const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
-    tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
-    console.log(`Admin set sp staking bridge`);
-    tx = await sPStakingFactoryContract.transferOwnership('0x8E0Efb9e6f0dc5c7f1AfDbFd0186C6cDa700B5B2');
-    console.log('Transfer sp factory ownership to committee', tx.hash)
+    // const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
+    // tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
+    // console.log(`Admin set sp staking bridge`);
+    // tx = await sPStakingFactoryContract.transferOwnership('0x8E0Efb9e6f0dc5c7f1AfDbFd0186C6cDa700B5B2');
+    // console.log('Transfer sp factory ownership to committee', tx.hash)
 
-    tx = await committeeContract.transferOwnership('0x8E0Efb9e6f0dc5c7f1AfDbFd0186C6cDa700B5B2');
-    console.log('Transfer committee ownership to gnosis contract', tx.hash);
+    // tx = await committeeContract.transferOwnership('0x8E0Efb9e6f0dc5c7f1AfDbFd0186C6cDa700B5B2');
+    // console.log('Transfer committee ownership to gnosis contract', tx.hash);
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
