@@ -11,6 +11,7 @@ import "./CommunityFactory.sol";
 import "./interfaces/ICommunity.sol";
 import "./ERC20Helper.sol";
 import "./NUTToken.sol";
+import "./NutPower.sol";
 
 contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
@@ -199,8 +200,8 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
             poolFactoryAvailable[factory] = poolFactoryAvailable[factory].add(poolFactoryPending);
         }
 
-        // discussion: using transfer or just amount record. NP is not transferable
-        lockERC20(NP, msg.sender, address(this), amount);
+        // using lock method, NP is not transferable
+        NutPower(NP).lock(msg.sender, amount);
 
         // update amount
         gauges[pool].users[msg.sender].amount = gauges[pool].users[msg.sender].amount.add(amount);
@@ -248,7 +249,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
             poolFactoryAvailable[factory] = poolFactoryAvailable[factory].add(poolFactoryPending);
         }
 
-        releaseERC20(NP, address(msg.sender), amount);
+        NutPower(NP).unlock(msg.sender, amount);
 
         // update amount
         gauges[pool].users[msg.sender].amount = gauges[pool].users[msg.sender].amount.sub(amount);
