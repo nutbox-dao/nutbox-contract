@@ -13,13 +13,13 @@ const CommitteeJson = require('../build/contracts/Committee.json')
 const CommunityFactoryJson = require('../build/contracts/CommunityFactory.json')
 const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
 const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
+const CosmosStakingFactoryJson = require('../build/contracts/CosmosStakingFactory.json')
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factory.json')
 
-// const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
+const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
-const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745'   // bsc mainnet
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -59,6 +59,16 @@ async function deployERC20StakingFactoryContract(env) {
     env.ERC20StakingFactory = contract.address
 }
 
+async function deployCosmosStakingFactoryContract(env) {
+    let factory = new ethers.ContractFactory(CosmosStakingFactoryJson.abi, CosmosStakingFactoryJson.bytecode, env.wallet);
+    let contract = await factory.deploy(env.CommunityFactory, {
+        gasPrice: env.gasPrice
+    });
+    await contract.deployed();
+    console.log("✓ CosmosStakingFactory contract deployed", contract.address);
+    env.CosmosStakingFactory = contract.address
+}
+
 async function deployCommunityFactoryContract(env) {
     let factory = new ethers.ContractFactory(CommunityFactoryJson.abi, CommunityFactoryJson.bytecode, env.wallet);
     let contract = await factory.deploy(env.Committee, {
@@ -81,8 +91,8 @@ async function deployLinearCalculatorContract(env) {
 
 async function main() {
     let env = {}
-    env.url = process.env.ENDPOINT;
-    env.privateKey = process.env.KEY;
+    env.url = process.env.TESTENDPOINT;
+    env.privateKey = process.env.TESTKEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasPrice = await env.provider.getGasPrice();
@@ -101,6 +111,7 @@ async function main() {
     await deployMintableERC20FactoryContract(env);
     await deployCommunityFactoryContract(env);
     await deploySPStakingFactoryContract(env);
+    await deployCosmosStakingFactoryContract(env);
     await deployERC20StakingFactoryContract(env);
     await deployLinearCalculatorContract(env);
     let tx;
@@ -109,6 +120,7 @@ async function main() {
     tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
     console.log('Admin set factory to committee whitelist');
 
+    // committee set contracts whitelist
     tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
     console.log(`Admin register MintableERC20Factory`);
     tx = await committeeContract.adminAddContract(env.LinearCalculator);
@@ -118,9 +130,21 @@ async function main() {
     tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
     console.log(`Admin register ERC20StakingFactory`);
 
+    tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
+    console.log(`Admin register CosmosStakingFactory`);
+    // committee set fee free list
     tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
     console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
-
+    tx = await committeeContract.adminAddFeeFreeAddress(env.CosmosStakingFactory);
+    console.log(`Admin set address:${env.CosmosStakingFactory} to fee free list`);
+    // staking factory set bridge
+    const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
+    tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
+    console.log(`Admin set sp staking bridge`);
+    const cosmosStakingFactoryContract = new ethers.Contract(env.CosmosStakingFactory, CosmosStakingFactoryJson.abi, env.wallet);
+    tx = await cosmosStakingFactoryContract.adminAddBridge(env.wallet.address);
+    console.log(`Admin set cosmos staking bridge`);
+    // set transaction fee
     // tx = await committeeContract.adminSetFee(
     //     'COMMUNITY', 
     //     ethers.utils.parseUnits('0.1', 18));
@@ -129,15 +153,6 @@ async function main() {
     //     ethers.utils.parseUnits('0.01', 18));
 
     // console.log(`Admin set fees`);
-
-    const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
-    tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
-    console.log(`Admin set sp staking bridge`);
-    tx = await sPStakingFactoryContract.transferOwnership('0x8E0Efb9e6f0dc5c7f1AfDbFd0186C6cDa700B5B2');
-    console.log('Transfer sp factory ownership to committee', tx.hash)
-
-    tx = await committeeContract.transferOwnership('0x8E0Efb9e6f0dc5c7f1AfDbFd0186C6cDa700B5B2');
-    console.log('Transfer committee ownership to gnosis contract', tx.hash);
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
@@ -149,7 +164,8 @@ async function main() {
         CommunityFactory: env.CommunityFactory ?? "Not Deployed",
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         SPStakingFactory: env.SPStakingFactory ?? 'Not Deployed',
-        ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed"
+        ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed",
+        CosmosStakingFactory: env.CosmosStakingFactory ?? "Not Deployed"
     }
 
     const outfile = "./scripts/contracts.json";
@@ -176,6 +192,8 @@ async function main() {
         SPStakingFactory:       ${env.SPStakingFactory ?? "Not Deployed"}
         ---------------------------------------------------------------
         ERC20StakingFactory:     ${env.ERC20StakingFactory ?? "Not Deployed"}
+        ---------------------------------------------------------------
+        CosmosStakingFactory:     ${env.CosmosStakingFactory ?? "Not Deployed"}
         ===============================================================
     `);
 }
