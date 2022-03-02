@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -44,7 +44,6 @@ contract NutPower is Ownable, ReentrancyGuard {
 
     uint256 public totalLockedNut;
     address public nut;
-    address public gauge;
     // total NP
     uint256 public totalSupply;
 
@@ -72,12 +71,6 @@ contract NutPower is Ownable, ReentrancyGuard {
         nut = _nut;
     }
 
-    function adminSetGauge(address _gauge) external onlyOwner {
-        whitelists[gauge] = false;
-        whitelists[_gauge] = true;
-        gauge = _gauge;
-    }
-
     function adminSetWhitelist(address _who, bool _tag) external onlyOwner {
         whitelists[_who] = _tag;
     }
@@ -85,11 +78,11 @@ contract NutPower is Ownable, ReentrancyGuard {
     function powerUp(uint256 _nutAmount, Period _period) external nonReentrant {
         require(_nutAmount > 0, "Invalid lock amount");
         IERC20(nut).transferFrom(msg.sender, address(this), _nutAmount);
-        uint256 upNP = _nutAmount.mul(multipier[uint256(_period)]);
+        uint256 issuedNp = _nutAmount.mul(multipier[uint256(_period)]);
         // NUT is locked
         totalLockedNut = totalLockedNut.add(_nutAmount);
-        totalSupply = totalSupply.add(upNP);
-        powers[msg.sender].free = powers[msg.sender].free.add(upNP);
+        totalSupply = totalSupply.add(issuedNp);
+        powers[msg.sender].free = powers[msg.sender].free.add(issuedNp);
         depositInfos[msg.sender][_period] = depositInfos[msg.sender][_period].add(_nutAmount);
 
         emit PowerUp(msg.sender, _period, _nutAmount);
@@ -122,11 +115,11 @@ contract NutPower is Ownable, ReentrancyGuard {
 
         depositInfos[msg.sender][_src] = depositInfos[msg.sender][_src].sub(_nutAmount);
         depositInfos[msg.sender][_dest] = depositInfos[msg.sender][_dest].add(_nutAmount);
-        uint256 addedNP = _nutAmount.mul(
+        uint256 issuedNp = _nutAmount.mul(
                 multipier[uint256(_dest)].sub(multipier[uint256(_src)])
             );
-        powers[msg.sender].free = powers[msg.sender].free.add(addedNP);
-        totalSupply = totalSupply.add(addedNP);
+        powers[msg.sender].free = powers[msg.sender].free.add(issuedNp);
+        totalSupply = totalSupply.add(issuedNp);
 
         emit Upgrade(msg.sender, _src, _dest, _nutAmount);
     }
