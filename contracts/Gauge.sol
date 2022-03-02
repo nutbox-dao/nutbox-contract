@@ -37,7 +37,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         uint256 cTokenAcc;
         uint256 cTokenRevenue;
         uint256 lastCTokenRevenue;
-        uint256 totalStakedNP;
+        uint256 totalLockedNP;
         mapping (address => User) users;
     }
 
@@ -55,19 +55,19 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     // Only Nutbox committee can set this. Communities which enabled this function in their pools,
     // part of the cToken rewards(dappToolsRatio / 10000 of total rewards) will be transfered
     // to gauge contract when user harvest their rewards, those rewards and NUTs would be
-    // distributed based on the NP staked by user.
+    // distributed based on the NP locked by user.
     uint16 public gaugeRatio;
     // total reward nut per block, can be reset by Nutbox DAO
     uint256 public rewardNUTPerBlock;
     // last nut reward block
     uint256 private lastRewardBlock;
 
-    // nutAcc means how many nut will 1 NP staked earn, it departed by community/poolFactory/user
+    // nutAcc means how many nut will 1 NP locked earn, it departed by community/poolFactory/user
     uint256 private userNutAcc;
     uint256 private poolFactoryNutAcc;
     uint256 private communityNutAcc;
 
-    uint256 public totalNPStaked;
+    uint256 public totalNPLocked;
 
     // can be rest by Nutbox DAO, total of the ratios should be 10000
     DistributionRatio public distributionRatio;
@@ -79,8 +79,8 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     mapping (address => GaugeMeta) private gauges;
 
     // reward nut distribute to community and tool dev
-    mapping (address => uint256) public communityTotalStakedNP;
-    mapping (address => uint256) public poolFactoryTotalStakedNP;
+    mapping (address => uint256) public communityTotalLockedNP;
+    mapping (address => uint256) public poolFactoryTotalLockedNP;
     mapping (address => uint256) private communityAvailable;
     mapping (address => uint256) private poolFactoryAvailable;
     mapping (address => uint256) private communityDebt;
@@ -196,14 +196,14 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
             gauges[pool].users[msg.sender].nutAvailable = gauges[pool].users[msg.sender].nutAvailable.add(pendingNut);
             gauges[pool].users[msg.sender].cTokenAvailable = gauges[pool].users[msg.sender].cTokenAvailable.add(pendingCToken);
         }
-        if (communityTotalStakedNP[community] > 0) {
+        if (communityTotalLockedNP[community] > 0) {
             // update community's reward only nut
-            uint256 commmunityPending = communityTotalStakedNP[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
+            uint256 commmunityPending = communityTotalLockedNP[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
             communityAvailable[community] = communityAvailable[community].add(commmunityPending);
         }
-        if (poolFactoryTotalStakedNP[factory] > 0) {
+        if (poolFactoryTotalLockedNP[factory] > 0) {
             // update tool dev's reward only nut
-            uint256 poolFactoryPending = poolFactoryTotalStakedNP[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
+            uint256 poolFactoryPending = poolFactoryTotalLockedNP[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
             poolFactoryAvailable[factory] = poolFactoryAvailable[factory].add(poolFactoryPending);
         }
 
@@ -212,16 +212,16 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
         // update amount
         gauges[pool].users[msg.sender].amount = gauges[pool].users[msg.sender].amount.add(amount);
-        gauges[pool].totalStakedNP = gauges[pool].totalStakedNP.add(amount);
-        communityTotalStakedNP[community] = communityTotalStakedNP[community].add(amount);
-        poolFactoryTotalStakedNP[factory] = poolFactoryTotalStakedNP[factory].add(amount);
-        totalNPStaked = totalNPStaked.add(amount);
+        gauges[pool].totalLockedNP = gauges[pool].totalLockedNP.add(amount);
+        communityTotalLockedNP[community] = communityTotalLockedNP[community].add(amount);
+        poolFactoryTotalLockedNP[factory] = poolFactoryTotalLockedNP[factory].add(amount);
+        totalNPLocked = totalNPLocked.add(amount);
 
         // update debt
         gauges[pool].users[msg.sender].nutDebt = gauges[pool].users[msg.sender].amount.mul(userNutAcc).div(1e12);
         gauges[pool].users[msg.sender].cTokenDebt = gauges[pool].users[msg.sender].amount.mul(gauges[pool].cTokenAcc).div(1e12);
-        communityDebt[community] = communityTotalStakedNP[community].mul(communityNutAcc).div(1e12);
-        poolFactoryDebt[factory] = poolFactoryTotalStakedNP[factory].mul(poolFactoryNutAcc).div(1e12);
+        communityDebt[community] = communityTotalLockedNP[community].mul(communityNutAcc).div(1e12);
+        poolFactoryDebt[factory] = poolFactoryTotalLockedNP[factory].mul(poolFactoryNutAcc).div(1e12);
 
         emit Deposited(community, factory, pool, msg.sender, amount);
     }
@@ -245,14 +245,14 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
             gauges[pool].users[msg.sender].nutAvailable = gauges[pool].users[msg.sender].nutAvailable.add(pendingNut);
             gauges[pool].users[msg.sender].cTokenAvailable = gauges[pool].users[msg.sender].cTokenAvailable.add(pendingCToken);
         }
-        if (communityTotalStakedNP[community] > 0) {
+        if (communityTotalLockedNP[community] > 0) {
             // update community's reward only nut
-            uint256 commmunityPending = communityTotalStakedNP[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
+            uint256 commmunityPending = communityTotalLockedNP[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
             communityAvailable[community] = communityAvailable[community].add(commmunityPending);
         }
-        if (poolFactoryTotalStakedNP[factory] > 0) {
+        if (poolFactoryTotalLockedNP[factory] > 0) {
             // update tool dev's reward only nut
-            uint256 poolFactoryPending = poolFactoryTotalStakedNP[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
+            uint256 poolFactoryPending = poolFactoryTotalLockedNP[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
             poolFactoryAvailable[factory] = poolFactoryAvailable[factory].add(poolFactoryPending);
         }
 
@@ -260,16 +260,16 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
         // update amount
         gauges[pool].users[msg.sender].amount = gauges[pool].users[msg.sender].amount.sub(amount);
-        gauges[pool].totalStakedNP = gauges[pool].totalStakedNP.sub(amount);
-        communityTotalStakedNP[community] = communityTotalStakedNP[community].sub(amount);
-        poolFactoryTotalStakedNP[factory] = poolFactoryTotalStakedNP[factory].sub(amount);
-        totalNPStaked = totalNPStaked.sub(amount);
+        gauges[pool].totalLockedNP = gauges[pool].totalLockedNP.sub(amount);
+        communityTotalLockedNP[community] = communityTotalLockedNP[community].sub(amount);
+        poolFactoryTotalLockedNP[factory] = poolFactoryTotalLockedNP[factory].sub(amount);
+        totalNPLocked = totalNPLocked.sub(amount);
 
         // update debt
         gauges[pool].users[msg.sender].nutDebt = gauges[pool].users[msg.sender].amount.mul(userNutAcc).div(1e12);
         gauges[pool].users[msg.sender].cTokenDebt = gauges[pool].users[msg.sender].amount.mul(gauges[pool].cTokenAcc).div(1e12);
-        communityDebt[community] = communityTotalStakedNP[community].mul(communityNutAcc).div(1e12);
-        poolFactoryDebt[factory] = poolFactoryTotalStakedNP[factory].mul(poolFactoryNutAcc).div(1e12);
+        communityDebt[community] = communityTotalLockedNP[community].mul(communityNutAcc).div(1e12);
+        poolFactoryDebt[factory] = poolFactoryTotalLockedNP[factory].mul(poolFactoryNutAcc).div(1e12);
 
         emit Withdrawn(community, factory, pool, msg.sender, amount);
     }
@@ -309,7 +309,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         _updateNutAcc();
 
         // calculate reward
-        uint256 pendingNut = communityTotalStakedNP[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
+        uint256 pendingNut = communityTotalLockedNP[community].mul(communityNutAcc).div(1e12).sub(communityDebt[community]);
         uint256 rewardNut = communityAvailable[community].add(pendingNut);
 
         // transfer nut
@@ -318,7 +318,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
         //update community data
         communityAvailable[community] = 0;
-        communityDebt[community] = communityTotalStakedNP[community].mul(communityNutAcc).div(1e12);
+        communityDebt[community] = communityTotalLockedNP[community].mul(communityNutAcc).div(1e12);
 
         emit CommunityWithdrewNut(community, msg.sender, rewardNut); 
     }
@@ -329,7 +329,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         _updateNutAcc();
 
         // calculate reward
-        uint256 pendingNut = poolFactoryTotalStakedNP[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
+        uint256 pendingNut = poolFactoryTotalLockedNP[factory].mul(poolFactoryNutAcc).div(1e12).sub(poolFactoryDebt[factory]);
         uint256 rewardNut = poolFactoryAvailable[factory].add(pendingNut);
 
         // transfer nut
@@ -338,7 +338,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
         //update poolFactory data
         poolFactoryAvailable[factory] = 0;
-        poolFactoryDebt[factory] = poolFactoryTotalStakedNP[factory].mul(poolFactoryNutAcc).div(1e12);
+        poolFactoryDebt[factory] = poolFactoryTotalLockedNP[factory].mul(poolFactoryNutAcc).div(1e12);
 
         emit PoolFactoryWithdrewNut(factory, msg.sender, rewardNut); 
     }
@@ -350,43 +350,55 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
             rewardNut = 0;
             rewardCToken = 0;
         }else {
-            if (totalNPStaked == 0)
+            if (totalNPLocked == 0)
                 rewardNut = gauges[pool].users[user].nutAvailable;
             else {
                 (,,uint256 _userNutAcc) = _cuclateNutAcc();
                 rewardNut = gauges[pool].users[user].amount.mul(_userNutAcc).div(1e12).sub(gauges[pool].users[user].nutDebt).add(gauges[pool].users[user].nutAvailable);
             }
 
-            if (gauges[pool].totalStakedNP == 0) 
+            if (gauges[pool].totalLockedNP == 0) 
                 rewardCToken = gauges[pool].users[user].cTokenAvailable;
             else {
-                uint256 _cTokenAcc = gauges[pool].cTokenAcc.add(gauges[pool].cTokenRevenue.sub(gauges[pool].lastCTokenRevenue).mul(1e12).div(gauges[pool].totalStakedNP));
+                uint256 _cTokenAcc = gauges[pool].cTokenAcc.add(gauges[pool].cTokenRevenue.sub(gauges[pool].lastCTokenRevenue).mul(1e12).div(gauges[pool].totalLockedNP));
                 rewardCToken = gauges[pool].users[user].amount.mul(_cTokenAcc).div(1e12).sub(gauges[pool].users[user].cTokenDebt).add(gauges[pool].users[user].cTokenAvailable);
             }
         }
     }
 
+    function getUserLocked(address pool, address user) external view returns (uint256 locked) {
+        if (!gauges[pool].users[user].hasDeposited) {
+            locked = 0;
+        }else {
+            locked = gauges[pool].users[user].amount;
+        }
+    }
+
+    function getGaugeTotalLocked(address pool) external view returns (uint256 totalLocked) {
+        totalLocked = gauges[pool].totalLockedNP;
+    }
+
     function getCommunityPendingRewardNut(address community) external view
         returns (uint256 rewardNut)
     {
-        uint256 communityStakedNP = communityTotalStakedNP[community];
-        if (communityStakedNP == 0)
+        uint256 communityLockedNP = communityTotalLockedNP[community];
+        if (communityLockedNP == 0)
             rewardNut = communityAvailable[community];
         else {
             (uint256 _communityNutAcc,,) = _cuclateNutAcc();
-            rewardNut = communityStakedNP.mul(_communityNutAcc).div(1e12).sub(communityDebt[community]).add(communityAvailable[community]);
+            rewardNut = communityLockedNP.mul(_communityNutAcc).div(1e12).sub(communityDebt[community]).add(communityAvailable[community]);
         }
     }
 
     function getPoolFactoryPendingRewardNut(address factory) external view
         returns (uint256 rewardNut) 
     {
-        uint256 poolFactoryStakedNP = poolFactoryTotalStakedNP[factory];
-        if (poolFactoryStakedNP == 0)
+        uint256 poolFactoryLockedNP = poolFactoryTotalLockedNP[factory];
+        if (poolFactoryLockedNP == 0)
             rewardNut = poolFactoryAvailable[factory];
         else {
             (,uint256 _poolFactoryAcc,) = _cuclateNutAcc();
-            rewardNut = poolFactoryStakedNP.mul(_poolFactoryAcc).div(1e12).sub(poolFactoryDebt[factory]).add(poolFactoryAvailable[factory]);
+            rewardNut = poolFactoryLockedNP.mul(_poolFactoryAcc).div(1e12).sub(poolFactoryDebt[factory]).add(poolFactoryAvailable[factory]);
         }
     }
 
@@ -410,21 +422,21 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         
         if (gauges[pool].lastCTokenRevenue == gauges[pool].cTokenRevenue) return;
 
-        gauges[pool].cTokenAcc = gauges[pool].cTokenAcc.add(gauges[pool].cTokenRevenue.sub(gauges[pool].lastCTokenRevenue).mul(1e12).div(gauges[pool].totalStakedNP));
+        gauges[pool].cTokenAcc = gauges[pool].cTokenAcc.add(gauges[pool].cTokenRevenue.sub(gauges[pool].lastCTokenRevenue).mul(1e12).div(gauges[pool].totalLockedNP));
 
         gauges[pool].lastCTokenRevenue = gauges[pool].cTokenRevenue;
     }
 
     function _cuclateNutAcc() private view returns (uint256 _communityNutAcc, uint256 _poolFactoryNutAcc, uint256 _userNutAcc) {
-        if (totalNPStaked == 0) {
+        if (totalNPLocked == 0) {
             _communityNutAcc = communityNutAcc;
             _poolFactoryNutAcc = poolFactoryNutAcc;
             _userNutAcc = userNutAcc;
         }else {
             (uint256 communityReadyToMint, uint256 poolFactoryReadyToMint, uint256 userReadyToMint) = _cuclateNutReadyToMint();
-            _communityNutAcc = communityNutAcc.add(communityReadyToMint.mul(1e12).div(totalNPStaked));
-            _poolFactoryNutAcc = poolFactoryNutAcc.add(poolFactoryReadyToMint.mul(1e12).div(totalNPStaked));
-            _userNutAcc = userNutAcc.add(userReadyToMint.mul(1e12).div(totalNPStaked));
+            _communityNutAcc = communityNutAcc.add(communityReadyToMint.mul(1e12).div(totalNPLocked));
+            _poolFactoryNutAcc = poolFactoryNutAcc.add(poolFactoryReadyToMint.mul(1e12).div(totalNPLocked));
+            _userNutAcc = userNutAcc.add(userReadyToMint.mul(1e12).div(totalNPLocked));
         }
     }
 
