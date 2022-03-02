@@ -123,23 +123,24 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    env.Committee = '0x116C1F8c11c041F5e095B35593cD28C438410096';
-    env.MintableERC20Factory = '0xD8dd76efe29bA2f38b24b8D2EAF23F500b8c95d6';
-    env.NutPower = '0xD34E7904a1676aF14266321d07fcFA585Ddc08aF'
-    env.CommunityFactory = '0x15a0055165Fa2d2b64758380FbF8FaF8f016F422'
-    env.SPStakingFactory = '0x0C1B497295925F2a8985B5834554C87B5BB5D9C1'
-    env.CosmosStakingFactory = '0xf6ecAAd3F991C911253FB887f9d68B9DD41429B0'
-    env.ERC20StakingFactory = '0x1BcAf6B35521ac89259d5625B1BfBc157fbd034E'
-    env.LinearCalculator = '0xA287ef9a4AEFf4A30A173F93B90cc98766B0251c'
+    // env.Committee = '0xb833d8Dd406dB0e826A9b7682306d64440d3e2a3';
+    // env.MintableERC20Factory = '0xbf4C627C9fb9f0816D863C38c3d24Ecdd29f9179';
+    // env.NutPower = '0xC87036c365020D214b63caf4f496dD45E5a4aB3b'
+    // env.CommunityFactory = '0xef3926d406190088c143e54d9b07f7991FE5Ca11'
+    // env.SPStakingFactory = '0x3AaD4712f9E97678534fE804B825A38aA6378160'
+    // env.CosmosStakingFactory = '0x458984BA39b694b21F006E1892c432Cd14f483b1'
+    // env.ERC20StakingFactory = '0x05fBf334590a5eDc4f1B06f6aC120CEA5FA76E1f'
+    // env.LinearCalculator = '0xf511E1bF7Bff8A5B44e7E9250789799f8A8069F8'
+    // env.Gauge = '0xb6EC9647338Cb094A6dB172E21058F7642d8E743'
 
-    // await deployCommitteeContract(env);
-    // await deployMintableERC20FactoryContract(env);
-    // await deployNutPowerContract(env);
-    // await deployCommunityFactoryContract(env);
-    // await deploySPStakingFactoryContract(env);
-    // await deployCosmosStakingFactoryContract(env);
-    // await deployERC20StakingFactoryContract(env);
-    // await deployLinearCalculatorContract(env);
+    await deployCommitteeContract(env);
+    await deployMintableERC20FactoryContract(env);
+    await deployNutPowerContract(env);
+    await deployCommunityFactoryContract(env);
+    await deploySPStakingFactoryContract(env);
+    await deployCosmosStakingFactoryContract(env);
+    await deployERC20StakingFactoryContract(env);
+    await deployLinearCalculatorContract(env);
     await deployGaugeContract(env);
     let tx;
 
@@ -176,11 +177,12 @@ async function main() {
     const cosmosStakingFactoryContract = new ethers.Contract(env.CosmosStakingFactory, CosmosStakingFactoryJson.abi, env.wallet);
     tx = await cosmosStakingFactoryContract.adminAddBridge(env.wallet.address);
     tx = await cosmosStakingFactoryContract.adminAddBridge('0xAF35c6452B3DD42dCc2AF8BF9689484bF27Aa143');  // Tien's address
+    tx = await cosmosStakingFactoryContract.adminAddBridge('0xD9f4985a73349dea9aCB7c424E35056714bA2B35');  // Boy's address
     console.log(`Admin set cosmos staking bridge`);
 
     // set gauge to np
     const nutPowerContract = new ethers.Contract(env.NutPower, NutPowerJson.abi, env.wallet);
-    tx = await nutPowerContract.adminSetGauge(env.Gauge);
+    tx = await nutPowerContract.adminSetWhitelist(env.Gauge, true);
     console.log('Admin set gauge to nut power');
 
     // set transaction fee

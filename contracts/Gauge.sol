@@ -89,6 +89,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     event AdminSetDappGaugeRatio(uint16 indexed gaugeRatio);
     event AdminSetNutRewardPerBlock(uint256 indexed nutRewardPerBlock);
     event AdminSetNutDistributionRatio(uint16 community, uint16 poolFactory, uint16 user);
+    event AdminSetRewardNUTPerBlock(uint256 indexed rewardPerBlock);
     event CreateNewGauge(address indexed community, address indexed factory, address indexed pool);
     event UpdateLedger(address indexed community, address indexed factory, address indexed pool, uint256 amount);
 
@@ -126,6 +127,12 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
     function getGaugeRatio() external view override returns (uint16) {
         return gaugeRatio;
+    }
+
+    function adminSetRewardNUTPerBlock(uint256 reward) external onlyOwner {
+        _updateNutAcc();
+        rewardNUTPerBlock = reward;
+        emit AdminSetRewardNUTPerBlock(reward);
     }
 
     function adminSetNutDistributionRatio(DistributionRatio memory ratios) external onlyOwner {
