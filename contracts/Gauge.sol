@@ -93,8 +93,8 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     event CreateNewGauge(address indexed community, address indexed factory, address indexed pool);
     event UpdateLedger(address indexed community, address indexed factory, address indexed pool, uint256 amount);
 
-    event Deposited(address indexed community, address indexed factory, address indexed pool, address user, uint256 amount);
-    event Withdrawn(address indexed community, address indexed factory, address indexed pool, address user, uint256 amount);
+    event Voted(address indexed community, address indexed factory, address indexed pool, address user, uint256 amount);
+    event Unvoted(address indexed community, address indexed factory, address indexed pool, address user, uint256 amount);
 
     event CTokenWithdrawn(address indexed pool, address indexed recipient, uint256 amount);
     event UserWithdrewNut(address indexed pool, address indexed recipient, uint256 amount);
@@ -176,7 +176,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         emit CreateNewGauge(community, factory, pool);
     }
 
-    function deposit(address pool, uint256 amount) external nonReentrant {
+    function vote(address pool, uint256 amount) external nonReentrant {
         require(gauges[pool].hasCreated, "Gauge not created");
         if (amount == 0) return;
         if (!gauges[pool].users[msg.sender].hasDeposited) {
@@ -223,10 +223,10 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         communityDebt[community] = communityTotalLockedNP[community].mul(communityNutAcc).div(1e12);
         poolFactoryDebt[factory] = poolFactoryTotalLockedNP[factory].mul(poolFactoryNutAcc).div(1e12);
 
-        emit Deposited(community, factory, pool, msg.sender, amount);
+        emit Voted(community, factory, pool, msg.sender, amount);
     }
 
-    function withdraw(address pool, uint256 amount) external nonReentrant {
+    function unvote(address pool, uint256 amount) external nonReentrant {
         require(gauges[pool].users[msg.sender].hasDeposited, "Caller not a depositor");
         if (amount == 0) return;
 
@@ -271,7 +271,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         communityDebt[community] = communityTotalLockedNP[community].mul(communityNutAcc).div(1e12);
         poolFactoryDebt[factory] = poolFactoryTotalLockedNP[factory].mul(poolFactoryNutAcc).div(1e12);
 
-        emit Withdrawn(community, factory, pool, msg.sender, amount);
+        emit Unvoted(community, factory, pool, msg.sender, amount);
     }
 
     function userWithdrawReward(address pool) external nonReentrant {

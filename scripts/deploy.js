@@ -123,15 +123,15 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    // env.Committee = '0xb833d8Dd406dB0e826A9b7682306d64440d3e2a3';
-    // env.MintableERC20Factory = '0xbf4C627C9fb9f0816D863C38c3d24Ecdd29f9179';
-    // env.NutPower = '0xC87036c365020D214b63caf4f496dD45E5a4aB3b'
-    // env.CommunityFactory = '0xef3926d406190088c143e54d9b07f7991FE5Ca11'
-    // env.SPStakingFactory = '0x3AaD4712f9E97678534fE804B825A38aA6378160'
-    // env.CosmosStakingFactory = '0x458984BA39b694b21F006E1892c432Cd14f483b1'
-    // env.ERC20StakingFactory = '0x05fBf334590a5eDc4f1B06f6aC120CEA5FA76E1f'
-    // env.LinearCalculator = '0xf511E1bF7Bff8A5B44e7E9250789799f8A8069F8'
-    // env.Gauge = '0xb6EC9647338Cb094A6dB172E21058F7642d8E743'
+    // env.Committee = '0xc788c334fbB991a3401c757946462fe42218e5E5';
+    // env.MintableERC20Factory = '0x22dFb6a44393db46CB6D1C834aE2908b054e9AFb';
+    // env.NutPower = '0xBDab62EDB1eC26952d4b5e5bFFA22AfA9eF8875B'
+    // env.CommunityFactory = '0xbDE70312EEB83Afe101BDA4F31b6093Cc3a3E682'
+    // env.SPStakingFactory = '0xF1Cd3716D97ab3C9D9Ed822EBa32fadECBdD4FDB'
+    // env.CosmosStakingFactory = '0x24e1ceEa36Aa3b2640A1fc038d764158D0A05c9F'
+    // env.ERC20StakingFactory = '0x9eB136f1e80ab6EFB5974277F25900db4E1f81Ab'
+    // env.LinearCalculator = '0x3D0650e727350c47d0Bc7FDbcdb04d3b583d631c'
+    // env.Gauge = '0x54d05f4cbdA8C72861B0213940aa8e1D07cD56d4'
 
     await deployCommitteeContract(env);
     await deployMintableERC20FactoryContract(env);
