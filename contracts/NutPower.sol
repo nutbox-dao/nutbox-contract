@@ -24,7 +24,7 @@ contract NutPower is Ownable, ReentrancyGuard {
     }
 
     struct RedeemRequest {
-        uint256 amount;
+        uint256 nutAmount;
         uint256 claimed;
         uint256 startTime;
         uint256 endTime;
@@ -42,8 +42,9 @@ contract NutPower is Ownable, ReentrancyGuard {
         uint256 locked;
     }
 
-    uint256 public totalLockedNut;
     address public nut;
+    // total lock nut
+    uint256 public totalLockedNut;
     // total NP
     uint256 public totalSupply;
 
@@ -98,7 +99,7 @@ contract NutPower is Ownable, ReentrancyGuard {
         depositInfos[msg.sender][_period] = depositInfos[msg.sender][_period].sub(downNut);
         // Add to redeem request queue
         requests[msg.sender][_period].queue.push(RedeemRequest ({
-            amount: downNut,
+            nutAmount: downNut,
             claimed: 0,
             startTime: block.timestamp,
             endTime: block.timestamp.add(WEEK.mul(multipier[uint256(_period)]))
@@ -212,9 +213,9 @@ contract NutPower is Ownable, ReentrancyGuard {
 
     function _claimableNutOfRequest(RedeemRequest memory _req) private view returns (uint256 amount) {
         if (block.timestamp >= _req.endTime) {
-            amount = _req.amount.sub(_req.claimed);
+            amount = _req.nutAmount.sub(_req.claimed);
         } else {
-            amount = _req.amount
+            amount = _req.nutAmount
                     .mul(block.timestamp.sub(_req.startTime))
                     .div(_req.endTime.sub(_req.startTime))
                     .sub(_req.claimed);
