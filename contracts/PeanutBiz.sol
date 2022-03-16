@@ -17,6 +17,7 @@ contract PeanutBiz is Ownable, ReentrancyGuard {
         uint256 amount;
         // How many peanut for 10% upvote, this is filled by owner
         uint256 pnutForVote;
+        uint256 payBlock;
         address payer;
         string cancelReason;
         string author;
@@ -70,7 +71,7 @@ contract PeanutBiz is Ownable, ReentrancyGuard {
         uint256 newId = allPayment.length;
         require(pending.add(newId), "Add new payment to pending fail.");
 
-        Payment memory _new = Payment(0, newId, amount, 0, msg.sender, "", author, permlink);
+        Payment memory _new = Payment(0, newId, amount, 0, block.number, msg.sender, "", author, permlink);
         allPayment.push(_new);
 
         isPending[a] = true;

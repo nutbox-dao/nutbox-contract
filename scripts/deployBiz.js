@@ -5,8 +5,8 @@ const PeanutBizJson = require('../build/contracts/PeanutBiz.json');
 const MintableERC20Json = require('../build/contracts/MintableERC20.json');
 const { waitForTx } = require('./utils');
 
-let PeanutBizAddress = '0x0cc11E1c734E9A74151253e1120f879d628C0942' // local
-const pnutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // local nut
+let PeanutBizAddress = '0x9185BdceB084B217D72d8B5FE6a89a26644B4bFC' //  mainnet
+const pnutAddress = '0x705931A83C9b22fB29985f28Aee3337Aa10EFE11' // 
 
 async function deployBiz(env) {
     let factory = new ethers.ContractFactory(PeanutBizJson.abi, PeanutBizJson.bytecode, env.wallet);
@@ -97,16 +97,18 @@ async function test(env) {
 
 async function main() {
     let env = {};
-    env.url = process.env.TESTENDPOINT || 'http://localhost:8545';
-    env.privateKey = process.env.TESTKEY;
+    env.url = process.env.ENDPOINT || 'http://localhost:8545';
+    env.privateKey = process.env.KEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     console.log(`private: ${env.privateKey}, url: ${env.url}`);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
 
-    PeanutBizAddress = await deployBiz(env)
-    await test(env)
+    // PeanutBizAddress = await deployBiz(env)
+    const biz = new ethers.Contract(PeanutBizAddress, PeanutBizJson.abi, env.wallet)
+    biz.transferOwnership('0x28D4FB9933badCE9C3596cEA248d98De03012F8B');
+    // await test(env)
 }
 
 main()
