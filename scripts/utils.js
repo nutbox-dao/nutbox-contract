@@ -7,7 +7,7 @@ function sleep(ms) {
 const waitForTx = async (provider, hash) => {
     console.log(`Waiting for tx: ${hash}...`)
     while (!await provider.getTransactionReceipt(hash)) {
-        sleep(3000)
+        await sleep(3000)
     }
 }
 
