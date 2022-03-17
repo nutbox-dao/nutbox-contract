@@ -132,7 +132,7 @@ contract NutPower is Ownable, ReentrancyGuard {
                 uint256 claimable = _claimableNutOfRequest(requests[msg.sender][Period(period)].queue[idx]);
                 requests[msg.sender][Period(period)].queue[idx].claimed = requests[msg.sender][Period(period)].queue[idx].claimed.add(claimable);
                 // Ignore requests that has already claimed completely next time.
-                if (requests[msg.sender][Period(period)].queue[idx].claimed == requests[msg.sender][Period(period)].queue[idx].amount) {
+                if (requests[msg.sender][Period(period)].queue[idx].claimed == requests[msg.sender][Period(period)].queue[idx].nutAmount) {
                     requests[msg.sender][Period(period)].index = idx + 1;
                 }
 

@@ -22,7 +22,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
     struct User {
         bool hasDeposited;
-        uint256 amount;
+        uint256 amount; // np amount
         uint256 nutAvailable;
         uint256 nutDebt;
         uint256 cTokenAvailable;
@@ -240,7 +240,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
         if(gauges[pool].users[msg.sender].amount > 0) {
             // update user's reward include nut and ctoken
-            uint256 pendingNut = gauges[pool].users[msg.sender].amount.mul(userNutAcc).div(1e16).sub(gauges[pool].users[msg.sender].nutDebt);
+            uint256 pendingNut = gauges[pool].users[msg.sender].amount.mul(userNutAcc).div(1e12).sub(gauges[pool].users[msg.sender].nutDebt);
             uint256 pendingCToken = gauges[pool].users[msg.sender].amount.mul(gauges[pool].cTokenAcc).div(1e12).sub(gauges[pool].users[msg.sender].cTokenDebt);
             gauges[pool].users[msg.sender].nutAvailable = gauges[pool].users[msg.sender].nutAvailable.add(pendingNut);
             gauges[pool].users[msg.sender].cTokenAvailable = gauges[pool].users[msg.sender].cTokenAvailable.add(pendingCToken);

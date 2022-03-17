@@ -91,10 +91,10 @@ async function deployCommunityFactoryContract(env) {
 
 async function deployGaugeContract(env) {
     let factory = new ethers.ContractFactory(GaugeJson.abi, GaugeJson.bytecode, env.wallet);
-    let contract = await factory.deploy(env.CommunityFactory, 100, {
-        community: 3500,
+    let contract = await factory.deploy(env.CommunityFactory, 1000, {
+        community: 2000,
         poolFactory: 0,
-        user: 6500
+        user: 8000
     }, env.NutPower, NutAddress, {gasPrice: env.gasPrice})
     await contract.deployed();
     env.Gauge = contract.address;
