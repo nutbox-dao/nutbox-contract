@@ -26,7 +26,7 @@
 require('dotenv').config();
 const ethers = require('ethers');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const MNEMONIC = 'tuition patrol slot pond lift search soccer chest taxi brass fever chat'
+const MNEMONIC = env.process.MNEMONIC;
 
 module.exports = {
   /**
