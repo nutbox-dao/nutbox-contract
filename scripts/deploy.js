@@ -17,7 +17,8 @@ const CosmosStakingFactoryJson = require('../build/contracts/CosmosStakingFactor
 const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factory.json')
 const NutPowerJson = require('../build/contracts/NutPower.json')
-const GaugeJson = require('../build/contracts/Gauge.json')
+const GaugeJson = require('../build/contracts/Gauge.json');
+const { log } = require('console');
 
 // const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
 const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
@@ -184,6 +185,11 @@ async function main() {
     const nutPowerContract = new ethers.Contract(env.NutPower, NutPowerJson.abi, env.wallet);
     tx = await nutPowerContract.adminSetWhitelist(env.Gauge, true);
     console.log('Admin set gauge to nut power');
+
+    // set gauge param
+    const gauge = new ethers.Contract(env.Gauge, GaugeJson.abi, env.wallet)
+    tx = await gauge.adminSetRewardNUTPerBlock(ethers.utils.parseUnits('1.0', 18))
+    console.log('Admin set gauge distribution to 1 nut per block');
 
     // set transaction fee
     // tx = await committeeContract.adminSetFee(

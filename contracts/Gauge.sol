@@ -22,7 +22,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
     struct User {
         bool hasDeposited;
-        uint256 amount; // np amount
+        uint256 amount; // NP amount
         uint256 nutAvailable;
         uint256 nutDebt;
         uint256 cTokenAvailable;
@@ -57,9 +57,9 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     // to gauge contract when user harvest their rewards, those rewards and NUTs would be
     // distributed based on the NP locked by user.
     uint16 public gaugeRatio;
-    // total reward nut per block, can be reset by Nutbox DAO
+    // Total reward nut per block, can be reset by Nutbox DAO
     uint256 public rewardNUTPerBlock;
-    // last nut reward block
+    // Last nut reward block
     uint256 private lastRewardBlock;
 
     // nutAcc means how many nut will 1 NP locked earn, it departed by community/poolFactory/user
@@ -67,9 +67,9 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     uint256 private poolFactoryNutAcc;
     uint256 private communityNutAcc;
 
-    uint256 public totalNPLocked;
+    uint256 public totalLockedNP;
 
-    // can be rest by Nutbox DAO, total of the ratios should be 10000
+    // can be rest by Nutbox DAO(Multi-sign contract held by nutbox committee), total of the ratios should be 10000
     DistributionRatio public distributionRatio;
 
     // communityFactory
@@ -215,7 +215,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         gauges[pool].totalLockedNP = gauges[pool].totalLockedNP.add(amount);
         communityTotalLockedNP[community] = communityTotalLockedNP[community].add(amount);
         poolFactoryTotalLockedNP[factory] = poolFactoryTotalLockedNP[factory].add(amount);
-        totalNPLocked = totalNPLocked.add(amount);
+        totalLockedNP = totalLockedNP.add(amount);
 
         // update debt
         gauges[pool].users[msg.sender].nutDebt = gauges[pool].users[msg.sender].amount.mul(userNutAcc).div(1e12);
@@ -263,7 +263,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         gauges[pool].totalLockedNP = gauges[pool].totalLockedNP.sub(amount);
         communityTotalLockedNP[community] = communityTotalLockedNP[community].sub(amount);
         poolFactoryTotalLockedNP[factory] = poolFactoryTotalLockedNP[factory].sub(amount);
-        totalNPLocked = totalNPLocked.sub(amount);
+        totalLockedNP = totalLockedNP.sub(amount);
 
         // update debt
         gauges[pool].users[msg.sender].nutDebt = gauges[pool].users[msg.sender].amount.mul(userNutAcc).div(1e12);
@@ -287,6 +287,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         uint256 rewardCToken = gauges[pool].users[msg.sender].cTokenAvailable.add(pendingCToken);
 
         // transfer reward
+        require(NUTToken(NUT).balanceOf(address(this)) >= rewardNut, "Insufficient NUT");
         if (rewardNut > 0) 
             releaseERC20(NUT, msg.sender, rewardNut);
         
@@ -313,6 +314,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         uint256 rewardNut = communityAvailable[community].add(pendingNut);
 
         // transfer nut
+        require(NUTToken(NUT).balanceOf(address(this)) >= rewardNut, "Insufficient NUT");
         if (rewardNut > 0) 
             releaseERC20(NUT, msg.sender, rewardNut);
 
@@ -333,6 +335,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         uint256 rewardNut = poolFactoryAvailable[factory].add(pendingNut);
 
         // transfer nut
+        require(NUTToken(NUT).balanceOf(address(this)) >= rewardNut, "Insufficient NUT");
         if (rewardNut > 0) 
             releaseERC20(NUT, msg.sender, rewardNut);
 
@@ -350,7 +353,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
             rewardNut = 0;
             rewardCToken = 0;
         }else {
-            if (totalNPLocked == 0)
+            if (totalLockedNP == 0)
                 rewardNut = gauges[pool].users[user].nutAvailable;
             else {
                 (,,uint256 _userNutAcc) = _cuclateNutAcc();
@@ -374,7 +377,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         }
     }
 
-    function getGaugeTotalLocked(address pool) external view returns (uint256 totalLocked) {
+    function getLockedNpInGauge(address pool) external view returns (uint256 totalLocked) {
         totalLocked = gauges[pool].totalLockedNP;
     }
 
@@ -428,19 +431,19 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     }
 
     function _cuclateNutAcc() private view returns (uint256 _communityNutAcc, uint256 _poolFactoryNutAcc, uint256 _userNutAcc) {
-        if (totalNPLocked == 0) {
+        if (totalLockedNP == 0) {
             _communityNutAcc = communityNutAcc;
             _poolFactoryNutAcc = poolFactoryNutAcc;
             _userNutAcc = userNutAcc;
         }else {
-            (uint256 communityReadyToMint, uint256 poolFactoryReadyToMint, uint256 userReadyToMint) = _cuclateNutReadyToMint();
-            _communityNutAcc = communityNutAcc.add(communityReadyToMint.mul(1e12).div(totalNPLocked));
-            _poolFactoryNutAcc = poolFactoryNutAcc.add(poolFactoryReadyToMint.mul(1e12).div(totalNPLocked));
-            _userNutAcc = userNutAcc.add(userReadyToMint.mul(1e12).div(totalNPLocked));
+            (uint256 communityReadyToMint, uint256 poolFactoryReadyToMint, uint256 userReadyToMint) = _calculateNutReadyToMint();
+            _communityNutAcc = communityNutAcc.add(communityReadyToMint.mul(1e12).div(totalLockedNP));
+            _poolFactoryNutAcc = poolFactoryNutAcc.add(poolFactoryReadyToMint.mul(1e12).div(totalLockedNP));
+            _userNutAcc = userNutAcc.add(userReadyToMint.mul(1e12).div(totalLockedNP));
         }
     }
 
-    function _cuclateNutReadyToMint() private view returns (uint256 communityReadyToMint, uint256 poolFactoryReadyToMint, uint256 userReadyToMint) {
+    function _calculateNutReadyToMint() private view returns (uint256 communityReadyToMint, uint256 poolFactoryReadyToMint, uint256 userReadyToMint) {
         uint256 readyToMint = (block.number - lastRewardBlock).mul(rewardNUTPerBlock);
         communityReadyToMint = readyToMint.mul(distributionRatio.community).div(CONSTANT_10000);
         poolFactoryReadyToMint = readyToMint.mul(distributionRatio.poolFactory).div(CONSTANT_10000);

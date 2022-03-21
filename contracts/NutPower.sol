@@ -43,7 +43,7 @@ contract NutPower is Ownable, ReentrancyGuard {
     }
 
     address public nut;
-    // total lock nut
+    // total locked nut
     uint256 public totalLockedNut;
     // total NP
     uint256 public totalSupply;
