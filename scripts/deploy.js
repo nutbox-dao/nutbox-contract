@@ -176,9 +176,13 @@ async function main() {
     tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
     console.log(`Admin set sp staking bridge`);
     const cosmosStakingFactoryContract = new ethers.Contract(env.CosmosStakingFactory, CosmosStakingFactoryJson.abi, env.wallet);
-    tx = await cosmosStakingFactoryContract.adminAddBridge(env.wallet.address);
-    tx = await cosmosStakingFactoryContract.adminAddBridge('0xAF35c6452B3DD42dCc2AF8BF9689484bF27Aa143');  // Tien's address
-    tx = await cosmosStakingFactoryContract.adminAddBridge('0xD9f4985a73349dea9aCB7c424E35056714bA2B35');  // Boy's address
+    tx = await cosmosStakingFactoryContract.adminAddBridge(1, env.wallet.address);  // steem
+    tx = await cosmosStakingFactoryContract.adminAddBridge(2, env.wallet.address);  // hive
+    // tx = await cosmosStakingFactoryContract.adminAddBridge(3, '0xAF35c6452B3DD42dCc2AF8BF9689484bF27Aa143');  // Tien's address
+    // tx = await cosmosStakingFactoryContract.adminAddBridge(1, '0xD9f4985a73349dea9aCB7c424E35056714bA2B35');  // Boy's address
+    tx = await cosmosStakingFactoryContract.adminAddBridge(3, env.wallet.address);  // atom
+    tx = await cosmosStakingFactoryContract.adminAddBridge(4, env.wallet.address);  // osmo
+    tx = await cosmosStakingFactoryContract.adminAddBridge(5, env.wallet.address);  // juno
     console.log(`Admin set cosmos staking bridge`);
 
     // set gauge to np
