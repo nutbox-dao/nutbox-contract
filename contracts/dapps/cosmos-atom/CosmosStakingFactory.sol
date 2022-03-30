@@ -16,7 +16,9 @@ import "../../CommunityFactory.sol";
  */
 contract CosmosStakingFactory is IPoolFactory, Ownable {
     using BytesLib for bytes;
-    mapping (address => bool) public isBridge;
+    // chain id => user address => is bridge
+    // every chain has it's own bridge accounts
+    mapping (uint8 => mapping(address => bool)) public isBridge;
     address public immutable communityFactory;
 
     constructor(address _communityFactory) {
@@ -32,8 +34,8 @@ contract CosmosStakingFactory is IPoolFactory, Ownable {
         address delegatee
     );
 
-    event AdminAddBridge(address indexed bridge);
-    event AdminRemoveBridge(address indexed bridge);
+    event AdminAddBridge(uint8 indexed chainId, address indexed bridge);
+    event AdminRemoveBridge(uint8 indexed chainId, address indexed bridge);
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
@@ -45,15 +47,15 @@ contract CosmosStakingFactory is IPoolFactory, Ownable {
         return address(pool);
     }
 
-    function adminAddBridge(address _bridge) external onlyOwner {
+    function adminAddBridge(uint8 _chainId, address _bridge) external onlyOwner {
         require(_bridge != address(0), "Invalid address");
-        isBridge[_bridge] = true;
-        emit AdminAddBridge(_bridge);
+        isBridge[_chainId][_bridge] = true;
+        emit AdminAddBridge(_chainId, _bridge);
     }
 
-    function adminRemoveBridge(address _bridge) external onlyOwner {
+    function adminRemoveBridge(uint8 _chainId, address _bridge) external onlyOwner {
         require(_bridge != address(0), "Invalid address");
-        isBridge[_bridge] = false;
-        emit AdminRemoveBridge(_bridge);
+        isBridge[_chainId][_bridge] = false;
+        emit AdminRemoveBridge(_chainId, _bridge);
     }
 }

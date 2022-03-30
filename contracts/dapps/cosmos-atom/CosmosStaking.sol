@@ -42,7 +42,7 @@ contract CosmosStaking is IPool {
     // delegatee account,the pubkey of cosmos is bytes20, so here encode it to address
     // It should be convert to specify format to the corresponding blockchain
     address public delegatee;
-    // chain id: atom: 3
+    // chain id: atom: 3  osmo: 4
     uint8 immutable chainId;
 
     // Total staked amount
@@ -70,7 +70,7 @@ contract CosmosStaking is IPool {
         uint256 amount,
         address _bindAccount
     ) external {
-        require(CosmosStakingFactory(factory).isBridge(msg.sender), "Only verified bridge can call");
+        require(CosmosStakingFactory(factory).isBridge(_chainId, msg.sender), "Only verified bridge can call");
         require(chainId == _chainId, "Wrong chain id");
         require(delegatee == _delegatee, "Wrong delegatee account");
         require(accountBindMap[_bindAccount] == address(0) || accountBindMap[_bindAccount] == depositor, "Bound bsc account dismatch");
