@@ -20,11 +20,11 @@ const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factor
 // const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 // const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745'   // bsc mainnet
-const NutAddress = '0xd10e4C1e301A13A9B874bd1757c135Eda075769D'     // Astar
+// const NutAddress = '0xd10e4C1e301A13A9B874bd1757c135Eda075769D'     // Astar
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
-    let contract = await factory.deploy(env.wallet.address, NutAddress, {
+    let contract = await factory.deploy(env.wallet.address, ethers.constants.AddressZero, {
         gasPrice: env.gasPrice
     });
     await contract.deployed();
@@ -88,7 +88,9 @@ async function main() {
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasPrice = await env.provider.getGasPrice();
     env.gasPrice = env.gasPrice * 1.2
-    console.log(`private: ${env.privateKey}, url: ${env.url}`);
+    env.gasPrice = 45000000000
+    console.log(`private: ${env.privateKey}, url: ${env.url}, price: ${env.gasPrice}`);
+    // return;
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 

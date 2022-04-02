@@ -48,8 +48,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     event AdminSetGauge(address indexed gauge);
 
     constructor(address _treasury, address _nut) {
-        require(_treasury != address(0), "Invalid treasury");
-        require(_nut != address(0), "Invalid nut");
+        // require(_treasury != address(0), "Invalid treasury");
+        // require(_nut != address(0), "Invalid nut");
         treasury = _treasury;
         nut = _nut;
         emit AdminSetTreasury(_treasury);
