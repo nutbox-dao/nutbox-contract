@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.0;
+pragma experimental ABIEncoderV2;
+
+import "solidity-bytes-utils/contracts/BytesLib.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "../../interfaces/IPoolFactory.sol";
+import "./AstarDappStaking.sol";
+
+/**
+ * @dev Factory contract of Astar Dapp staking pool.
+ *x
+ */
+contract AstarDappStakingFactory is IPoolFactory, Ownable {
+    using BytesLib for bytes;
+
+    address astarDAppStakingContract;
+
+    event StakingContractChange(address indexed oldContract, address indexed newContract);
+    event AStarDappStakingCreated(
+        address indexed pool,
+        address indexed community,
+        string name,
+        address dapp
+    );
+
+    constructor(address _astarDAppStakingContract) {
+        require(_astarDAppStakingContract != address(0), 'Invalid argument');
+        astarDAppStakingContract = _astarDAppStakingContract;
+    }
+
+    function adminSetStakingContract(address _astarDAppStakingContract) external onlyOwner {
+        require(_astarDAppStakingContract != address(0), 'Invalid argument');
+        address old = astarDAppStakingContract;
+        astarDAppStakingContract = _astarDAppStakingContract;
+        emit StakingContractChange(old, _astarDAppStakingContract);
+    }
+
+    function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
+        require(community == msg.sender, 'Permission denied: caller is not community');
+        bytes memory dappBytes = meta.slice(0, 20);
+        bytes20 dapp;
+        assembly {
+            dapp := mload(add(dappBytes, 0x20))
+        }
+
+        AstarDappStaking pool = new AstarDappStaking(astarDAppStakingContract, community, name, address(dapp));
+        emit AStarDappStakingCreated(address(pool), community, name, address(dapp));
+        return address(pool);
+    }
+}
