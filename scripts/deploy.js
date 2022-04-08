@@ -20,8 +20,8 @@ const NutPowerJson = require('../build/contracts/NutPower.json')
 const GaugeJson = require('../build/contracts/Gauge.json');
 const { log } = require('console');
 
-const NutAddress = '0x8112D891bf3863923827438A5d25c855b70708Cc'  // local host
-// const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
+// const NutAddress = '0x223326a5F7565c5E6cEcf47D0220aa86922C37E9'  // local host
+const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 
 async function deployCommitteeContract(env) {
@@ -144,6 +144,33 @@ async function main() {
     await deployLinearCalculatorContract(env);
     await deployGaugeContract(env);
     let tx;
+
+    // const erc20abi = [{
+    //     "inputs": [
+    //       {
+    //         "internalType": "address",
+    //         "name": "recipient",
+    //         "type": "address"
+    //       },
+    //       {
+    //         "internalType": "uint256",
+    //         "name": "amount",
+    //         "type": "uint256"
+    //       }
+    //     ],
+    //     "name": "transfer",
+    //     "outputs": [
+    //       {
+    //         "internalType": "bool",
+    //         "name": "",
+    //         "type": "bool"
+    //       }
+    //     ],
+    //     "stateMutability": "nonpayable",
+    //     "type": "function"
+    //   }]
+    // const nut = new ethers.Contract(NutAddress, erc20abi, env.wallet)
+    // await nut.transfer(env.Gauge, ethers.utils.parseUnits('100000', 18));
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
     tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);

@@ -3,7 +3,7 @@ const ethers = require('ethers');
 
 const NUTTokenJson = require('../build/contracts/NUTToken.json');
 const { waitForTx } = require('./utils');
-const NUTAddress = '0x8112D891bf3863923827438A5d25c855b70708Cc' // localhost
+const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // localhost
 // const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
 // const NUTAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306'  // BSC test
 
@@ -41,14 +41,16 @@ async function main() {
     // const NUTAddress = await deployNutContract(env)
 
     const contract = new ethers.Contract(NUTAddress, NUTTokenJson.abi, env.wallet)
+
+    // const tx = await contract.enableTransfer();
+    // await waitForTx(env.provider, tx.hash)
+    // console.log(tx.hash);
     const amount = ethers.utils.parseUnits('10000', 18)
     for (let acc of accounts){
         const tx = await contract.transfer(acc, amount);
         await waitForTx(env.provider, tx.hash)
+        console.log('Transfer nut to', acc);
     }
-
-    // const tx = await contract.enableTransfer();
-    // console.log(tx.hash);
 }
 
 main()
