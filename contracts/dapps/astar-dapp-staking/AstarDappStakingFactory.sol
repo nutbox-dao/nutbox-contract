@@ -7,6 +7,7 @@ import "solidity-bytes-utils/contracts/BytesLib.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../../interfaces/IPoolFactory.sol";
 import "./AstarDappStaking.sol";
+import "../../CommunityFactory.sol";
 
 /**
  * @dev Factory contract of Astar Dapp staking pool.
@@ -16,6 +17,7 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable {
     using BytesLib for bytes;
 
     address astarDAppStakingContract;
+    address public immutable communityFactory;
 
     event StakingContractChange(address indexed oldContract, address indexed newContract);
     event AStarDappStakingCreated(
@@ -25,9 +27,12 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable {
         address dapp
     );
 
-    constructor(address _astarDAppStakingContract) {
+    constructor(address _astarDAppStakingContract, address _communityFactory) {
         require(_astarDAppStakingContract != address(0), 'Invalid argument');
+        require(_communityFactory != address(0), 'Invalid argument');
+
         astarDAppStakingContract = _astarDAppStakingContract;
+        communityFactory = _communityFactory;
     }
 
     function adminSetStakingContract(address _astarDAppStakingContract) external onlyOwner {
@@ -39,13 +44,10 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable {
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
-        bytes memory dappBytes = meta.slice(0, 20);
-        bytes20 dapp;
-        assembly {
-            dapp := mload(add(dappBytes, 0x20))
-        }
+        require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
+        address dapp = meta.toAddress(0);
 
-        AstarDappStaking pool = new AstarDappStaking(astarDAppStakingContract, community, name, address(dapp));
+        AstarDappStaking pool = new AstarDappStaking(astarDAppStakingContract, community, name, address(dapp), owner());
         emit AStarDappStakingCreated(address(pool), community, name, address(dapp));
         return address(pool);
     }

@@ -29,6 +29,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         bool hasStaked;
         // User staked amount
         uint256 amount;
+        // Unclaimed amount that already unbounded
+        uint256 unwithdrew;
     }
 
     // stakingInfo used to save every user's staking information,
@@ -48,30 +50,47 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     address private community;
     address private dapp;
     string name;
+    address private owner;
 
     event Staked(
         address indexed community,
         address indexed who,
         uint256 amount
     );
-    event Claimed(
+    event UnStaked(
         address indexed community,
         address indexed who,
         uint256 amount
     );
+    event Withdraw(
+        address indexed community,
+        address indexed who,
+        uint256 amount
+    );
+    event StakeClaimed(
+        address indexed community,
+        address indexed dapp,
+        uint256 amount
+    );
+    event DappClaimed(
+        address indexed community,
+        address indexed dapp,
+        uint256 amount
+    );
 
-    constructor(address _stakingContract, address _community, string memory _name, address _dapp) {
+    constructor(address _stakingContract, address _community, string memory _name, address _dapp, address _owner) {
         factory = msg.sender;
         stakingContract = _stakingContract;
         community = _community;
         dapp = _dapp;
         name = _name;
+        owner = _owner;
 
         // Register DApp on Astar network, developer
         DappsStaking(stakingContract).register(dapp);
     }
 
-    function stake(uint128 amount) external payable {
+    function stake(uint128 amount) external payable nonReentrant {
         require(amount >= MINIMUM_STAKE, "Invalid stake amount");
 
         // Transfer user assets to the contract
@@ -80,13 +99,14 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         // Stake asset for the DApp
         DappsStaking(stakingContract).bond_and_stake(dapp, amount);
 
-        // trigger community update all pool staking info, send factory as fee payer to ignore fee payment.
-        ICommunity(community).updatePools("USER", factory);
+        // trigger community update all pool staking info.
+        ICommunity(community).updatePools("USER", msg.sender);
 
         // Upate the ledger
         require(totalStakers <= MAXIMUM_STAKERS, "Too many stakers");
         if (stakingInfo[msg.sender].hasStaked == false) {
             stakingInfo[msg.sender].hasStaked = true;
+            stakingInfo[msg.sender].unwithdrew = 0;
             totalStakers += 1;
         }
         uint256 pending = stakingInfo[msg.sender]
@@ -99,7 +119,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         }
 
         stakingInfo[msg.sender].amount += amount;
-        totalStakedAmount  += amount;
+        totalStakedAmount += amount;
 
         ICommunity(community).setUserDebt(
             msg.sender,
@@ -111,10 +131,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         emit Staked(community, msg.sender, amount);
     }
 
-    function claim(
-        uint256 amount
-    ) external nonReentrant {
-        if (amount < 0) return;
+    function unstake(uint128 amount) external payable nonReentrant {
+        if (amount <= 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
 
         // trigger community update all pool staking info
@@ -129,16 +147,19 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
 
-        uint256 claimAmount;
+        uint256 unstakeAmount;
         if (amount >= stakingInfo[msg.sender].amount)
-            claimAmount = stakingInfo[msg.sender].amount;
-        else claimAmount = amount;
+            unstakeAmount = stakingInfo[msg.sender].amount;
+        else unstakeAmount = amount;
 
-        // TODO: unbond & transfer reward to community
+        // Unbond stake, note the staked amount will not settle immediately, user need claim 
+        // manually after ubound period complete.
+        DappsStaking(stakingContract).unbond_and_unstake(dapp, amount);
 
         // Update ledger
-        stakingInfo[msg.sender].amount -= claimAmount;
-        totalStakedAmount -= claimAmount;
+        stakingInfo[msg.sender].amount -= unstakeAmount;
+        stakingInfo[msg.sender].unwithdrew += unstakeAmount;
+        totalStakedAmount -= unstakeAmount;
 
         ICommunity(community).setUserDebt(
             msg.sender,
@@ -147,19 +168,59 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
             .mul(ICommunity(community).getShareAcc(address(this)))
             .div(1e12));
 
-        emit Claimed(community, msg.sender, claimAmount);
+        emit UnStaked(community, msg.sender, unstakeAmount);        
     }
 
-    function current_era() external view returns (uint256) {
-        return DappsStaking(stakingContract).current_era();
+    // Withdraw unbounded amount, only work after unbound period has complete after unstake triggered.
+    function withdraw_unbonded() external nonReentrant {
+        require(stakingInfo[msg.sender].unwithdrew > 0, "No fund to be withdraw");
+
+        uint256 withdraw_amount = stakingInfo[msg.sender].unwithdrew;
+
+        // Essentially address(this) is the real staker, so we always withdraw all unbounded fund here
+        // and then send back to users. That means actually withdrawn amount from staking contract could
+        // greater than withdraw_amount.
+        DappsStaking(stakingContract).withdraw_unbonded();
+
+        // Transfer back the fund that belongs to the user
+        bool hasSent = payable(msg.sender).send(withdraw_amount);
+        require(hasSent, "Failed to transfer Fund");
+
+        // Update ledger
+        stakingInfo[msg.sender].unwithdrew -= withdraw_amount;
+
+        emit Withdraw(community, msg.sender, withdraw_amount);
     }
 
-    function era_reward_and_stake(uint32 era) external view returns (uint128, uint128) {
-        return DappsStaking(stakingContract).era_reward_and_stake(era);
+    // Claim one era of unclaimed rewards. The rewards first send to the real staker, e.g. address(this),
+    // then we transfer to community contract, user then can claim their rewards according to the ledger.
+    function claim_stake_reward() external nonReentrant {
+        uint256 old_balance = address(this).balance;
+
+        // Claim rewards for the staker, e.g. this contract.
+        DappsStaking(stakingContract).claim_staker(dapp);
+        uint256 new_balance = address(this).balance;
+
+        // Transfer to community contract
+        bool hasSent = payable(address(community)).send(new_balance);
+        require(hasSent, "Failed to transfer Fund");
+
+        emit StakeClaimed(community, dapp, new_balance.sub(old_balance));
     }
 
-    function registered_contract() external view returns (uint256) {
-        return DappsStaking(stakingContract).registered_contract(msg.sender);
+    // Claim the specific era of unclaimed rewards for the DApp, rewards would be sent to owner of the DApp.
+    function claim_dapp_reward(uint128 era) external nonReentrant {
+        uint256 old_balance = address(this).balance;
+
+        // Claim rewards for the DApp
+        DappsStaking(stakingContract).claim_dapp(dapp, era);
+        uint256 new_balance = address(this).balance;
+
+        // Transfer to community owner
+        bool hasSent = payable(address(owner)).send(new_balance.sub(old_balance));
+        require(hasSent, "Failed to transfer Fund");
+
+        emit DappClaimed(community, dapp, new_balance.sub(old_balance));
     }
 
     function getFactory() external view override returns (address) {
