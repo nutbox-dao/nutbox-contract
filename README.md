@@ -50,3 +50,12 @@ You should see the output like below:
         ERC20StakingFactory:     0xf870724476912057C807056b29c1161f5Fe0199a
         ===============================================================
 ```
+
+### Register chains
+
+- 1: steem(sp delegation)
+- 2: hive
+- 3: atom
+- 4: osmosis
+- 5: juno
+- 6: steem(sp witness proxy)
