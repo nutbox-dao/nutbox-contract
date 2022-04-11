@@ -10,8 +10,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract NutPower is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
 
-    uint256 constant WEEK = 604800;
-    uint256 constant PERIOD_COUNT = 7;
+    uint256 constant public WEEK = 604800;
+    uint256 constant public PERIOD_COUNT = 7;
 
     enum Period {
         W1,
@@ -54,6 +54,9 @@ contract NutPower is Ownable, ReentrancyGuard {
     mapping (address => mapping (Period => RequestsOfPeriod)) private requests;
     mapping (address => bool) public whitelists;
 
+    event AdminChangeNut(address indexed oldNut, address indexed newNut);
+    event AdminSetWhiteList(address indexed who, bool tag);
+
     event PowerUp(address indexed who, Period period, uint256 amount);
     event PowerDown(address indexed who, Period period, uint256 amount);
     event Upgrade(address indexed who, Period src, Period dest, uint256 amount);
@@ -65,15 +68,21 @@ contract NutPower is Ownable, ReentrancyGuard {
     }
 
     constructor(address _nut) {
+        require(_nut != address(0), "Invalid nut address");
         nut = _nut;
     }
 
     function adminSetNut(address _nut) external onlyOwner {
+        require(_nut != address(0), "Invalid nut address");
+        address oldNut = nut;
         nut = _nut;
+        emit AdminChangeNut(oldNut, nut);
     }
 
     function adminSetWhitelist(address _who, bool _tag) external onlyOwner {
+        require(_who != address(0), "Invalide address");
         whitelists[_who] = _tag;
+        emit AdminSetWhiteList(_who, _tag);
     }
 
     function powerUp(uint256 _nutAmount, Period _period) external nonReentrant {
@@ -93,7 +102,7 @@ contract NutPower is Ownable, ReentrancyGuard {
         uint256 downNut = _npAmount.div(multipier[uint256(_period)]);
         require(_npAmount > 0, "Invalid unlock NP");
         require(depositInfos[msg.sender][_period] >= downNut, "Insufficient free NUT");
-        require(powers[msg.sender].free > _npAmount, "Insufficient free NP");
+        require(powers[msg.sender].free >= _npAmount, "Insufficient free NP");
 
         powers[msg.sender].free = powers[msg.sender].free.sub(_npAmount);
         depositInfos[msg.sender][_period] = depositInfos[msg.sender][_period].sub(downNut);
@@ -142,7 +151,7 @@ contract NutPower is Ownable, ReentrancyGuard {
             }
         }
 
-        require(IERC20(nut).balanceOf(address(this)) > avaliableRedeemNut, "Inceficient balance of NUT");
+        require(IERC20(nut).balanceOf(address(this)) >= avaliableRedeemNut, "Inceficient balance of NUT");
         IERC20(nut).transfer(msg.sender, avaliableRedeemNut);
         emit Redeemd(msg.sender, avaliableRedeemNut);
     }

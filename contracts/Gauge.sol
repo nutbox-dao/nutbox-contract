@@ -18,7 +18,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeMath for uint16;
 
-    uint16 constant CONSTANT_10000 = 10000;
+    uint16 constant private CONSTANT_10000 = 10000;
 
     struct User {
         bool hasDeposited;
@@ -102,6 +102,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     event PoolFactoryWithdrewNut(address indexed poolFactory, address indexed recipient, uint256 amount);
 
     constructor(address _communityFactory, uint16 _gaugeRatio, DistributionRatio memory ratios, address _NP, address _nut) {
+        require(_communityFactory != address(0), "Invalide community factory");
         require(ratios.community + ratios.poolFactory + ratios.user == CONSTANT_10000, "Sum of ratios should be 10000");
         distributionRatio.community = ratios.community;
         distributionRatio.poolFactory = ratios.poolFactory;
