@@ -94,9 +94,9 @@ async function deployCommunityFactoryContract(env) {
 async function deployGaugeContract(env) {
     let factory = new ethers.ContractFactory(GaugeJson.abi, GaugeJson.bytecode, env.wallet);
     let contract = await factory.deploy(env.CommunityFactory, 1000, {
-        community: 2000,
+        community: 5000,
         poolFactory: 0,
-        user: 8000
+        user: 5000
     }, env.NutPower, NutAddress, {gasPrice: env.gasPrice})
     await contract.deployed();
     env.Gauge = contract.address;
@@ -115,8 +115,8 @@ async function deployLinearCalculatorContract(env) {
 
 async function main() {
     let env = {}
-    env.url = process.env.TESTENDPOINT;
-    env.privateKey = process.env.TESTKEY;
+    env.url = process.env.ENDPOINT;
+    env.privateKey = process.env.KEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasPrice = await env.provider.getGasPrice();
@@ -127,23 +127,23 @@ async function main() {
 
     env.Committee = '0xd10e4C1e301A13A9B874bd1757c135Eda075769D';
     // env.MintableERC20Factory = '0x22dFb6a44393db46CB6D1C834aE2908b054e9AFb';
-    // env.NutPower = '0xBDab62EDB1eC26952d4b5e5bFFA22AfA9eF8875B'
+    env.NutPower = '0x5De2a9993eCcbFab4d83a5dCc0911c0e80A08AbA'
     env.CommunityFactory = '0x1A4EeE210Bc54a75D25989546F648474EdF1C0A3'
     // env.SPStakingFactory = '0xF1Cd3716D97ab3C9D9Ed822EBa32fadECBdD4FDB'
-    // env.CosmosStakingFactory = '0x24e1ceEa36Aa3b2640A1fc038d764158D0A05c9F'
+    env.CosmosStakingFactory = '0xAD6a0c0017559d051264e1657d627107d6b12f0d'
     // env.ERC20StakingFactory = '0x9eB136f1e80ab6EFB5974277F25900db4E1f81Ab'
     // env.LinearCalculator = '0x3D0650e727350c47d0Bc7FDbcdb04d3b583d631c'
-    // env.Gauge = '0x54d05f4cbdA8C72861B0213940aa8e1D07cD56d4'
+    env.Gauge = '0x6F2686B34D23dCbf79a33A2EEA5e92d84b942d91'
 
     // await deployCommitteeContract(env);
     // await deployMintableERC20FactoryContract(env);
-    await deployNutPowerContract(env);
+    // await deployNutPowerContract(env);
     // await deployCommunityFactoryContract(env);
     // await deploySPStakingFactoryContract(env);
-    await deployCosmosStakingFactoryContract(env);
+    // await deployCosmosStakingFactoryContract(env);
     // await deployERC20StakingFactoryContract(env);
     // await deployLinearCalculatorContract(env);
-    await deployGaugeContract(env);
+    // await deployGaugeContract(env);
     let tx;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
@@ -159,18 +159,18 @@ async function main() {
     // console.log(`Admin register SPStakingFactory`);
     // tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
     // console.log(`Admin register ERC20StakingFactory`);
-    tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
-    console.log(`Admin register CosmosStakingFactory`);
+    // tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
+    // console.log(`Admin register CosmosStakingFactory`);
 
     // set Gauge to committee
-    tx = await committeeContract.adminSetGauge(env.Gauge);
-    console.log(`Admin register Gauge`);
+    // tx = await committeeContract.adminSetGauge(env.Gauge);
+    // console.log(`Admin register Gauge`);
 
     // committee set fee free list
     // tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
     // console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
-    tx = await committeeContract.adminAddFeeFreeAddress(env.CosmosStakingFactory);
-    console.log(`Admin set address:${env.CosmosStakingFactory} to fee free list`);
+    // tx = await committeeContract.adminAddFeeFreeAddress(env.CosmosStakingFactory);
+    // console.log(`Admin set address:${env.CosmosStakingFactory} to fee free list`);
 
     // staking factory set bridge
     // const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
@@ -181,20 +181,28 @@ async function main() {
     // tx = await cosmosStakingFactoryContract.adminAddBridge(2, env.wallet.address);  // hive
     // tx = await cosmosStakingFactoryContract.adminAddBridge(3, '0xAF35c6452B3DD42dCc2AF8BF9689484bF27Aa143');  // Tien's address
     // tx = await cosmosStakingFactoryContract.adminAddBridge(1, '0xD9f4985a73349dea9aCB7c424E35056714bA2B35');  // Boy's address
-    tx = await cosmosStakingFactoryContract.adminAddBridge(3, "0x8c4C0Ec6d30A7B3f81E4F70a46b3c8B44B99470D");  // atom
-    tx = await cosmosStakingFactoryContract.adminAddBridge(4, "0xFa41CfdaAf9ae7f3a72d86229FBE428bb186A305");  // osmo
-    tx = await cosmosStakingFactoryContract.adminAddBridge(5, "0x6587FD7f5Dd9D0EbC13bf5C9CEfCf675a11d351f");  // juno
-    console.log(`Admin set cosmos staking bridge`);
+    // tx = await cosmosStakingFactoryContract.adminAddBridge(3, "0x8c4C0Ec6d30A7B3f81E4F70a46b3c8B44B99470D");  // atom
+    // tx = await cosmosStakingFactoryContract.adminAddBridge(4, "0xFa41CfdaAf9ae7f3a72d86229FBE428bb186A305");  // osmo
+    // tx = await cosmosStakingFactoryContract.adminAddBridge(5, "0x6587FD7f5Dd9D0EbC13bf5C9CEfCf675a11d351f");  // juno
+    // console.log(`Admin set cosmos staking bridge`);
 
     // set gauge to np
-    const nutPowerContract = new ethers.Contract(env.NutPower, NutPowerJson.abi, env.wallet);
-    tx = await nutPowerContract.adminSetWhitelist(env.Gauge, true);
-    console.log('Admin set gauge to nut power');
+    // const nutPowerContract = new ethers.Contract(env.NutPower, NutPowerJson.abi, env.wallet);
+    // tx = await nutPowerContract.adminSetWhitelist(env.Gauge, true);
+    // console.log('Admin set gauge to nut power');
 
     // set gauge param
     const gauge = new ethers.Contract(env.Gauge, GaugeJson.abi, env.wallet)
-    tx = await gauge.adminSetRewardNUTPerBlock(ethers.utils.parseUnits('1.0', 18))
-    console.log('Admin set gauge distribution to 1 nut per block');
+    // tx = await gauge.adminSetRewardNUTPerBlock(ethers.utils.parseUnits('2.5', 18))
+    // console.log('Admin set gauge distribution to 2.5 nut per block');
+
+    // transfer ownership to committee
+    // tx = await cosmosStakingFactoryContract.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
+    // console.log('Transfer cosmos staking factory ownership to committee', tx.hash);
+    // tx = await nutPowerContract.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
+    // console.log('Transfer np ownership to committee', tx.hash);
+    tx = await gauge.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
+    console.log('Transfer gauge ownership to committee', tx.hash);
 
     // set transaction fee
     // tx = await committeeContract.adminSetFee(
