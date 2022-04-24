@@ -50,3 +50,13 @@ You should see the output like below:
         ERC20StakingFactory:     0xf870724476912057C807056b29c1161f5Fe0199a
         ===============================================================
 ```
+
+### Deployed contract on astar
+```
+  "Committee": "0xF7Fa41BF814eDC767691DDB1864a334D83f4acf7",
+  "MintableERC20Factory": "0xf870724476912057C807056b29c1161f5Fe0199a",
+  "CommunityFactory": "0x6ab448C1C6e1870602d3FB867F167029bbFb3181",
+  "LinearCalculator": "0x1f44D5e1351Ff5f1124eFC8a71A838C5C38FB131",
+  "SPStakingFactory": "Not Deployed",
+  "ERC20StakingFactory": "0x00ad4C61403455731C685cC71D9a406c5fcB8D69"
+```
