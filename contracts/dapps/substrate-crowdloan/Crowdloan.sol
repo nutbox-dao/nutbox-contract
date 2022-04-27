@@ -41,8 +41,8 @@ contract Crowdloan is IPool {
     // community that pool belongs to
     address immutable community;
     // crowdlaon paraId
-    uint256 public paraId;
-    uint256 public fundIndex;
+    uint256 public immutable paraId;
+    uint256 public immutable fundIndex;
     // chain id: polkadot : 0  kusama: 2
     uint8 immutable chainId;
 

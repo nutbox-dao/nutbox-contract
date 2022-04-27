@@ -30,10 +30,10 @@ async function main() {
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
 
-    const NUTAddress = await deployNutContract(env)
+    // const NUTAddress = await deployNutContract(env)
 
     const contract = new ethers.Contract(NUTAddress, NUTTokenJson.abi, env.wallet)
-    const tx = await contract.disableTransfer();
+    const tx = await contract.enableTransfer();
     console.log(tx.hash);
 }
 
