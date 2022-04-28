@@ -22,9 +22,9 @@ const GaugeJson = require('../build/contracts/Gauge.json');
 const { log } = require('console');
 
 // const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
-// const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
+const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
-const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745' // bsc
+// const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745' // bsc
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -136,55 +136,55 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    env.Committee = '0x5288DA783695DAb739ab5e1d7BF0d4920667809B';
-    env.MintableERC20Factory = '0x95a3119660ed199d36cCfdE29E07af1afDDa1B7c';
-    env.NutPower = '0x9C5493ea3a6414f83A0d867329A67f7741071669'
-    env.CommunityFactory = '0x6c999d6C30B2016611eBBbFA53793d2522A66250'
-    env.SPStakingFactory = '0x6383b535e7EC5f24aC1e9cf32fca6cbFa8fD251B'
-    env.CosmosStakingFactory = '0x1E2f12267D587c571ba147193DB94ED64C7e269f'
-    env.ERC20StakingFactory = '0x1AC355145e523C1295D5AB8cC6f37087E286B94E'
-    env.LinearCalculator = '0x604a7CADDFf6Cc87cf3cB74Adb0580c53E91B6d8'
-    env.Gauge = '0x306fb5447FCE4960E74cD28C22a1A7627cae678F'
+    // env.Committee = '0x5288DA783695DAb739ab5e1d7BF0d4920667809B';
+    // env.MintableERC20Factory = '0x95a3119660ed199d36cCfdE29E07af1afDDa1B7c';
+    // env.NutPower = '0x9C5493ea3a6414f83A0d867329A67f7741071669'
+    // env.CommunityFactory = '0x6c999d6C30B2016611eBBbFA53793d2522A66250'
+    // env.SPStakingFactory = '0x6383b535e7EC5f24aC1e9cf32fca6cbFa8fD251B'
+    // env.CosmosStakingFactory = '0x1E2f12267D587c571ba147193DB94ED64C7e269f'
+    // env.ERC20StakingFactory = '0x1AC355145e523C1295D5AB8cC6f37087E286B94E'
+    // env.LinearCalculator = '0x604a7CADDFf6Cc87cf3cB74Adb0580c53E91B6d8'
+    // env.Gauge = '0x306fb5447FCE4960E74cD28C22a1A7627cae678F'
 
-    // await deployCommitteeContract(env);
-    // await deployMintableERC20FactoryContract(env);
-    // await deployNutPowerContract(env);
-    // await deployCommunityFactoryContract(env);
-    // await deploySPStakingFactoryContract(env);
-    // await deployCosmosStakingFactoryContract(env);
-    // await deployERC20StakingFactoryContract(env);
+    await deployCommitteeContract(env);
+    await deployMintableERC20FactoryContract(env);
+    await deployNutPowerContract(env);
+    await deployCommunityFactoryContract(env);
+    await deploySPStakingFactoryContract(env);
+    await deployCosmosStakingFactoryContract(env);
+    await deployERC20StakingFactoryContract(env);
     await deployERC1155StakingFactoryContract(env);
-    // await deployLinearCalculatorContract(env);
-    // await deployGaugeContract(env);
+    await deployLinearCalculatorContract(env);
+    await deployGaugeContract(env);
     let tx;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
-    // tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
-    // console.log('Admin set factory to committee whitelist');
+    tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
+    console.log('Admin set factory to committee whitelist');
 
-    // // committee set contracts whitelist
-    // tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
-    // console.log(`Admin register MintableERC20Factory`);
-    // tx = await committeeContract.adminAddContract(env.LinearCalculator);
-    // console.log(`Admin register linear calculator`);
-    // tx = await committeeContract.adminAddContract(env.SPStakingFactory);
-    // console.log(`Admin register SPStakingFactory`);
-    // tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
-    // console.log(`Admin register ERC20StakingFactory`);
+    // committee set contracts whitelist
+    tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
+    console.log(`Admin register MintableERC20Factory`);
+    tx = await committeeContract.adminAddContract(env.LinearCalculator);
+    console.log(`Admin register linear calculator`);
+    tx = await committeeContract.adminAddContract(env.SPStakingFactory);
+    console.log(`Admin register SPStakingFactory`);
+    tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
+    console.log(`Admin register ERC20StakingFactory`);
     tx = await committeeContract.adminAddContract(env.ERC1155StakingFactory);
     console.log(`Admin register ERC1155StakingFactory`);
-    // tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
-    // console.log(`Admin register CosmosStakingFactory`);
+    tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
+    console.log(`Admin register CosmosStakingFactory`);
 
     // set Gauge to committee
-    // tx = await committeeContract.adminSetGauge(env.Gauge);
-    // console.log(`Admin register Gauge`);
+    tx = await committeeContract.adminSetGauge(env.Gauge);
+    console.log(`Admin register Gauge`);
 
     // committee set fee free list
-    // tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
-    // console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
-    // tx = await committeeContract.adminAddFeeFreeAddress(env.CosmosStakingFactory);
-    // console.log(`Admin set address:${env.CosmosStakingFactory} to fee free list`);
+    tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
+    console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
+    tx = await committeeContract.adminAddFeeFreeAddress(env.CosmosStakingFactory);
+    console.log(`Admin set address:${env.CosmosStakingFactory} to fee free list`);
 
     // staking factory set bridge
     // const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
@@ -201,14 +201,14 @@ async function main() {
     // console.log(`Admin set cosmos staking bridge`);
 
     // set gauge to np
-    // const nutPowerContract = new ethers.Contract(env.NutPower, NutPowerJson.abi, env.wallet);
-    // tx = await nutPowerContract.adminSetWhitelist(env.Gauge, true);
-    // console.log('Admin set gauge to nut power');
+    const nutPowerContract = new ethers.Contract(env.NutPower, NutPowerJson.abi, env.wallet);
+    tx = await nutPowerContract.adminSetWhitelist(env.Gauge, true);
+    console.log('Admin set gauge to nut power');
 
     // set gauge param
-    // const gauge = new ethers.Contract(env.Gauge, GaugeJson.abi, env.wallet)
-    // tx = await gauge.adminSetRewardNUTPerBlock(ethers.utils.parseUnits('1.0', 18))
-    // console.log('Admin set gauge distribution to 1 nut per block');
+    const gauge = new ethers.Contract(env.Gauge, GaugeJson.abi, env.wallet)
+    tx = await gauge.adminSetRewardNUTPerBlock(ethers.utils.parseUnits('1.0', 18))
+    console.log('Admin set gauge distribution to 1 nut per block');
 
     // set transaction fee
     // tx = await committeeContract.adminSetFee(
@@ -232,7 +232,7 @@ async function main() {
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         SPStakingFactory: env.SPStakingFactory ?? 'Not Deployed',
         ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed",
-        ERC1155StakingFacory: env.ERC1155StakingFacory ?? "Not Depolyed",
+        ERC1155StakingFacory: env.ERC1155StakingFactory ?? "Not Depolyed",
         CosmosStakingFactory: env.CosmosStakingFactory ?? "Not Deployed",
         Gauge:  env.Gauge ?? 'Not deployed'
     }
@@ -264,7 +264,7 @@ async function main() {
         ---------------------------------------------------------------
         ERC20StakingFactory:     ${env.ERC20StakingFactory ?? "Not Deployed"}
         ---------------------------------------------------------------
-        ERC1155StakingFacory:    ${env.ERC1155StakingFactory ?? "Not Deployed"}
+        ERC1155StakingFactory:    ${env.ERC1155StakingFactory ?? "Not Deployed"}
         ---------------------------------------------------------------
         CosmosStakingFactory:     ${env.CosmosStakingFactory ?? "Not Deployed"}
         ---------------------------------------------------------------

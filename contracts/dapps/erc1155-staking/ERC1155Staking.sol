@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/IPool.sol";
 
@@ -17,7 +18,7 @@ import "../../interfaces/IPool.sol";
  * Also only user themself than withdraw their staked asset
  * One pool surport only one token id of an ERC1155 token
  */
-contract ERC1155Staking is IPool, ReentrancyGuard {
+contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
     using SafeMath for uint256;
 
     struct StakingInfo {
@@ -181,5 +182,29 @@ contract ERC1155Staking is IPool, ReentrancyGuard {
         returns (StakingInfo memory)
     {
         return stakingInfo[user];
+    }
+
+     function onERC1155Received(
+        address operator,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        return 0xf23a6e61;
+    }
+
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        return 0xbc197c81;
+    }
+
+    function supportsInterface(bytes4 interfaceId) external override view returns (bool) {
+        return false;
     }
 }
