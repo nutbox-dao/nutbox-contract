@@ -20,7 +20,7 @@ contract TreasuryFactory is Ownable {
     address immutable communityFactory;
 
     // community => created treasury
-    mapping(address => bool) communityCreatedTreasury;
+    mapping(address => address) communityCreatedTreasury;
 
     address[] private createdTreasury;
 
@@ -41,25 +41,26 @@ contract TreasuryFactory is Ownable {
     }
 
     function adminRemoveReward(address _reward) external onlyOwner {
-        require(rewardsList.contains(_newReward), "Reward not added");
+        require(rewardsList.contains(_reward), "Reward not added");
         rewardsList.remove(_reward);
         emit AdminRemoveReward(_reward);
     }
 
-    function getRewardList() public view returns (address[]) {
+    function getRewardList() public view returns (address[] memory) {
         return rewardsList.values();
     }
 
-    function createTreasury(address community) {
-        require(!createdTreasuryList[community], "Community has created treasury");
+    function createTreasury(address community) external {
+        require(communityCreatedTreasury[community] == address(0), "Community has created treasury");
         require(CommunityFactory(communityFactory).createdCommunity(community), "Community not exist");
-        require(Ownable(community).owner == msg.sender, "Caller not community admin");
+        require(Ownable(community).owner() == msg.sender, "Caller not community admin");
         Treasury t = new Treasury(community);
+        communityCreatedTreasury[community] = address(t);
         createdTreasury.push(address(t));
         emit NewTreasuryCreated(community, address(t));
     }
 
-    function communityHasCreatedTreasury(address community) public view {
+    function treasuryOfCommunity(address community) public view returns (address) {
         return communityCreatedTreasury[community];
     }
 

@@ -19,7 +19,9 @@ const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
 const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factory.json')
 const NutPowerJson = require('../build/contracts/NutPower.json')
 const GaugeJson = require('../build/contracts/Gauge.json');
+const TreasuryFactoryJson = require('../build/contracts/TreasuryFactory.json')
 const { log } = require('console');
+const { env } = require('process');
 
 // const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
 const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
@@ -124,6 +126,16 @@ async function deployLinearCalculatorContract(env) {
     console.log("✓ LinearCalculator contract deployed", contract.address);
 }
 
+async function deployTreasuryFactoryContract(env) {
+    let factory = new ethers.ContractFactory(TreasuryFactoryJson.abi, TreasuryFactoryJson.bytecode, env.wallet)
+    let contract = await factory.deploy(env.CommunityFactory, {
+        gasPrice: env.gasPrice
+    });
+    await contract.deployed();
+    env.TreasuryFactory = contract.address;
+    console.log("✓ TreasureFactory contract deployed", contract.address);
+}
+
 async function main() {
     let env = {}
     env.url = process.env.TESTENDPOINT;
@@ -136,26 +148,28 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    // env.Committee = '0x5288DA783695DAb739ab5e1d7BF0d4920667809B';
-    // env.MintableERC20Factory = '0x95a3119660ed199d36cCfdE29E07af1afDDa1B7c';
-    // env.NutPower = '0x9C5493ea3a6414f83A0d867329A67f7741071669'
-    // env.CommunityFactory = '0x6c999d6C30B2016611eBBbFA53793d2522A66250'
-    // env.SPStakingFactory = '0x6383b535e7EC5f24aC1e9cf32fca6cbFa8fD251B'
-    // env.CosmosStakingFactory = '0x1E2f12267D587c571ba147193DB94ED64C7e269f'
-    // env.ERC20StakingFactory = '0x1AC355145e523C1295D5AB8cC6f37087E286B94E'
-    // env.LinearCalculator = '0x604a7CADDFf6Cc87cf3cB74Adb0580c53E91B6d8'
-    // env.Gauge = '0x306fb5447FCE4960E74cD28C22a1A7627cae678F'
+    env.Committee = '0x524d1C459DE80820D8EeeDdbeB891799c5523C85';
+    env.MintableERC20Factory = '0x42A2D3D7cf116c56f1D47643B3524E78b867aBb7';
+    env.NutPower = '0x5CD907265f54590c4e035Af3D1Dd731AeED82603'
+    env.CommunityFactory = '0x113866ac496Bd85A8A8a687d04139bA441d09276'
+    env.SPStakingFactory = '0x9Df9D7412E4462AA863A35B54142d1D35F07b214'
+    env.CosmosStakingFactory = '0xbe1709B3D175aaecA132BEA8630063E99f090D68'
+    env.ERC20StakingFactory = '0x1AC355145e523C1295D5AB8cC6f37087E286B94E'
+    env.LinearCalculator = '0x604a7CADDFf6Cc87cf3cB74Adb0580c53E91B6d8'
+    env.Gauge = '0x56c44B51eaCcd283024523dF1268A8E01887C218'
 
-    await deployCommitteeContract(env);
-    await deployMintableERC20FactoryContract(env);
-    await deployNutPowerContract(env);
-    await deployCommunityFactoryContract(env);
-    await deploySPStakingFactoryContract(env);
-    await deployCosmosStakingFactoryContract(env);
-    await deployERC20StakingFactoryContract(env);
-    await deployERC1155StakingFactoryContract(env);
-    await deployLinearCalculatorContract(env);
-    await deployGaugeContract(env);
+    // await deployCommitteeContract(env);
+    // await deployMintableERC20FactoryContract(env);
+    // await deployNutPowerContract(env);
+    // await deployCommunityFactoryContract(env);
+    // await deploySPStakingFactoryContract(env);
+    // await deployCosmosStakingFactoryContract(env);
+    // await deployERC20StakingFactoryContract(env);
+    // await deployERC1155StakingFactoryContract(env);
+    // await deployLinearCalculatorContract(env);
+    // await deployGaugeContract(env);
+    await deployTreasuryFactoryContract(env);
+    return;
     let tx;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
@@ -234,7 +248,8 @@ async function main() {
         ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed",
         ERC1155StakingFacory: env.ERC1155StakingFactory ?? "Not Depolyed",
         CosmosStakingFactory: env.CosmosStakingFactory ?? "Not Deployed",
-        Gauge:  env.Gauge ?? 'Not deployed'
+        Gauge:  env.Gauge ?? 'Not deployed',
+        TreasuryFactory: env.TreasuryFactory ?? "Not deployed"
     }
 
     const outfile = "./scripts/contracts.json";
@@ -269,6 +284,8 @@ async function main() {
         CosmosStakingFactory:     ${env.CosmosStakingFactory ?? "Not Deployed"}
         ---------------------------------------------------------------
         Gauge: ${env.Gauge ?? "Not Deployed"}
+        ---------------------------------------------------------------
+        TreasuryFactory:        ${env.TreasuryFactory ?? "Not Deployed"}
         ===============================================================
     `);
 }

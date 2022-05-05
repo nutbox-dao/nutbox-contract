@@ -15,18 +15,28 @@ contract Treasury is ReentrancyGuard {
     address immutable factory;
     address immutable community;
 
+    event Redeem(address indexed user, uint256 indexed amount);
+
     constructor(address _community) {
         // we only admit the caller is TreasuryFactory registered by committee
         factory = msg.sender;
         community = _community;
     }
 
-    redeem(uint256 amount) {
+    function redeem(uint256 amount) external nonReentrant {
         ERC20Burnable ctoken = ERC20Burnable(ICommunity(community).getCommunityToken());
-        require(ctoken.balaceOf(msg.sender) >= amount, "Insufficient balance");
+        require(ctoken.balanceOf(msg.sender) >= amount, "Insufficient balance");
         uint256 supply = ctoken.totalSupply();
         ctoken.transferFrom(msg.sender, address(this), amount);
         ctoken.burn(amount);
+        address[] memory rewardList = TreasuryFactory(factory).getRewardList();
+        for (uint256 i = 0; i < rewardList.length; i++) {
+            ERC20Burnable token = ERC20Burnable(rewardList[i]);
+            uint256 balance = token.balanceOf(address(this));
+            token.transfer(msg.sender, amount.mul(balance).div(supply));
+        }
+
+        emit Redeem(msg.sender, amount);
     }
     
 
