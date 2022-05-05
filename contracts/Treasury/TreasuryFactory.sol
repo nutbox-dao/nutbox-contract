@@ -24,7 +24,7 @@ contract TreasuryFactory is Ownable {
 
     address[] private createdTreasury;
 
-    event AdminAddNewRewards(address indexed newReward);
+    event AdminAddNewReward(address indexed newReward);
     event AdminRemoveReward(address indexed reward);
     event NewTreasuryCreated(address indexed community, address indexed treasury);
 
@@ -37,7 +37,7 @@ contract TreasuryFactory is Ownable {
         require(_newReward != address(0), "Invalid address");
         require(!rewardsList.contains(_newReward), "Reward has been added");
         rewardsList.add(_newReward);
-        emit AdminAddNewRewards(_newReward);
+        emit AdminAddNewReward(_newReward);
     }
 
     function adminRemoveReward(address _reward) external onlyOwner {
