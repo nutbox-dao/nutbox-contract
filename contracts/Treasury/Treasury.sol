@@ -15,7 +15,7 @@ contract Treasury is ReentrancyGuard {
     address immutable factory;
     address immutable community;
 
-    event Redeem(address indexed user, uint256 indexed amount);
+    event Redeem(address indexed community, address indexed user, uint256 indexed amount);
 
     constructor(address _community) {
         // we only admit the caller is TreasuryFactory registered by committee
@@ -36,7 +36,7 @@ contract Treasury is ReentrancyGuard {
             token.transfer(msg.sender, amount.mul(balance).div(supply));
         }
 
-        emit Redeem(msg.sender, amount);
+        emit Redeem(community, msg.sender, amount);
     }
     
 

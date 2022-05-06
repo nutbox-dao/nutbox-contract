@@ -133,7 +133,7 @@ async function deployTreasuryFactoryContract(env) {
     });
     await contract.deployed();
     env.TreasuryFactory = contract.address;
-    console.log("✓ TreasureFactory contract deployed", contract.address);
+    console.log("✓ TreasuryFactory contract deployed", contract.address);
 }
 
 async function main() {
@@ -168,9 +168,14 @@ async function main() {
     // await deployERC1155StakingFactoryContract(env);
     // await deployLinearCalculatorContract(env);
     // await deployGaugeContract(env);
-    await deployTreasuryFactoryContract(env);
-    return;
+    // await deployTreasuryFactoryContract(env);
     let tx;
+    const treasuryFactory = new ethers.Contract("0x8428aD36744a9917112c2A9a40C4f48FCF80e39E", TreasuryFactoryJson.abi, env.wallet);
+    const eth = "0x33B78D217F271Ecb3DA1bB61F9ABB7d49425dd14"
+    const cake = "0x9187C7B1284F6583aD960eB2b7074a0df563E346"
+    tx = await treasuryFactory.adminAddReward(eth)
+    tx = await treasuryFactory.adminAddReward(cake)
+    return;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
     tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);

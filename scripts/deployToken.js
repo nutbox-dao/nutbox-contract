@@ -9,6 +9,7 @@ async function deployTokenContract(env, name, symbol) {
         name,
         symbol,
         ethers.utils.parseUnits("20000000.0", 18),
+        env.wallet.address,
         env.wallet.address
     );
     await contract.deployed();
@@ -27,7 +28,7 @@ async function main() {
 
     let tx = await deployTokenContract(env, 'Wrapped ETH', 'WETH');
     // await deployTokenContract(env, 'Ethereum Token', 'ETH');
-    // await deployTokenContract(env, 'PancakeSwap Token', 'CAKE');
+    await deployTokenContract(env, 'PancakeSwap Token', 'CAKE');
     // await deployTokenContract(env, 'BTCB Token', 'BTCB')
 }
 
