@@ -25,6 +25,7 @@ contract Treasury is ReentrancyGuard {
 
     function redeem(uint256 amount) external nonReentrant {
         ERC20Burnable ctoken = ERC20Burnable(ICommunity(community).getCommunityToken());
+        require(amount > 0, "Must use some ctoken to redeem");
         require(ctoken.balanceOf(msg.sender) >= amount, "Insufficient balance");
         uint256 supply = ctoken.totalSupply();
         ctoken.transferFrom(msg.sender, address(this), amount);
@@ -33,7 +34,9 @@ contract Treasury is ReentrancyGuard {
         for (uint256 i = 0; i < rewardList.length; i++) {
             ERC20Burnable token = ERC20Burnable(rewardList[i]);
             uint256 balance = token.balanceOf(address(this));
-            token.transfer(msg.sender, amount.mul(balance).div(supply));
+            if (balance > 0) {
+                token.transfer(msg.sender, amount.mul(balance).div(supply));
+            }
         }
 
         emit Redeem(community, msg.sender, amount);
