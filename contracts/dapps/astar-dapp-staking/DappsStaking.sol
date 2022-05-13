@@ -31,6 +31,12 @@ interface DappsStaking {
     /// @return amount, Staked amount by the staker
     function read_staked_amount(bytes calldata staker) external view returns (uint128);
 
+    /// @notice Read Staked amount on a given contract for the staker
+    /// @param contract_id contract evm address
+    /// @param staker in form of 20 or 32 hex bytes
+    /// @return amount, Staked amount by the staker
+    function read_staked_amount_on_contract(address contract_id, bytes calldata staker) external view returns (uint128);
+
     /// @notice Read the staked amount from the era when the amount was last staked/unstaked
     /// @return total, The most recent total staked amount on contract
     function read_contract_stake(address contract_id) external view returns (uint128);
@@ -56,4 +62,23 @@ interface DappsStaking {
 
     /// @notice Claim one era of unclaimed dapp rewards for the specified contract and era.
     function claim_dapp(address, uint128) external;
+
+    /// Instruction how to handle reward payout for staker.
+    /// `FreeBalance` - Reward will be paid out to the staker (free balance).
+    /// `StakeBalance` - Reward will be paid out to the staker and is immediately restaked (locked balance)
+    enum RewardDestination {FreeBalance, StakeBalance}
+
+    /// @notice Set reward destination for staker rewards
+    /// @param reward_destination instruction on how the reward payout should be handled
+    function set_reward_destination(RewardDestination reward_destination) external;
+    
+    /// @notice Withdraw staked funds from an unregistered contract.
+    /// @param smart_contract smart contract address
+    function withdraw_from_unregistered(address smart_contract) external;
+
+    /// @notice Transfer part or entire nomination from origin smart contract to target smart contract
+    /// @param origin_smart_contract origin smart contract address
+    /// @param amount amount to transfer from origin to target
+    /// @param target_smart_contract target smart contract address
+    function nomination_transfer(address origin_smart_contract, uint128 amount, address target_smart_contract) external;
 }
