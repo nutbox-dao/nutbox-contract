@@ -1,4 +1,4 @@
-// Copy from: https://github.com/AstarNetwork/astar-frame/blob/polkadot-v0.9.17/precompiles/dapps-staking/DappsStaking.sol
+// Copy from: https://github.com/AstarNetwork/astar-frame/blob/polkadot-v0.9.19/precompiles/dapps-staking/DappsStaking.sol
 
 // SPDX-License-Identifier: BSD-3-Clause
 

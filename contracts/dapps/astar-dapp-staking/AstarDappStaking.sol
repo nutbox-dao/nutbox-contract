@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -9,6 +9,8 @@ import "../../interfaces/ICommunity.sol";
 import "../../interfaces/IPool.sol";
 import "../../ERC20Helper.sol";
 import "./DappsStaking.sol";
+import "./IAstarFactory.sol";
+import "./IAstarDappStakingCalc.sol";
 
 /**
  * @dev Proxy contract of Astar Dapp staking pool.
@@ -27,10 +29,16 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     struct StakingInfo {
         // Mark if user has staked
         bool hasStaked;
+        // last operated rea
+        uint32 lastEra;
         // User staked amount
         uint256 amount;
         // Unclaimed amount that already unbounded
         uint256 unwithdrew;
+        // Unclaimed staking rewards
+        uint256 unClaimReward;
+        // Era that has been rewarded
+        mapping(uint32 => bool) rewardedEra;
     }
 
     // stakingInfo used to save every user's staking information,
@@ -41,9 +49,6 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     uint256 public totalStakedAmount;
     // Total stakers, up to 1024
     uint256 public totalStakers;
-    // Minimum stake amount, current 50 SDN
-    uint256 public MINIMUM_STAKE = 50000000000000;
-    uint256 public MAXIMUM_STAKERS = 1024;
 
     address private factory;
     address private stakingContract;
@@ -52,33 +57,19 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     string name;
     address private owner;
 
-    event Staked(
-        address indexed community,
-        address indexed who,
-        uint256 amount
-    );
-    event UnStaked(
-        address indexed community,
-        address indexed who,
-        uint256 amount
-    );
-    event Withdraw(
-        address indexed community,
-        address indexed who,
-        uint256 amount
-    );
-    event StakeClaimed(
-        address indexed community,
-        address indexed dapp,
-        uint256 amount
-    );
-    event DappClaimed(
-        address indexed community,
-        address indexed dapp,
-        uint256 amount
-    );
+    event Staked(address indexed community, address indexed who, uint256 amount);
+    event UnStaked(address indexed community, address indexed who, uint256 amount);
+    event Withdraw(address indexed community, address indexed who, uint256 amount);
+    event StakeClaimed(address indexed community, address indexed dapp, uint256 amount);
+    event DappClaimed(address indexed community, address indexed dapp, uint256 amount);
 
-    constructor(address _stakingContract, address _community, string memory _name, address _dapp, address _owner) {
+    constructor(
+        address _stakingContract,
+        address _community,
+        string memory _name,
+        address _dapp,
+        address _owner
+    ) {
         factory = msg.sender;
         stakingContract = _stakingContract;
         community = _community;
@@ -90,44 +81,40 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         DappsStaking(stakingContract).register(dapp);
     }
 
-    function stake(uint128 amount) external payable nonReentrant {
-        require(amount >= MINIMUM_STAKE, "Invalid stake amount");
+    function _getCalc() private view returns (IAstarDappStakingCalc) {
+        return IAstarDappStakingCalc(IAstarFactory(factory).rewardCalcContract());
+    }
 
-        // Transfer user assets to the contract
-        payable(msg.sender).transfer(amount);
+    function stake() external payable nonReentrant {
+        uint128 amount = msg.value;
+        require(amount >= _getCalc().minimumStake(), "Invalid stake amount");
+
+        DappsStaking dappsStaking = DappsStaking(stakingContract);
 
         // Stake asset for the DApp
-        DappsStaking(stakingContract).bond_and_stake(dapp, amount);
+        dappsStaking.bond_and_stake(dapp, amount);
 
         // trigger community update all pool staking info.
         ICommunity(community).updatePools("USER", msg.sender);
 
-        // Upate the ledger
-        require(totalStakers <= MAXIMUM_STAKERS, "Too many stakers");
         if (stakingInfo[msg.sender].hasStaked == false) {
             stakingInfo[msg.sender].hasStaked = true;
             stakingInfo[msg.sender].unwithdrew = 0;
             totalStakers += 1;
         }
-        uint256 pending = stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12)
-            .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
+        uint256 pending = stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12).sub(
+            ICommunity(community).getUserDebt(address(this), msg.sender)
+        );
         if (pending > 0) {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
 
+        stakingInfo[msg.sender].lastEra = dappsStaking.read_current_era();
         stakingInfo[msg.sender].amount += amount;
         totalStakedAmount += amount;
 
-        ICommunity(community).setUserDebt(
-            msg.sender,
-            stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12));
-        
+        ICommunity(community).setUserDebt(msg.sender, stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12));
+
         emit Staked(community, msg.sender, amount);
     }
 
@@ -138,37 +125,42 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         // trigger community update all pool staking info
         ICommunity(community).updatePools("USER", msg.sender);
 
-        uint256 pending = stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12)
-            .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
+        uint256 pending = stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12).sub(
+            ICommunity(community).getUserDebt(address(this), msg.sender)
+        );
         if (pending > 0) {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
 
         uint256 unstakeAmount;
-        if (amount >= stakingInfo[msg.sender].amount)
-            unstakeAmount = stakingInfo[msg.sender].amount;
+        if (amount >= stakingInfo[msg.sender].amount) unstakeAmount = stakingInfo[msg.sender].amount;
         else unstakeAmount = amount;
 
-        // Unbond stake, note the staked amount will not settle immediately, user need claim 
+        DappsStaking dappsStaking = DappsStaking(stakingContract);
+        // Unbond stake, note the staked amount will not settle immediately, user need claim
         // manually after ubound period complete.
-        DappsStaking(stakingContract).unbond_and_unstake(dapp, amount);
+        dappsStaking.unbond_and_unstake(dapp, unstakeAmount);
+
+        // calc dapp staking reward
+        uint256 currentEra = dappsStaking.read_current_era();
+        uint256 perReward = 0;
+        for (uint256 era = stakingInfo[msg.sender].lastEra + 1; era < currentEra; era++) {
+            if (false == stakingInfo[msg.sender].rewardedEra[era]) {
+                perReward = _getCalc().calcRewardByEra(era);
+                stakingInfo[msg.sender].unClaimReward += stakingInfo[msg.sender].amount.mul(perReward).div(_getCalc().precision());
+                stakingInfo[msg.sender].rewardedEra[era] = true;
+            }
+        }
 
         // Update ledger
+        stakingInfo[msg.sender].lastEra = currentEra;
         stakingInfo[msg.sender].amount -= unstakeAmount;
         stakingInfo[msg.sender].unwithdrew += unstakeAmount;
         totalStakedAmount -= unstakeAmount;
 
-        ICommunity(community).setUserDebt(
-            msg.sender,
-            stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12));
+        ICommunity(community).setUserDebt(msg.sender, stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12));
 
-        emit UnStaked(community, msg.sender, unstakeAmount);        
+        emit UnStaked(community, msg.sender, unstakeAmount);
     }
 
     // Withdraw unbounded amount, only work after unbound period has complete after unstake triggered.
@@ -231,27 +223,15 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         return community;
     }
 
-    function getUserStakedAmount(address user)
-        external
-        view
-        override returns (uint256)
-    {
+    function getUserStakedAmount(address user) external view override returns (uint256) {
         return stakingInfo[user].amount;
     }
 
-    function getTotalStakedAmount()
-        external
-        view
-        override returns (uint256)
-    {
+    function getTotalStakedAmount() external view override returns (uint256) {
         return totalStakedAmount;
     }
 
-    function getUserDepositInfo(address user)
-        external
-        view
-        returns (StakingInfo memory)
-    {
+    function getUserDepositInfo(address user) external view returns (StakingInfo memory) {
         return stakingInfo[user];
     }
 }

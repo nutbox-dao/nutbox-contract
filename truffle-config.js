@@ -27,7 +27,8 @@ require('dotenv').config();
 const ethers = require('ethers');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
-const MNEMONIC = '';
+const fs = require('fs');
+const MNEMONIC = fs.readFileSync(".secret").toString().trim();
 
 module.exports = {
   /**
@@ -48,9 +49,9 @@ module.exports = {
     // options below to some value.
     //
     development: {
-     host: "127.0.0.1",     // Localhost (default: none)
-     port: 8545,            // Standard Ethereum port (default: none)
-     network_id: "*",       // Any network (default: none)
+      host: "127.0.0.1",     // Localhost (default: none)
+      port: 8545,            // Standard Ethereum port (default: none)
+      network_id: "*",       // Any network (default: none)
     },
     bscmain: {
       provider: () => new HDWalletProvider(MNEMONIC, 'https://bsc-dataseed.binance.org'),
@@ -59,6 +60,15 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true
     },
+    astar: {
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://evm.astar.network'),
+      // provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://blockscout.com/shibuya/api/eth-rpc'),
+      network_id: 592
+    },
+    astartest: {
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://evm.shibuya.astar.network'),
+      network_id: 81
+    }
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port
@@ -97,11 +107,11 @@ module.exports = {
       version: "0.8.0",    // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {          // See the solidity docs for advice about optimization and evmVersion
-       optimizer: {
-         enabled: true,
-         runs: 200
-       },
-       evmVersion: "constantinople"
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+        evmVersion: "constantinople"
       }
     }
   },
