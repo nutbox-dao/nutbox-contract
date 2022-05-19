@@ -8,9 +8,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/IPool.sol";
 import "../../ERC20Helper.sol";
-import "./DappsStaking.sol";
+import "./DelegateDappsStaking.sol";
 import "./IAstarFactory.sol";
-import "./IAstarDappStakingCalc.sol";
 
 /**
  * @dev Proxy contract of Astar Dapp staking pool.
@@ -29,21 +28,29 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     struct StakingInfo {
         // Mark if user has staked
         bool hasStaked;
-        // last operated rea
-        uint32 lastEra;
         // User staked amount
         uint256 amount;
         // Unclaimed amount that already unbounded
         uint256 unwithdrew;
-        // Unclaimed staking rewards
-        uint256 unClaimReward;
-        // Era that has been rewarded
-        mapping(uint32 => bool) rewardedEra;
+        // The last era to claim the reward
+        uint256 lastClaimRewardEra;
+        uint256 lastSaveEra;
+        // era=> staked amount
+        mapping(uint256 => uint256) eraStaked;
+    }
+
+    struct EraInfo {
+        bool isClaim;
+        uint256 totalStake;
+        uint256 totalReward;
+        uint256 unitReward;
     }
 
     // stakingInfo used to save every user's staking information,
     // including how many they deposited.
     mapping(address => StakingInfo) stakingInfo;
+
+    mapping(uint256 => EraInfo) eraInfo;
 
     // Total staked amount
     uint256 public totalStakedAmount;
@@ -51,11 +58,12 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     uint256 public totalStakers;
 
     address private factory;
-    address private stakingContract;
+    address private dappsStaking;
     address private community;
     address private dapp;
     string name;
     address private owner;
+    uint256 lastClaimEra;
 
     event Staked(address indexed community, address indexed who, uint256 amount);
     event UnStaked(address indexed community, address indexed who, uint256 amount);
@@ -64,35 +72,101 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     event DappClaimed(address indexed community, address indexed dapp, uint256 amount);
 
     constructor(
-        address _stakingContract,
         address _community,
         string memory _name,
         address _dapp,
         address _owner
     ) {
         factory = msg.sender;
-        stakingContract = _stakingContract;
+        dappsStaking = DelegateDappsStaking(IAstarFactory(factory).delegateDappsStakingContract());
         community = _community;
         dapp = _dapp;
         name = _name;
         owner = _owner;
 
+        lastClaimEra = dappsStaking.read_current_era();
+        eraInfo[lastClaimEra].isClaim = true;
+
         // Register DApp on Astar network, developer
-        DappsStaking(stakingContract).register(dapp);
+        dappsStaking.register(dapp);
+        dappsStaking.set_reward_destination(0);
     }
 
-    function _getCalc() private view returns (IAstarDappStakingCalc) {
-        return IAstarDappStakingCalc(IAstarFactory(factory).rewardCalcContract());
+    function _calcUnitReward(uint256 era) private {
+        uint256 precision = dappsStaking.precision();
+        uint256 reward = eraInfo[era].totalReward.mul(precision).div(eraInfo[era].totalStake).div(precision);
+        eraInfo[era].unitReward = reward;
     }
 
-    function stake() external payable nonReentrant {
+    function _saveStake() internal {
+        uint256 staked = dappsStaking.read_staked_amount_on_contract(dapp, bytes(address(this)));
+        uint256 era = dappsStaking.read_current_era();
+        if (eraInfo[era].totalStake != staked) {
+            eraInfo[era].totalStake = staked;
+        }
+        // Reward is 0
+        if (eraInfo[era].totalStake == 0) {
+            eraInfo[era].unitReward = 0;
+        }
+        stakingInfo[msg.sender].eraStaked[era] = stakingInfo[msg.sender].amount;
+        if (stakingInfo[msg.sender].lastSaveEra != era) {
+            stakingInfo[msg.sender].lastSaveEra = era;
+        }
+    }
+
+    function _saveEraStake(uint256 _era) internal {
+        uint256 lastSaveEra = stakingInfo[msg.sender].lastSaveEra;
+        uint256 era = dappsStaking.read_current_era();
+
+        if (lastSaveEra == 0) lastSaveEra = era;
+
+        if (_era > lastSaveEra && _era <= era) era = _era;
+
+        for (uint256 i = lastSaveEra + 1; i < era; i++) {
+            stakingInfo[msg.sender].eraStaked[i] = stakingInfo[msg.sender].amount;
+        }
+        stakingInfo[msg.sender].lastSaveEra = era;
+    }
+
+    function checkAndClaim() public {
+        uint256 era = dappsStaking.read_current_era();
+        uint256 diff = era - lastClaimEra;
+        uint256 oldBalance;
+        uint256 newBalance;
+        uint256 reward;
+        for (uint256 i = 0; i < diff; i++) {
+            oldBalance = address(this).balance;
+            dappsStaking.claim_staker(dapp);
+            newBalance = address(this).balance;
+            reward = newBalance - oldBalance;
+            if (reward > 0) {
+                lastClaimEra += 1;
+                eraInfo[lastClaimEra].isClaim = true;
+                eraInfo[lastClaimEra].totalReward = reward;
+                // calc unit reward
+                _calcUnitReward(lastClaimEra);
+            }
+        }
+    }
+
+    function stake() public payable nonReentrant {
         uint128 amount = msg.value;
-        require(amount >= _getCalc().minimumStake(), "Invalid stake amount");
+        checkAndClaim();
+        _saveEraStake(dappsStaking.read_current_era());
 
-        DappsStaking dappsStaking = DappsStaking(stakingContract);
+        bool poolActived = ICommunity(community).poolActived(address(this));
+        if (poolActived == false) {
+            // Refund if closed
+            payable(msg.sender).transfer(amount);
+            return;
+        }
 
         // Stake asset for the DApp
-        dappsStaking.bond_and_stake(dapp, amount);
+        if (totalStakedAmount >= dappsStaking.minimumStake()) {
+            dappsStaking.bond_and_stake(dapp, amount);
+        } else if (totalStakedAmount + amount >= dappsStaking.minimumStake()) {
+            dappsStaking.bond_and_stake(dapp, totalStakedAmount + amount);
+        }
 
         // trigger community update all pool staking info.
         ICommunity(community).updatePools("USER", msg.sender);
@@ -100,6 +174,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (stakingInfo[msg.sender].hasStaked == false) {
             stakingInfo[msg.sender].hasStaked = true;
             stakingInfo[msg.sender].unwithdrew = 0;
+            stakingInfo[msg.sender].lastClaimRewardEra = dappsStaking.read_current_era();
             totalStakers += 1;
         }
         uint256 pending = stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12).sub(
@@ -109,9 +184,11 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
 
-        stakingInfo[msg.sender].lastEra = dappsStaking.read_current_era();
         stakingInfo[msg.sender].amount += amount;
         totalStakedAmount += amount;
+
+        //save stake
+        _saveStake();
 
         ICommunity(community).setUserDebt(msg.sender, stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12));
 
@@ -119,8 +196,10 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     function unstake(uint128 amount) external payable nonReentrant {
+        checkAndClaim();
         if (amount <= 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
+        _saveEraStake(dappsStaking.read_current_era());
 
         // trigger community update all pool staking info
         ICommunity(community).updatePools("USER", msg.sender);
@@ -136,83 +215,111 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (amount >= stakingInfo[msg.sender].amount) unstakeAmount = stakingInfo[msg.sender].amount;
         else unstakeAmount = amount;
 
-        DappsStaking dappsStaking = DappsStaking(stakingContract);
         // Unbond stake, note the staked amount will not settle immediately, user need claim
         // manually after ubound period complete.
         dappsStaking.unbond_and_unstake(dapp, unstakeAmount);
 
-        // calc dapp staking reward
-        uint256 currentEra = dappsStaking.read_current_era();
-        uint256 perReward = 0;
-        for (uint256 era = stakingInfo[msg.sender].lastEra + 1; era < currentEra; era++) {
-            if (false == stakingInfo[msg.sender].rewardedEra[era]) {
-                perReward = _getCalc().calcRewardByEra(era);
-                stakingInfo[msg.sender].unClaimReward += stakingInfo[msg.sender].amount.mul(perReward).div(_getCalc().precision());
-                stakingInfo[msg.sender].rewardedEra[era] = true;
-            }
-        }
-
         // Update ledger
-        stakingInfo[msg.sender].lastEra = currentEra;
         stakingInfo[msg.sender].amount -= unstakeAmount;
         stakingInfo[msg.sender].unwithdrew += unstakeAmount;
         totalStakedAmount -= unstakeAmount;
+
+        // save stake amount
+        _saveStake();
+
+        uint256 staked = dappsStaking.read_staked_amount_on_contract(dapp, abi.encodePacked(address(this)));
+        if (staked == 0) {
+            // less than minimumStake
+            totalStakedAmount = 0;
+        }
 
         ICommunity(community).setUserDebt(msg.sender, stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12));
 
         emit UnStaked(community, msg.sender, unstakeAmount);
     }
 
+    // withdraw when the pool is closed
+    function withdraw() public nonReentrant returns (bool) {
+        bool poolActived = ICommunity(community).poolActived(address(this));
+        if (poolActived == false || totalStakedAmount < dappsStaking.minimumStake()) {
+            uint256 unwithdraw_amount = stakingInfo[msg.sender].unwithdrew;
+            uint256 amount = stakingInfo[msg.sender].amount;
+
+            stakingInfo[msg.sender].unwithdrew = 0;
+            stakingInfo[msg.sender].amount = 0;
+            amount += unwithdraw_amount;
+
+            if (address(this).balance >= amount) {
+                bool hasSent = payable(msg.sender).send(amount);
+                require(hasSent, "Failed to transfer Fund");
+                emit Withdraw(community, msg.sender, amount);
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Withdraw unbounded amount, only work after unbound period has complete after unstake triggered.
     function withdraw_unbonded() external nonReentrant {
+        checkAndClaim();
+        _saveEraStake(dappsStaking.read_current_era());
         require(stakingInfo[msg.sender].unwithdrew > 0, "No fund to be withdraw");
 
         uint256 withdraw_amount = stakingInfo[msg.sender].unwithdrew;
+        // Update ledger
+        stakingInfo[msg.sender].unwithdrew -= withdraw_amount;
 
         // Essentially address(this) is the real staker, so we always withdraw all unbounded fund here
         // and then send back to users. That means actually withdrawn amount from staking contract could
         // greater than withdraw_amount.
-        DappsStaking(stakingContract).withdraw_unbonded();
+        dappsStaking.withdraw_unbonded();
 
-        // Transfer back the fund that belongs to the user
-        bool hasSent = payable(msg.sender).send(withdraw_amount);
-        require(hasSent, "Failed to transfer Fund");
-
-        // Update ledger
-        stakingInfo[msg.sender].unwithdrew -= withdraw_amount;
-
-        emit Withdraw(community, msg.sender, withdraw_amount);
+        if (address(this).balance >= withdraw_amount) {
+            // Transfer back the fund that belongs to the user
+            bool hasSent = payable(msg.sender).send(withdraw_amount);
+            require(hasSent, "Failed to transfer Fund");
+            emit Withdraw(community, msg.sender, withdraw_amount);
+        }
     }
 
     // Claim one era of unclaimed rewards. The rewards first send to the real staker, e.g. address(this),
     // then we transfer to community contract, user then can claim their rewards according to the ledger.
-    function claim_stake_reward() external nonReentrant {
-        uint256 old_balance = address(this).balance;
+    function claim_stake_reward(uint256 _era) external nonReentrant {
+        checkAndClaim();
 
-        // Claim rewards for the staker, e.g. this contract.
-        DappsStaking(stakingContract).claim_staker(dapp);
-        uint256 new_balance = address(this).balance;
+        uint256 era = _era;
+        uint256 tmpEra = dappsStaking.read_current_era();
+        if (era <= stakingInfo[msg.sender].lastClaimRewardEra || era > tmpEra) era = tmpEra;
 
-        // Transfer to community contract
-        bool hasSent = payable(address(community)).send(new_balance);
-        require(hasSent, "Failed to transfer Fund");
+        _saveEraStake(era);
 
-        emit StakeClaimed(community, dapp, new_balance.sub(old_balance));
+        uint256 reward;
+        for (uint256 i = stakingInfo[msg.sender].lastClaimRewardEra + 1; i < era; i++) {
+            reward += eraInfo[i].unitReward * stakingInfo[msg.sender].eraStaked[i];
+        }
+        stakingInfo[msg.sender].lastClaimRewardEra = era - 1;
+        if (address(this).balance >= reward) {
+            bool hasSent = payable(address(msg.sender)).send(reward);
+            require(hasSent, "Failed to transfer Fund");
+            emit StakeClaimed(community, dapp, reward);
+        }
     }
 
     // Claim the specific era of unclaimed rewards for the DApp, rewards would be sent to owner of the DApp.
     function claim_dapp_reward(uint128 era) external nonReentrant {
-        uint256 old_balance = address(this).balance;
+        checkAndClaim();
 
+        uint256 old_balance = address(this).balance;
         // Claim rewards for the DApp
-        DappsStaking(stakingContract).claim_dapp(dapp, era);
+        dappsStaking.claim_dapp(dapp, era);
         uint256 new_balance = address(this).balance;
 
-        // Transfer to community owner
-        bool hasSent = payable(address(owner)).send(new_balance.sub(old_balance));
-        require(hasSent, "Failed to transfer Fund");
-
-        emit DappClaimed(community, dapp, new_balance.sub(old_balance));
+        if (new_balance > old_balance) {
+            // Transfer to community
+            bool hasSent = payable(address(community)).send(new_balance.sub(old_balance));
+            require(hasSent, "Failed to transfer Fund");
+            emit DappClaimed(community, dapp, new_balance.sub(old_balance));
+        }
     }
 
     function getFactory() external view override returns (address) {

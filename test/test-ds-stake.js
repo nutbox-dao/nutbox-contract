@@ -13,9 +13,10 @@ module.exports = async (callback) => {
     console.log("Total stake: %s", fromWei(total, "ether"));
 
     //stake
-    await instance.bond_and_stake(dappAddress, "5000000000000000000");
+    // await instance.bond_and_stake(dappAddress, "5000000000000000000");
     // FreeBalance 0, StakeBalance 1
     // await instance.set_reward_destination(0);
+    await instance.unbond_and_unstake(dappAddress, toWei("0.34882103018192561","ether"));
 
 
     //read_contract_stake

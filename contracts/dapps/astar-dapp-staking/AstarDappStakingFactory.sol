@@ -19,55 +19,38 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable, IAstarFactory {
 
     address astarDAppStakingContract;
     address public immutable communityFactory;
-    address public rewardCalcContract;
+    address public delegateDappsStakingContract;
 
-    event StakingContractChange(
-        address indexed oldContract,
-        address indexed newContract
-    );
-    event CalcContractChange(
-        address indexed oldContract,
-        address indexed newContract
-    );
-    event AStarDappStakingCreated(
-        address indexed pool,
-        address indexed community,
-        string name,
-        address dapp
-    );
+    event StakingContractChange(address indexed oldContract, address indexed newContract);
+    event DelegateContractChange(address indexed oldContract, address indexed newContract);
+    event AStarDappStakingCreated(address indexed pool, address indexed community, string name, address dapp);
 
     constructor(
         address _astarDAppStakingContract,
         address _communityFactory,
-        address _rewardCalcContract
+        address _delegateDappsStakingContract
     ) {
         require(_astarDAppStakingContract != address(0), "Invalid argument");
         require(_communityFactory != address(0), "Invalid argument");
-        require(_rewardCalcContract != address(0), "Invalid argument");
+        require(_delegateDappsStakingContract != address(0), "Invalid argument");
 
         astarDAppStakingContract = _astarDAppStakingContract;
         communityFactory = _communityFactory;
-        rewardCalcContract = _rewardCalcContract;
+        delegateDappsStakingContract = _delegateDappsStakingContract;
     }
 
-    function adminSetStakingContract(address _astarDAppStakingContract)
-        external
-        onlyOwner
-    {
+    function adminSetStakingContract(address _astarDAppStakingContract) external onlyOwner {
         require(_astarDAppStakingContract != address(0), "Invalid argument");
         address old = astarDAppStakingContract;
         astarDAppStakingContract = _astarDAppStakingContract;
         emit StakingContractChange(old, _astarDAppStakingContract);
     }
 
-    function adminSetCalcContract(address _rewardCalcContract)
-        external
-        onlyOwner
-    {
-        require(_rewardCalcContract != address(0), "Invalid argument");
-        address old = rewardCalcContract;
-        rewardCalcContract = _rewardCalcContract;
-        emit CalcContractChange(old, _rewardCalcContract);
+    function adminSetDelegateContract(address _delegateDappsStakingContract) external onlyOwner {
+        require(_delegateDappsStakingContract != address(0), "Invalid argument");
+        address old = delegateDappsStakingContract;
+        delegateDappsStakingContract = _delegateDappsStakingContract;
+        emit DelegateContractChange(old, _delegateDappsStakingContract);
     }
 
     function createPool(
@@ -75,29 +58,12 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable, IAstarFactory {
         string memory name,
         bytes calldata meta
     ) external override returns (address) {
-        require(
-            community == msg.sender,
-            "Permission denied: caller is not community"
-        );
-        require(
-            CommunityFactory(communityFactory).createdCommunity(community),
-            "Invalid community"
-        );
+        require(community == msg.sender, "Permission denied: caller is not community");
+        require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
         address dapp = meta.toAddress(0);
 
-        AstarDappStaking pool = new AstarDappStaking(
-            astarDAppStakingContract,
-            community,
-            name,
-            address(dapp),
-            owner()
-        );
-        emit AStarDappStakingCreated(
-            address(pool),
-            community,
-            name,
-            address(dapp)
-        );
+        AstarDappStaking pool = new AstarDappStaking(astarDAppStakingContract, community, name, address(dapp), owner());
+        emit AStarDappStakingCreated(address(pool), community, name, address(dapp));
         return address(pool);
     }
 }

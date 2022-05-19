@@ -91,6 +91,7 @@ module.exports = async (callback) => {
     let stakers_joint_reward = eraInfo_rewards_stakers.mul(contract_stake_portion).div(precision);//dapps
     console.log("stakers_joint_reward: ", fromWei(stakers_joint_reward, "ether"));
     let staked = await instance.read_staked_amount_on_contract(dappAddress, accounts[0])
+    
     console.log("staked: ",fromWei(staked,"ether"));
     let staker_reward = staked.mul(stakers_joint_reward).div(contractStakeInfo_total);
     // let staker_reward = staked.mul(precision).div(toBN(contractStakeInfo.total.toString())).mul(toBN(stakers_joint_reward)).div(precision);
