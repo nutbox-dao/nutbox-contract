@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -35,8 +35,6 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         // The last era to claim the reward
         uint256 lastClaimRewardEra;
         uint256 lastSaveEra;
-        // era=> staked amount
-        mapping(uint256 => uint256) eraStaked;
     }
 
     struct EraInfo {
@@ -52,13 +50,16 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
     mapping(uint256 => EraInfo) eraInfo;
 
+    // user(era=> staked amount)
+    mapping(address => mapping(uint256 => uint256)) eraStaked;
+
     // Total staked amount
     uint256 public totalStakedAmount;
     // Total stakers, up to 1024
     uint256 public totalStakers;
 
     address private factory;
-    address private dappsStaking;
+    DelegateDappsStaking private dappsStaking;
     address private community;
     address private dapp;
     string name;
@@ -99,7 +100,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     function _saveStake() internal {
-        uint256 staked = dappsStaking.read_staked_amount_on_contract(dapp, bytes(address(this)));
+        uint256 staked = dappsStaking.read_staked_amount_on_contract(dapp, abi.encodePacked(address(this)));
         uint256 era = dappsStaking.read_current_era();
         if (eraInfo[era].totalStake != staked) {
             eraInfo[era].totalStake = staked;
@@ -108,7 +109,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (eraInfo[era].totalStake == 0) {
             eraInfo[era].unitReward = 0;
         }
-        stakingInfo[msg.sender].eraStaked[era] = stakingInfo[msg.sender].amount;
+        
+        eraStaked[msg.sender][era] = stakingInfo[msg.sender].amount;
         if (stakingInfo[msg.sender].lastSaveEra != era) {
             stakingInfo[msg.sender].lastSaveEra = era;
         }
@@ -123,7 +125,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (_era > lastSaveEra && _era <= era) era = _era;
 
         for (uint256 i = lastSaveEra + 1; i < era; i++) {
-            stakingInfo[msg.sender].eraStaked[i] = stakingInfo[msg.sender].amount;
+            eraStaked[msg.sender][i] = stakingInfo[msg.sender].amount;
         }
         stakingInfo[msg.sender].lastSaveEra = era;
     }
@@ -150,7 +152,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     function stake() public payable nonReentrant {
-        uint128 amount = msg.value;
+        uint256 amount = msg.value;
         checkAndClaim();
         _saveEraStake(dappsStaking.read_current_era());
 
@@ -295,7 +297,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
         uint256 reward;
         for (uint256 i = stakingInfo[msg.sender].lastClaimRewardEra + 1; i < era; i++) {
-            reward += eraInfo[i].unitReward * stakingInfo[msg.sender].eraStaked[i];
+            reward += eraInfo[i].unitReward * eraStaked[msg.sender][i];
         }
         stakingInfo[msg.sender].lastClaimRewardEra = era - 1;
         if (address(this).balance >= reward) {

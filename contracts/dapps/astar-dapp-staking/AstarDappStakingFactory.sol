@@ -17,33 +17,18 @@ import "./IAstarFactory.sol";
 contract AstarDappStakingFactory is IPoolFactory, Ownable, IAstarFactory {
     using BytesLib for bytes;
 
-    address astarDAppStakingContract;
     address public immutable communityFactory;
-    address public delegateDappsStakingContract;
+    address public override delegateDappsStakingContract;
 
-    event StakingContractChange(address indexed oldContract, address indexed newContract);
     event DelegateContractChange(address indexed oldContract, address indexed newContract);
     event AStarDappStakingCreated(address indexed pool, address indexed community, string name, address dapp);
 
-    constructor(
-        address _astarDAppStakingContract,
-        address _communityFactory,
-        address _delegateDappsStakingContract
-    ) {
-        require(_astarDAppStakingContract != address(0), "Invalid argument");
+    constructor(address _communityFactory, address _delegateDappsStakingContract) {
         require(_communityFactory != address(0), "Invalid argument");
         require(_delegateDappsStakingContract != address(0), "Invalid argument");
 
-        astarDAppStakingContract = _astarDAppStakingContract;
         communityFactory = _communityFactory;
         delegateDappsStakingContract = _delegateDappsStakingContract;
-    }
-
-    function adminSetStakingContract(address _astarDAppStakingContract) external onlyOwner {
-        require(_astarDAppStakingContract != address(0), "Invalid argument");
-        address old = astarDAppStakingContract;
-        astarDAppStakingContract = _astarDAppStakingContract;
-        emit StakingContractChange(old, _astarDAppStakingContract);
     }
 
     function adminSetDelegateContract(address _delegateDappsStakingContract) external onlyOwner {
@@ -62,7 +47,7 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable, IAstarFactory {
         require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
         address dapp = meta.toAddress(0);
 
-        AstarDappStaking pool = new AstarDappStaking(astarDAppStakingContract, community, name, address(dapp), owner());
+        AstarDappStaking pool = new AstarDappStaking(community, name, address(dapp), owner());
         emit AStarDappStakingCreated(address(pool), community, name, address(dapp));
         return address(pool);
     }

@@ -114,7 +114,7 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
         emit AdminSetNutDistributionRatio(ratios.community, ratios.poolFactory, ratios.user);
     }
 
-    function hasGaugeEnabled(address pool) external override returns (bool) {
+    function hasGaugeEnabled(address pool) external override view returns (bool) {
         return gauges[pool].hasCreated;
     }
 

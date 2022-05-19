@@ -9,8 +9,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract DelegateDappsStaking is IAstarDappStakingConfig, Ownable {
     address public dappsStaking = 0x0000000000000000000000000000000000005001;
-    uint256 public precision = 10**18;
-    uint256 public minimumStake = 5000000000000000000; // Note: This parameter is different for different chains
+    uint256 public override precision = 10**18;
+    uint256 public override minimumStake = 5000000000000000000; // Note: This parameter is different for different chains
 
     function setDappsStaking(address contractAddress) public onlyOwner {
         dappsStaking = contractAddress;
@@ -53,13 +53,13 @@ contract DelegateDappsStaking is IAstarDappStakingConfig, Ownable {
         require(success, "register error");
     }
 
-    function bond_and_stake(address dapp, uint128 amount) public {
-        (bool success, ) = dappsStaking.delegatecall(abi.encodeWithSelector(DappsStaking.bond_and_stake.selector, dapp, amount));
+    function bond_and_stake(address dapp, uint256 amount) public {
+        (bool success, ) = dappsStaking.delegatecall(abi.encodeWithSelector(DappsStaking.bond_and_stake.selector, dapp, uint128(amount)));
         require(success, "bond_and_stake error");
     }
 
-    function unbond_and_unstake(address dapp, uint128 amount) public {
-        (bool success, ) = dappsStaking.delegatecall(abi.encodeWithSelector(DappsStaking.unbond_and_unstake.selector, dapp, amount));
+    function unbond_and_unstake(address dapp, uint256 amount) public {
+        (bool success, ) = dappsStaking.delegatecall(abi.encodeWithSelector(DappsStaking.unbond_and_unstake.selector, dapp, uint128(amount)));
         require(success, "unbond_and_unstake error");
     }
 
@@ -73,8 +73,8 @@ contract DelegateDappsStaking is IAstarDappStakingConfig, Ownable {
         require(success, "claim_staker error");
     }
 
-    function claim_dapp(address dapp, uint128 era) public {
-        (bool success, ) = dappsStaking.delegatecall(abi.encodeWithSelector(DappsStaking.claim_dapp.selector, dapp, era));
+    function claim_dapp(address dapp, uint256 era) public {
+        (bool success, ) = dappsStaking.delegatecall(abi.encodeWithSelector(DappsStaking.claim_dapp.selector, dapp, uint128(era)));
         require(success, "claim_dapp error");
     }
 
