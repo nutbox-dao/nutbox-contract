@@ -30,6 +30,7 @@ contract TreasuryFactory is Ownable {
 
     constructor(address _communityFactory) {
         require(_communityFactory != address(0), "Invalid address");
+        // from community factory, we can check wheather the community is legal
         communityFactory = _communityFactory;
     }
 
