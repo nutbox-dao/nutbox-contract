@@ -171,10 +171,24 @@ async function main() {
     // await deployTreasuryFactoryContract(env);
     let tx;
     const treasuryFactory = new ethers.Contract("0x8428aD36744a9917112c2A9a40C4f48FCF80e39E", TreasuryFactoryJson.abi, env.wallet);
-    const eth = "0x33B78D217F271Ecb3DA1bB61F9ABB7d49425dd14"
-    const cake = "0x9187C7B1284F6583aD960eB2b7074a0df563E346"
-    tx = await treasuryFactory.adminAddReward(eth)
-    tx = await treasuryFactory.adminAddReward(cake)
+    const eth = "0x3F3BFe3b0363c3e0a713C0Ce338DbFd31b987581"
+    const cake = "0x9574e5728E4Ea28d832E12d4d1a80225DD93B689"
+    const ts = '0x33B78D217F271Ecb3DA1bB61F9ABB7d49425dd14'
+    const pnut = '0x9187C7B1284F6583aD960eB2b7074a0df563E346'
+    const atom = '0xf0D4597E13715b372497EeaC05a0e9aa5b10f929'
+    const steem = '0xC07FA2B98f8BE846da87e3F03dB1A77dBd4b4485'
+    tx = await treasuryFactory.adminAddReward(atom)
+    await waitForTx(env.provider, tx.hash)
+    tx = await treasuryFactory.adminAddReward(steem)
+    await waitForTx(env.provider, tx.hash)
+    tx = await treasuryFactory.adminRemoveReward(eth)
+    await waitForTx(env.provider, tx.hash)
+    tx = await treasuryFactory.adminRemoveReward(cake)
+    await waitForTx(env.provider, tx.hash)
+    tx = await treasuryFactory.adminRemoveReward(ts)
+    await waitForTx(env.provider, tx.hash)
+    tx = await treasuryFactory.adminRemoveReward(pnut)
+    await waitForTx(env.provider, tx.hash)
     return;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)

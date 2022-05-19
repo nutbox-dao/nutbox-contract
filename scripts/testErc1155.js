@@ -3,7 +3,7 @@ const ethers = require('ethers');
 const { waitForTx } = require('./utils');
 require('dotenv').config();
 
-const erc1155 = '0x42aB1Da570fF1309E8d631945531966b830865e9' // test token on goerli
+const erc1155 = '0x94Cd64e037A14F9816C7b79A08C00299Fe4604A0' // test token on goerli
 
 async function main() {
     let env = {}
@@ -16,22 +16,24 @@ async function main() {
     console.log(`private: ${env.privateKey}, url: ${env.url}`);
 
     let factory = new ethers.ContractFactory(ERC1155Json.abi, ERC1155Json.bytecode, env.wallet);
-    // let contract = await factory.deploy('test', {
-    //     gasPrice: env.gasPrice
-    // });
-    // await contract.deployed();
-    // console.log("✓ Erc1155 contract deployed", contract.address);
-    // const token = contract.address;
+    let contract = await factory.deploy('test', {
+        gasPrice: env.gasPrice
+    });
+    await contract.deployed();
+    console.log("✓ Erc1155 contract deployed", contract.address);
+    const token = contract.address;
+    return;
 
     contract = new ethers.Contract(erc1155, ERC1155Json.abi, env.wallet);
 
-    let tx = await contract.mint(env.wallet.address, 1, 100, '0x');
-    await waitForTx(env.provider, tx.hash)
-    tx = await contract.mint(env.wallet.address, 2, 1000, '0x');
-    await waitForTx(env.provider, tx.hash)
-    tx = await contract.mint(env.wallet.address, 3, 10000, '0x');
-    await waitForTx(env.provider, tx.hash)
-
+    let tx = await contract.mint(env.wallet.address, 4, 100, '0x');
+    // await waitForTx(env.provider, tx.hash)
+    // tx = await contract.mint(env.wallet.address, 5, 1000, '0x');
+    // await waitForTx(env.provider, tx.hash)
+    // tx = await contract.mint(env.wallet.address, 6, 10000, '0x');
+    // await waitForTx(env.provider, tx.hash)
+    const b = await contract.isApprovedForAll('0x3d67A8926F097a1304eAF9Dc985fd00533Fa56C5', '0x735845971e3AC1a48159EB88efEd831D81Feec29')
+    console.log(66, b);
 }
 
-main();
+main().catch(console.log);
