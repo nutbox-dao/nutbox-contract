@@ -319,8 +319,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         uint256 new_balance = address(this).balance;
 
         if (new_balance > old_balance) {
-            // Transfer to community
-            bool hasSent = payable(address(community)).send(new_balance.sub(old_balance));
+            // Transfer to community owner
+            bool hasSent = payable(address(owner)).send(new_balance.sub(old_balance));
             require(hasSent, "Failed to transfer Fund");
             emit DappClaimed(community, dapp, new_balance.sub(old_balance));
         }
