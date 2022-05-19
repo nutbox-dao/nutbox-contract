@@ -59,7 +59,6 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     uint256 public totalStakers;
 
     address private factory;
-    DelegateDappsStaking private dappsStaking;
     address private community;
     address private dapp;
     string name;
@@ -79,29 +78,32 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         address _owner
     ) {
         factory = msg.sender;
-        dappsStaking = DelegateDappsStaking(IAstarFactory(factory).delegateDappsStakingContract());
         community = _community;
         dapp = _dapp;
         name = _name;
         owner = _owner;
 
-        lastClaimEra = dappsStaking.read_current_era();
+        lastClaimEra = dappsStaking().read_current_era();
         eraInfo[lastClaimEra].isClaim = true;
 
         // Register DApp on Astar network, developer
-        dappsStaking.register(dapp);
-        dappsStaking.set_reward_destination(0);
+        dappsStaking().register(dapp);
+        dappsStaking().set_reward_destination(0);
+    }
+
+    function dappsStaking() public view returns (DelegateDappsStaking) {
+        return DelegateDappsStaking(IAstarFactory(factory).delegateDappsStakingContract());
     }
 
     function _calcUnitReward(uint256 era) private {
-        uint256 precision = dappsStaking.precision();
+        uint256 precision = dappsStaking().precision();
         uint256 reward = eraInfo[era].totalReward.mul(precision).div(eraInfo[era].totalStake).div(precision);
         eraInfo[era].unitReward = reward;
     }
 
     function _saveStake() internal {
-        uint256 staked = dappsStaking.read_staked_amount_on_contract(dapp, abi.encodePacked(address(this)));
-        uint256 era = dappsStaking.read_current_era();
+        uint256 staked = dappsStaking().read_staked_amount_on_contract(dapp, abi.encodePacked(address(this)));
+        uint256 era = dappsStaking().read_current_era();
         if (eraInfo[era].totalStake != staked) {
             eraInfo[era].totalStake = staked;
         }
@@ -109,7 +111,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (eraInfo[era].totalStake == 0) {
             eraInfo[era].unitReward = 0;
         }
-        
+
         eraStaked[msg.sender][era] = stakingInfo[msg.sender].amount;
         if (stakingInfo[msg.sender].lastSaveEra != era) {
             stakingInfo[msg.sender].lastSaveEra = era;
@@ -118,7 +120,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
     function _saveEraStake(uint256 _era) internal {
         uint256 lastSaveEra = stakingInfo[msg.sender].lastSaveEra;
-        uint256 era = dappsStaking.read_current_era();
+        uint256 era = dappsStaking().read_current_era();
 
         if (lastSaveEra == 0) lastSaveEra = era;
 
@@ -131,14 +133,14 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     function checkAndClaim() public {
-        uint256 era = dappsStaking.read_current_era();
+        uint256 era = dappsStaking().read_current_era();
         uint256 diff = era - lastClaimEra;
         uint256 oldBalance;
         uint256 newBalance;
         uint256 reward;
         for (uint256 i = 0; i < diff; i++) {
             oldBalance = address(this).balance;
-            dappsStaking.claim_staker(dapp);
+            dappsStaking().claim_staker(dapp);
             newBalance = address(this).balance;
             reward = newBalance - oldBalance;
             if (reward > 0) {
@@ -154,7 +156,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     function stake() public payable nonReentrant {
         uint256 amount = msg.value;
         checkAndClaim();
-        _saveEraStake(dappsStaking.read_current_era());
+        _saveEraStake(dappsStaking().read_current_era());
 
         bool poolActived = ICommunity(community).poolActived(address(this));
         if (poolActived == false) {
@@ -164,10 +166,10 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         }
 
         // Stake asset for the DApp
-        if (totalStakedAmount >= dappsStaking.minimumStake()) {
-            dappsStaking.bond_and_stake(dapp, amount);
-        } else if (totalStakedAmount + amount >= dappsStaking.minimumStake()) {
-            dappsStaking.bond_and_stake(dapp, totalStakedAmount + amount);
+        if (totalStakedAmount >= dappsStaking().minimumStake()) {
+            dappsStaking().bond_and_stake(dapp, amount);
+        } else if (totalStakedAmount + amount >= dappsStaking().minimumStake()) {
+            dappsStaking().bond_and_stake(dapp, totalStakedAmount + amount);
         }
 
         // trigger community update all pool staking info.
@@ -176,7 +178,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (stakingInfo[msg.sender].hasStaked == false) {
             stakingInfo[msg.sender].hasStaked = true;
             stakingInfo[msg.sender].unwithdrew = 0;
-            stakingInfo[msg.sender].lastClaimRewardEra = dappsStaking.read_current_era();
+            stakingInfo[msg.sender].lastClaimRewardEra = dappsStaking().read_current_era();
             totalStakers += 1;
         }
         uint256 pending = stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12).sub(
@@ -201,7 +203,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         checkAndClaim();
         if (amount <= 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
-        _saveEraStake(dappsStaking.read_current_era());
+        _saveEraStake(dappsStaking().read_current_era());
 
         // trigger community update all pool staking info
         ICommunity(community).updatePools("USER", msg.sender);
@@ -219,7 +221,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
         // Unbond stake, note the staked amount will not settle immediately, user need claim
         // manually after ubound period complete.
-        dappsStaking.unbond_and_unstake(dapp, unstakeAmount);
+        dappsStaking().unbond_and_unstake(dapp, unstakeAmount);
 
         // Update ledger
         stakingInfo[msg.sender].amount -= unstakeAmount;
@@ -229,7 +231,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         // save stake amount
         _saveStake();
 
-        uint256 staked = dappsStaking.read_staked_amount_on_contract(dapp, abi.encodePacked(address(this)));
+        uint256 staked = dappsStaking().read_staked_amount_on_contract(dapp, abi.encodePacked(address(this)));
         if (staked == 0) {
             // less than minimumStake
             totalStakedAmount = 0;
@@ -243,7 +245,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     // withdraw when the pool is closed
     function withdraw() public nonReentrant returns (bool) {
         bool poolActived = ICommunity(community).poolActived(address(this));
-        if (poolActived == false || totalStakedAmount < dappsStaking.minimumStake()) {
+        if (poolActived == false || totalStakedAmount < dappsStaking().minimumStake()) {
             uint256 unwithdraw_amount = stakingInfo[msg.sender].unwithdrew;
             uint256 amount = stakingInfo[msg.sender].amount;
 
@@ -264,7 +266,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     // Withdraw unbounded amount, only work after unbound period has complete after unstake triggered.
     function withdraw_unbonded() external nonReentrant {
         checkAndClaim();
-        _saveEraStake(dappsStaking.read_current_era());
+        _saveEraStake(dappsStaking().read_current_era());
         require(stakingInfo[msg.sender].unwithdrew > 0, "No fund to be withdraw");
 
         uint256 withdraw_amount = stakingInfo[msg.sender].unwithdrew;
@@ -274,7 +276,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         // Essentially address(this) is the real staker, so we always withdraw all unbounded fund here
         // and then send back to users. That means actually withdrawn amount from staking contract could
         // greater than withdraw_amount.
-        dappsStaking.withdraw_unbonded();
+        dappsStaking().withdraw_unbonded();
 
         if (address(this).balance >= withdraw_amount) {
             // Transfer back the fund that belongs to the user
@@ -290,7 +292,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         checkAndClaim();
 
         uint256 era = _era;
-        uint256 tmpEra = dappsStaking.read_current_era();
+        uint256 tmpEra = dappsStaking().read_current_era();
         if (era <= stakingInfo[msg.sender].lastClaimRewardEra || era > tmpEra) era = tmpEra;
 
         _saveEraStake(era);
@@ -313,7 +315,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
         uint256 old_balance = address(this).balance;
         // Claim rewards for the DApp
-        dappsStaking.claim_dapp(dapp, era);
+        dappsStaking().claim_dapp(dapp, era);
         uint256 new_balance = address(this).balance;
 
         if (new_balance > old_balance) {
