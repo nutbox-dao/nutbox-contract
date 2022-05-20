@@ -47,7 +47,7 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable, IAstarFactory {
         require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
         address dapp = meta.toAddress(0);
 
-        AstarDappStaking pool = new AstarDappStaking(community, name, address(dapp), owner());
+        AstarDappStaking pool = new AstarDappStaking(community, name, address(dapp));
         emit AStarDappStakingCreated(address(pool), community, name, address(dapp));
         return address(pool);
     }

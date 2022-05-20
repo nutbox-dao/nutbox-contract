@@ -38,7 +38,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     struct EraInfo {
-        bool isClaim;
+        bool isClaimed;
         uint256 totalStake;
         uint256 totalReward;
         uint256 unitReward;
@@ -60,43 +60,41 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
     address private factory;
     address private community;
-    address private dapp;
-    string name;
-    address private owner;
-    uint256 lastClaimEra;
+    address public dapp;
+    string public name;
+    uint256 private lastClaimEra;
 
     event Staked(address indexed community, address indexed who, uint256 amount);
     event UnStaked(address indexed community, address indexed who, uint256 amount);
     event Withdraw(address indexed community, address indexed who, uint256 amount);
     event StakeClaimed(address indexed community, address indexed dapp, uint256 amount);
-    event DappClaimed(address indexed community, address indexed dapp, uint256 amount);
 
     constructor(
         address _community,
         string memory _name,
-        address _dapp,
-        address _owner
+        address _dapp
     ) {
         factory = msg.sender;
         community = _community;
         dapp = _dapp;
         name = _name;
-        owner = _owner;
 
-        lastClaimEra = dappsStaking().read_current_era();
-        eraInfo[lastClaimEra].isClaim = true;
+        lastClaimEra = dappsStaking().read_current_era() - 1;
+        eraInfo[lastClaimEra].isClaimed = true;
 
         // Register DApp on Astar network, developer
-        dappsStaking().register(dapp);
+        // dappsStaking().register(dapp);
         dappsStaking().set_reward_destination(0);
     }
 
-    function dappsStaking() public view returns (DelegateDappsStaking) {
+    function dappsStaking() private view returns (DelegateDappsStaking) {
         return DelegateDappsStaking(IAstarFactory(factory).delegateDappsStakingContract());
     }
 
+    // can move this method to Delegate contract
     function _calcUnitReward(uint256 era) private {
         uint256 precision = dappsStaking().precision();
+        // reward can not div precision, div precision until the final result
         uint256 reward = eraInfo[era].totalReward.mul(precision).div(eraInfo[era].totalStake).div(precision);
         eraInfo[era].unitReward = reward;
     }
@@ -111,7 +109,6 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (eraInfo[era].totalStake == 0) {
             eraInfo[era].unitReward = 0;
         }
-
         eraStaked[msg.sender][era] = stakingInfo[msg.sender].amount;
         if (stakingInfo[msg.sender].lastSaveEra != era) {
             stakingInfo[msg.sender].lastSaveEra = era;
@@ -132,9 +129,10 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         stakingInfo[msg.sender].lastSaveEra = era;
     }
 
+    // I suggest move this method to Delegate contract
     function checkAndClaim() public {
         uint256 era = dappsStaking().read_current_era();
-        uint256 diff = era - lastClaimEra;
+        uint256 diff = era - lastClaimEra - 1;
         uint256 oldBalance;
         uint256 newBalance;
         uint256 reward;
@@ -143,9 +141,10 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
             dappsStaking().claim_staker(dapp);
             newBalance = address(this).balance;
             reward = newBalance - oldBalance;
+            // no need to judge reward > 0 
             if (reward > 0) {
                 lastClaimEra += 1;
-                eraInfo[lastClaimEra].isClaim = true;
+                eraInfo[lastClaimEra].isClaimed = true;
                 eraInfo[lastClaimEra].totalReward = reward;
                 // calc unit reward
                 _calcUnitReward(lastClaimEra);
@@ -154,16 +153,18 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     function stake() public payable nonReentrant {
+        require(ICommunity(community).poolActived(address(this)), "Pool has been closed");
         uint256 amount = msg.value;
+        require(amount > 0, "Must stake some token");
         checkAndClaim();
         _saveEraStake(dappsStaking().read_current_era());
 
-        bool poolActived = ICommunity(community).poolActived(address(this));
-        if (poolActived == false) {
-            // Refund if closed
-            payable(msg.sender).transfer(amount);
-            return;
-        }
+        // bool poolActived = ICommunity(community).poolActived(address(this));
+        // if (poolActived == false) {
+        //     // Refund if closed
+        //     payable(msg.sender).transfer(amount);
+        //     return;
+        // }
 
         // Stake asset for the DApp
         if (totalStakedAmount >= dappsStaking().minimumStake()) {
@@ -178,7 +179,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (stakingInfo[msg.sender].hasStaked == false) {
             stakingInfo[msg.sender].hasStaked = true;
             stakingInfo[msg.sender].unwithdrew = 0;
-            stakingInfo[msg.sender].lastClaimRewardEra = dappsStaking().read_current_era();
+            stakingInfo[msg.sender].lastClaimRewardEra = dappsStaking().read_current_era() - 1;
             totalStakers += 1;
         }
         uint256 pending = stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12).sub(
@@ -219,8 +220,13 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (amount >= stakingInfo[msg.sender].amount) unstakeAmount = stakingInfo[msg.sender].amount;
         else unstakeAmount = amount;
 
+        // here need to judge the left total amount if less than 500, every stake will canceled
+        // need udpate all left user's stake to 0
+
         // Unbond stake, note the staked amount will not settle immediately, user need claim
         // manually after ubound period complete.
+
+        // need to save the unbond era, then we can know which era he can claim the unbond token
         dappsStaking().unbond_and_unstake(dapp, unstakeAmount);
 
         // Update ledger
@@ -234,6 +240,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         uint256 staked = dappsStaking().read_staked_amount_on_contract(dapp, abi.encodePacked(address(this)));
         if (staked == 0) {
             // less than minimumStake
+            // need update all left user's stake amount
             totalStakedAmount = 0;
         }
 
@@ -243,8 +250,10 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     // withdraw when the pool is closed
+    // can withdraw even if the pool is active
     function withdraw() public nonReentrant returns (bool) {
         bool poolActived = ICommunity(community).poolActived(address(this));
+        // there's no possibility the total amount less than minimumStake
         if (poolActived == false || totalStakedAmount < dappsStaking().minimumStake()) {
             uint256 unwithdraw_amount = stakingInfo[msg.sender].unwithdrew;
             uint256 amount = stakingInfo[msg.sender].amount;
@@ -306,23 +315,6 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
             bool hasSent = payable(address(msg.sender)).send(reward);
             require(hasSent, "Failed to transfer Fund");
             emit StakeClaimed(community, dapp, reward);
-        }
-    }
-
-    // Claim the specific era of unclaimed rewards for the DApp, rewards would be sent to owner of the DApp.
-    function claim_dapp_reward(uint128 era) external nonReentrant {
-        checkAndClaim();
-
-        uint256 old_balance = address(this).balance;
-        // Claim rewards for the DApp
-        dappsStaking().claim_dapp(dapp, era);
-        uint256 new_balance = address(this).balance;
-
-        if (new_balance > old_balance) {
-            // Transfer to community owner
-            bool hasSent = payable(address(owner)).send(new_balance.sub(old_balance));
-            require(hasSent, "Failed to transfer Fund");
-            emit DappClaimed(community, dapp, new_balance.sub(old_balance));
         }
     }
 
