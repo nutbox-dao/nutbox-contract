@@ -313,16 +313,20 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         checkAndClaim();
 
         uint256 era = _era;
-        uint256 tmpEra = dappsStaking().read_current_era();
-        if (era <= stakingInfo[msg.sender].lastClaimRewardEra || era > tmpEra) era = tmpEra;
+        uint256 curEra = dappsStaking().read_current_era();
+        if (era <= stakingInfo[msg.sender].lastClaimRewardEra || era > curEra) era = curEra;
 
-        _saveEraStake(era);
+        _saveEraStake(era); // will calculate the current era
 
         uint256 reward;
-        for (uint256 i = stakingInfo[msg.sender].lastClaimRewardEra + 1; i < era; i++) {
+        // Cannot claim current era rewards
+        if (era == curEra) era -= 1;
+        for (uint256 i = stakingInfo[msg.sender].lastClaimRewardEra + 1; i <= era; i++) {
             reward += eraInfo[i].unitReward * eraStaked[msg.sender][i];
         }
-        stakingInfo[msg.sender].lastClaimRewardEra = era - 1;
+
+        stakingInfo[msg.sender].lastClaimRewardEra = era;
+
         if (address(this).balance >= reward) {
             bool hasSent = payable(address(msg.sender)).send(reward);
             require(hasSent, "Failed to transfer Fund");
