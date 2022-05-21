@@ -141,7 +141,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
             dappsStaking().claim_staker(dapp);
             newBalance = address(this).balance;
             reward = newBalance - oldBalance;
-            // no need to judge reward > 0 
+            // no need to judge reward > 0
             if (reward > 0) {
                 lastClaimEra += 1;
                 eraInfo[lastClaimEra].isClaimed = true;
@@ -261,6 +261,18 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
             stakingInfo[msg.sender].unwithdrew = 0;
             stakingInfo[msg.sender].amount = 0;
             amount += unwithdraw_amount;
+
+            if (amount > 0) {
+                // trigger community update all pool staking info
+                ICommunity(community).updatePools("USER", msg.sender);
+
+                uint256 pending = amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12).sub(
+                    ICommunity(community).getUserDebt(address(this), msg.sender)
+                );
+                if (pending > 0) {
+                    ICommunity(community).appendUserReward(msg.sender, pending);
+                }
+            }
 
             if (address(this).balance >= amount) {
                 bool hasSent = payable(msg.sender).send(amount);
