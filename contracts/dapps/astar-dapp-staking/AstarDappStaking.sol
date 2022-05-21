@@ -322,6 +322,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         // Cannot claim current era rewards
         if (era == curEra) era -= 1;
         for (uint256 i = stakingInfo[msg.sender].lastClaimRewardEra + 1; i <= era; i++) {
+            // TODO If you want to deal with the precision problem, 
+            // you can cancel the `.div(precision)` of `_calcUnitReward()` and add `.div(precision)` here
             reward += eraInfo[i].unitReward * eraStaked[msg.sender][i];
         }
 
