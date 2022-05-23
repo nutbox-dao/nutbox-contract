@@ -30,11 +30,10 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         bool hasStaked;
         // User staked amount
         uint256 amount;
-        // Unclaimed amount that already unbounded
-        uint256 unwithdrew;
         // The last era to claim the reward
         uint256 lastClaimRewardEra;
         uint256 lastSaveEra;
+        uint256 lastWithdrewEra;
     }
 
     struct EraInfo {
@@ -52,6 +51,12 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
     // user(era=> staked amount)
     mapping(address => mapping(uint256 => uint256)) eraStaked;
+
+    /**
+    Unclaimed amount that already unbounded
+    user(era=>unwithdrew)
+    */
+    mapping(address => mapping(uint256 => uint256)) unWithdrew;
 
     // Total staked amount
     uint256 public totalStakedAmount;
@@ -154,14 +159,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         uint256 amount = msg.value;
         require(amount > 0, "Must stake some token");
         checkAndClaim();
-        _saveEraStake(dappsStaking().read_current_era());
-
-        // bool poolActived = ICommunity(community).poolActived(address(this));
-        // if (poolActived == false) {
-        //     // Refund if closed
-        //     payable(msg.sender).transfer(amount);
-        //     return;
-        // }
+        uint256 currentEra = dappsStaking().read_current_era();
+        _saveEraStake(currentEra);
 
         // Stake asset for the DApp
         if (totalStakedAmount >= dappsStaking().minimumStake()) {
@@ -175,8 +174,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
         if (stakingInfo[msg.sender].hasStaked == false) {
             stakingInfo[msg.sender].hasStaked = true;
-            stakingInfo[msg.sender].unwithdrew = 0;
-            stakingInfo[msg.sender].lastClaimRewardEra = dappsStaking().read_current_era() - 1;
+            stakingInfo[msg.sender].lastWithdrewEra = currentEra - dappsStaking().read_unbonding_period();
+            stakingInfo[msg.sender].lastClaimRewardEra = currentEra - 1;
             totalStakers += 1;
         }
         uint256 pending = stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12).sub(
@@ -201,7 +200,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         checkAndClaim();
         if (amount <= 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
-        _saveEraStake(dappsStaking().read_current_era());
+        uint256 currentEra = dappsStaking().read_current_era();
+        _saveEraStake(currentEra);
 
         // trigger community update all pool staking info
         ICommunity(community).updatePools("USER", msg.sender);
@@ -217,79 +217,46 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         if (amount >= stakingInfo[msg.sender].amount) unstakeAmount = stakingInfo[msg.sender].amount;
         else unstakeAmount = amount;
 
-        // here need to judge the left total amount if less than 500, every stake will canceled
-        // need udpate all left user's stake to 0
-
-        // Unbond stake, note the staked amount will not settle immediately, user need claim
-        // manually after ubound period complete.
-
-        // need to save the unbond era, then we can know which era he can claim the unbond token
-        dappsStaking().unbond_and_unstake(dapp, unstakeAmount);
-
         // Update ledger
         stakingInfo[msg.sender].amount -= unstakeAmount;
-        stakingInfo[msg.sender].unwithdrew += unstakeAmount;
         totalStakedAmount -= unstakeAmount;
-
         // save stake amount
         _saveStake();
 
-        // uint256 staked = dappsStaking().read_staked_amount_on_contract(dapp, abi.encodePacked(address(this)));
-        // if (staked == 0) {
-        //     // less than minimumStake
-        //     // need update all left user's stake amount
-        //     totalStakedAmount = 0;
-        // }
+        bool poolActived = ICommunity(community).poolActived(address(this));
+        if (totalStakedAmount >= dappsStaking().minimumStake() && true == poolActived) {
+            unWithdrew[msg.sender][currentEra] += unstakeAmount;
+            dappsStaking().unbond_and_unstake(dapp, unstakeAmount);
+        } else {
+            // If it is not staked in astar, the token will be withdrew directly,
+            // If the unbonding period has not expired, you cannot withdraw token
+            require(address(this).balance > unstakeAmount, "Not yet unbundled");
+            bool hasSent = payable(msg.sender).send(unstakeAmount);
+            require(hasSent, "Failed to transfer Fund");
+            emit Withdraw(community, msg.sender, unstakeAmount);
+        }
 
         ICommunity(community).setUserDebt(msg.sender, stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12));
 
         emit UnStaked(community, msg.sender, unstakeAmount);
     }
 
-    // withdraw when the pool is closed
-    // can withdraw even if the pool is active
-    function withdraw() public nonReentrant returns (bool) {
-        bool poolActived = ICommunity(community).poolActived(address(this));
-        // there's no possibility the total amount less than minimumStake
-        if (poolActived == false || totalStakedAmount < dappsStaking().minimumStake()) {
-            uint256 unwithdraw_amount = stakingInfo[msg.sender].unwithdrew;
-            uint256 amount = stakingInfo[msg.sender].amount;
-
-            stakingInfo[msg.sender].unwithdrew = 0;
-            stakingInfo[msg.sender].amount = 0;
-            amount += unwithdraw_amount;
-
-            if (amount > 0) {
-                // trigger community update all pool staking info
-                ICommunity(community).updatePools("USER", msg.sender);
-
-                uint256 pending = amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12).sub(
-                    ICommunity(community).getUserDebt(address(this), msg.sender)
-                );
-                if (pending > 0) {
-                    ICommunity(community).appendUserReward(msg.sender, pending);
-                }
-            }
-
-            if (address(this).balance >= amount) {
-                bool hasSent = payable(msg.sender).send(amount);
-                require(hasSent, "Failed to transfer Fund");
-                emit Withdraw(community, msg.sender, amount);
-                return true;
-            }
-        }
-        return false;
-    }
-
     // Withdraw unbounded amount, only work after unbound period has complete after unstake triggered.
     function withdraw_unbonded() external nonReentrant {
         checkAndClaim();
-        _saveEraStake(dappsStaking().read_current_era());
-        require(stakingInfo[msg.sender].unwithdrew > 0, "No fund to be withdraw");
+        uint256 periodEra = dappsStaking().read_unbonding_period();
+        uint256 currentEra = dappsStaking().read_current_era();
+        _saveEraStake(currentEra);
 
-        uint256 withdraw_amount = stakingInfo[msg.sender].unwithdrew;
+        uint256 withdraw_amount;
+        for (uint256 i = stakingInfo[msg.sender].lastWithdrewEra + 1; i <= currentEra - periodEra; i++) {
+            withdraw_amount += unWithdrew[msg.sender][i];
+        }
+        require(withdraw_amount > 0, "No fund to be withdraw");
+
         // Update ledger
         stakingInfo[msg.sender].unwithdrew -= withdraw_amount;
+        stakingInfo[msg.sender].lastWithdrewEra = currentEra - periodEra;
 
         // Essentially address(this) is the real staker, so we always withdraw all unbounded fund here
         // and then send back to users. That means actually withdrawn amount from staking contract could
@@ -351,5 +318,15 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
     function getUserDepositInfo(address user) external view returns (StakingInfo memory) {
         return stakingInfo[user];
+    }
+
+    // Get the token that has been unbound by the specified user.
+    function getUnbonded(address user) public view returns (uint256 amount) {
+        uint256 currentEra = dappsStaking().read_current_era();
+        uint256 periodEra = dappsStaking().read_unbonding_period();
+        uint256 last = stakingInfo[user].lastWithdrewEra;
+        for (uint256 i = last + 1; i <= currentEra - periodEra; i++) {
+            amount += unWithdrew[user][i];
+        }
     }
 }
