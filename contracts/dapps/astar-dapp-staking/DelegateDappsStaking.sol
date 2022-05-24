@@ -11,6 +11,7 @@ contract DelegateDappsStaking is IAstarDappStakingConfig, Ownable {
     address public dappsStaking = 0x0000000000000000000000000000000000005001;
     uint256 public override precision = 10e18;
     uint256 public override minimumStake = 5e18; // Note: This parameter is different for different chains
+    uint256 public override maxUnlockingChunks = 32;
 
     function setDappsStaking(address contractAddress) public onlyOwner {
         dappsStaking = contractAddress;
