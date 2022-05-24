@@ -52,10 +52,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     // user(era=> staked amount)
     mapping(address => mapping(uint256 => uint256)) eraStaked;
 
-    /**
-    Unclaimed amount that already unbounded
-    user(era=>unwithdrew)
-    */
+    // Unclaimed amount that already unbounded
+    // user(era=>unwithdrew)
     mapping(address => mapping(uint256 => uint256)) unWithdrew;
 
     // Total staked amount
@@ -255,7 +253,6 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         require(withdraw_amount > 0, "No fund to be withdraw");
 
         // Update ledger
-        stakingInfo[msg.sender].unwithdrew -= withdraw_amount;
         stakingInfo[msg.sender].lastWithdrewEra = currentEra - periodEra;
 
         // Essentially address(this) is the real staker, so we always withdraw all unbounded fund here
@@ -321,12 +318,17 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     // Get the token that has been unbound by the specified user.
-    function getUnbonded(address user) public view returns (uint256 amount) {
+    function getUnbonded(address user) public view returns (uint256[] memory) {
         uint256 currentEra = dappsStaking().read_current_era();
         uint256 periodEra = dappsStaking().read_unbonding_period();
+        uint256 max = dappsStaking().maxUnlockingChunks();
         uint256 last = stakingInfo[user].lastWithdrewEra;
-        for (uint256 i = last + 1; i <= currentEra - periodEra; i++) {
-            amount += unWithdrew[user][i];
+        uint256 len = currentEra - periodEra - last;
+        if (len > max) len = max;
+        uint256[] memory chunks = new uint256[](len);
+        for (uint256 i = len - 1; i >= 0; i--) {
+            chunks[i] = unWithdrew[user][currentEra - periodEra - i];
         }
+        return chunks;
     }
 }
