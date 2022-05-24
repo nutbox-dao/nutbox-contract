@@ -171,7 +171,8 @@ async function main() {
         CommunityFactory: env.CommunityFactory ?? "Not Deployed",
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         ERC20StakingFactory: env.ERC20StakingFactory ?? 'Not Deployed',
-        CrowdloanFactory: env.CrowdloanFactory ?? "Not Deployed"
+        CrowdloanFactory: env.CrowdloanFactory ?? "Not Deployed",
+        AstarDappStakingFactory: env.AstarDappStakingFactory ?? "Not Deployed"
     }
 
     const outfile = "./scripts/contracts.json";
@@ -198,6 +199,8 @@ async function main() {
         CrowdloanFactory:       ${env.CrowdloanFactory ?? "Not Deployed"}
         ---------------------------------------------------------------
         ERC20StakingFactory:     ${env.ERC20StakingFactory ?? "Not Deployed"}
+        ---------------------------------------------------------------
+        AstarDappStakingFactory: ${env.AstarDappStakingFactory ?? "Not Deployed"}
         ===============================================================
     `);
 }

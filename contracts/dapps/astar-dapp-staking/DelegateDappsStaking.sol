@@ -9,8 +9,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract DelegateDappsStaking is IAstarDappStakingConfig, Ownable {
     address public dappsStaking = 0x0000000000000000000000000000000000005001;
-    uint256 public override precision = 10e18;
-    uint256 public override minimumStake = 5e18; // Note: This parameter is different for different chains
+    uint256 public override precision = 1 ether;
+    uint256 public override minimumStake = 5 ether; // Note: This parameter is different for different chains
+    uint256 public override maxUnlockingChunks = 32;
 
     function setDappsStaking(address contractAddress) public onlyOwner {
         dappsStaking = contractAddress;
@@ -18,6 +19,10 @@ contract DelegateDappsStaking is IAstarDappStakingConfig, Ownable {
 
     function setMinimumStake(uint256 _minimumStake) public onlyOwner {
         minimumStake = _minimumStake;
+    }
+
+    function setMaxUnlockingChunks(uint256 _maxUnlockingChunks) public onlyOwner {
+        maxUnlockingChunks = _maxUnlockingChunks;
     }
 
     function read_current_era() public view returns (uint256) {
