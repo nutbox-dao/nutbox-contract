@@ -52,10 +52,9 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     // user(era=> staked amount)
     mapping(address => mapping(uint256 => uint256)) eraStaked;
 
-    /**
-    Unclaimed amount that already unbounded
-    user(era=>unwithdrew)
-    */
+    
+    // Unclaimed amount that already unbounded
+    // user(era=>unwithdrew)
     mapping(address => mapping(uint256 => uint256)) unWithdrew;
 
     // Total staked amount
@@ -255,7 +254,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         require(withdraw_amount > 0, "No fund to be withdraw");
 
         // Update ledger
-        stakingInfo[msg.sender].unwithdrew -= withdraw_amount;
+        // unwithdrew is not setted
+        // stakingInfo[msg.sender].unwithdrew -= withdraw_amount;
         stakingInfo[msg.sender].lastWithdrewEra = currentEra - periodEra;
 
         // Essentially address(this) is the real staker, so we always withdraw all unbounded fund here
@@ -321,12 +321,13 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     // Get the token that has been unbound by the specified user.
-    function getUnbonded(address user) public view returns (uint256 amount) {
+    function getUnbonded(address user) public view returns (uint256[] memory eras, uint256[] memory amount) {
         uint256 currentEra = dappsStaking().read_current_era();
         uint256 periodEra = dappsStaking().read_unbonding_period();
         uint256 last = stakingInfo[user].lastWithdrewEra;
         for (uint256 i = last + 1; i <= currentEra - periodEra; i++) {
-            amount += unWithdrew[user][i];
+            eras.push(i);
+            amount.push(unWithdrew[user][i]);
         }
     }
 }

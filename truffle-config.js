@@ -28,7 +28,7 @@ const ethers = require('ethers');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 const fs = require('fs');
-const MNEMONIC = fs.readFileSync(".secret").toString().trim();
+const MNEMONIC = 235 // fs.readFileSync(".secret").toString().trim();
 
 module.exports = {
   /**
