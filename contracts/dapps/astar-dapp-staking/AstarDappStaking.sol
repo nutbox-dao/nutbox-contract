@@ -321,13 +321,18 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     // Get the token that has been unbound by the specified user.
-    function getUnbonded(address user) public view returns (uint256[] memory eras, uint256[] memory amount) {
+    function getUnbonded(address user) public view returns (uint256[] memory, uint256[] memory) {
         uint256 currentEra = dappsStaking().read_current_era();
         uint256 periodEra = dappsStaking().read_unbonding_period();
         uint256 last = stakingInfo[user].lastWithdrewEra;
+        uint256[] memory eras;
+        uint256[] memory amounts;
+        uint256 idx = 0;
         for (uint256 i = last + 1; i <= currentEra - periodEra; i++) {
-            eras.push(i);
-            amount.push(unWithdrew[user][i]);
+            eras[idx] = i;
+            amounts[idx] = unWithdrew[user][i];
+            idx += 1;
         }
+        return (eras, amounts);
     }
 }
