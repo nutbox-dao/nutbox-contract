@@ -131,7 +131,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         for (uint256 i = lastSaveEra + 1; i < era; i++) {
             eraStaked[msg.sender][i] = stakingInfo[msg.sender].amount;
         }
-        stakingInfo[msg.sender].lastSaveEra = era;
+        stakingInfo[msg.sender].lastSaveEra = era - 1;
     }
 
     // I suggest move this method to Delegate contract
