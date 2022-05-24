@@ -135,6 +135,8 @@ async function main() {
     await deployERC20StakingFactoryContract(env);
     await deployCrowdloanFactoryContract(env);
     await deployLinearCalculatorContract(env);
+    await deployDelegateDappsStakingContract(env);
+    await deployAstarDappStakingFactoryContract(env);
     let tx;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
