@@ -122,44 +122,49 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    // env.Committee = '0x72d67B28E16f8629C4C9eAe3441369bb42460f26';
-    // env.CommunityFactory = '0x8adAf21Ca4D170d0c12DD6501B80f3f97DB158C3'
+    env.Committee = '0x3931546cA5399ef0e0b0c7d1d78C89F0e7BeB8AF';
+    env.CommunityFactory = '0x6B70dCfA3E14f532C8C9cB113558254464760023'
     // env.SPStakingFactory = '0x228Bb17bCe5FC4d8212Bfa2Fe61e6CC6e1131772'
     // env.ERC20StakingFactory = '0xe8924F73a236439B2512f2Bb92EA8e7100b743BD'
     // env.LinearCalculator = '0x7281e39F77418356950A62BA944a79Db9310c69e'
+    env.DelegateDappsStaking = '0xD83Fb1383A76BeaBc13Edba6D92358eDa9145AA8'
+    env.AstarDappStakingFactory = '0xbBAc3A06eB1918EfC33af78e83E9A3b2D9fe81f3'
 
-    await deployCommitteeContract(env);
-    await deployMintableERC20FactoryContract(env);
-    await deployCommunityFactoryContract(env);
-    // await deploySPStakingFactoryContract(env);
-    await deployERC20StakingFactoryContract(env);
-    await deployCrowdloanFactoryContract(env);
-    await deployLinearCalculatorContract(env);
-    await deployDelegateDappsStakingContract(env);
-    await deployAstarDappStakingFactoryContract(env);
+    // await deployCommitteeContract(env);
+    // await deployMintableERC20FactoryContract(env);
+    // await deployCommunityFactoryContract(env);
+    // // await deploySPStakingFactoryContract(env);
+    // await deployERC20StakingFactoryContract(env);
+    // await deployCrowdloanFactoryContract(env);
+    // await deployLinearCalculatorContract(env);
+    // await deployDelegateDappsStakingContract(env);
+    // await deployAstarDappStakingFactoryContract(env);
     let tx;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
-    tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
-    console.log('Admin set factory to committee whitelist');
+    // tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
+    // console.log('Admin set factory to committee whitelist');
 
-    tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
-    console.log(`Admin register MintableERC20Factory`);
-    tx = await committeeContract.adminAddContract(env.LinearCalculator);
-    console.log(`Admin register linear calculator`);
-    tx = await committeeContract.adminAddContract(env.CrowdloanFactory);
-    console.log(`Admin register CrowdloanFactory`);
-    tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
-    console.log(`Admin register ERC20StakingFactory`);
+    // tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
+    // console.log(`Admin register MintableERC20Factory`);
+    // tx = await committeeContract.adminAddContract(env.LinearCalculator);
+    // console.log(`Admin register linear calculator`);
+    // tx = await committeeContract.adminAddContract(env.CrowdloanFactory);
+    // console.log(`Admin register CrowdloanFactory`);
+    // tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
+    // console.log(`Admin register ERC20StakingFactory`);
+    tx = await committeeContract.adminAddContract(env.AstarDappStakingFactory);
+    console.log(`Admin register AstarDappStakingFactory`);
+    return;
 
-    tx = await committeeContract.adminAddFeeFreeAddress(env.CrowdloanFactory);
-    console.log(`Admin set address:${env.CrowdloanFactory} to fee free list`);
+    // tx = await committeeContract.adminAddFeeFreeAddress(env.CrowdloanFactory);
+    // console.log(`Admin set address:${env.CrowdloanFactory} to fee free list`);
     
-    const crowdloanFactoryContract = new ethers.Contract(env.CrowdloanFactory, CrowdloanFactoryJson.abi, env.wallet);
-    tx = await crowdloanFactoryContract.adminSetBridge(0, env.wallet.address, true);
-    tx = await crowdloanFactoryContract.adminSetBridge(1, env.wallet.address, true);
-    tx = await crowdloanFactoryContract.adminSetBridge(2, env.wallet.address, true);
-    console.log(`Admin set crowdloan bridge`);
+    // const crowdloanFactoryContract = new ethers.Contract(env.CrowdloanFactory, CrowdloanFactoryJson.abi, env.wallet);
+    // tx = await crowdloanFactoryContract.adminSetBridge(0, env.wallet.address, true);
+    // tx = await crowdloanFactoryContract.adminSetBridge(1, env.wallet.address, true);
+    // tx = await crowdloanFactoryContract.adminSetBridge(2, env.wallet.address, true);
+    // console.log(`Admin set crowdloan bridge`);
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
@@ -172,6 +177,7 @@ async function main() {
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         ERC20StakingFactory: env.ERC20StakingFactory ?? 'Not Deployed',
         CrowdloanFactory: env.CrowdloanFactory ?? "Not Deployed",
+        DelegateDappsStaking: env.DelegateDappsStaking ?? 'Not Deployed',
         AstarDappStakingFactory: env.AstarDappStakingFactory ?? "Not Deployed"
     }
 
@@ -199,6 +205,8 @@ async function main() {
         CrowdloanFactory:       ${env.CrowdloanFactory ?? "Not Deployed"}
         ---------------------------------------------------------------
         ERC20StakingFactory:     ${env.ERC20StakingFactory ?? "Not Deployed"}
+        ---------------------------------------------------------------
+        DelegateDappsStaking:    ${env.DelegateDappsStaking ?? "Not Deployed"}
         ---------------------------------------------------------------
         AstarDappStakingFactory: ${env.AstarDappStakingFactory ?? "Not Deployed"}
         ===============================================================

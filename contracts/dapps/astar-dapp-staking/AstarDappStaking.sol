@@ -66,6 +66,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     address public dapp;
     string public name;
     uint256 private lastClaimEra;
+    bool isSetDestination = false;
 
     event Staked(address indexed community, address indexed who, uint256 amount);
     event UnStaked(address indexed community, address indexed who, uint256 amount);
@@ -84,10 +85,13 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
         lastClaimEra = dappsStaking().read_current_era() - 1;
         eraInfo[lastClaimEra].isClaimed = true;
+    }
 
-        // Register DApp on Astar network, developer
-        // dappsStaking().register(dapp);
-        dappsStaking().set_reward_destination(0);
+    function _set_reward_destination() internal {
+        if (false == isSetDestination) {
+            isSetDestination = true;
+            dappsStaking().set_reward_destination(0);
+        }
     }
 
     function dappsStaking() private view returns (DelegateDappsStaking) {
@@ -165,6 +169,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
             dappsStaking().bond_and_stake(dapp, amount);
         } else if (totalStakedAmount + amount >= dappsStaking().minimumStake()) {
             dappsStaking().bond_and_stake(dapp, totalStakedAmount + amount);
+            _set_reward_destination();
         }
 
         // trigger community update all pool staking info.
@@ -224,6 +229,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         totalStakedAmount -= unstakeAmount;
         // save stake amount
         _saveStake();
+
+        if (totalStakedAmount < dappsStaking().minimumStake() && isSetDestination) isSetDestination = false;
 
         ICommunity(community).setUserDebt(msg.sender, stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12));
 
