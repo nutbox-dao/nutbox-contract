@@ -230,6 +230,8 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
         // save stake amount
         _saveStake();
 
+        if (totalStakedAmount < dappsStaking().minimumStake() && isSetDestination) isSetDestination = false;
+
         ICommunity(community).setUserDebt(msg.sender, stakingInfo[msg.sender].amount.mul(ICommunity(community).getShareAcc(address(this))).div(1e12));
 
         emit UnStaked(community, msg.sender, unstakeAmount);
