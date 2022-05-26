@@ -100,6 +100,9 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
     // can move this method to Delegate contract
     function _calcUnitReward(uint256 era) private {
+        if (0 == eraInfo[era].totalStake){
+            return;
+        }
         uint256 precision = dappsStaking().precision();
         // reward can not div precision, div precision until the final result
         uint256 reward = eraInfo[era].totalReward.mul(precision).div(eraInfo[era].totalStake).div(precision);
