@@ -123,7 +123,7 @@ async function main() {
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
     env.Committee = '0x3931546cA5399ef0e0b0c7d1d78C89F0e7BeB8AF';
-    env.CommunityFactory = '0x6B70dCfA3E14f532C8C9cB113558254464760023'
+    env.CommunityFactory = '0xE7e2A7994D86Ae51F6Fc614e01EC3229C8f62b6B'
     // env.SPStakingFactory = '0x228Bb17bCe5FC4d8212Bfa2Fe61e6CC6e1131772'
     // env.ERC20StakingFactory = '0xe8924F73a236439B2512f2Bb92EA8e7100b743BD'
     // env.LinearCalculator = '0x7281e39F77418356950A62BA944a79Db9310c69e'
@@ -133,10 +133,10 @@ async function main() {
     // await deployCommitteeContract(env);
     // await deployMintableERC20FactoryContract(env);
     // await deployCommunityFactoryContract(env);
-    // // await deploySPStakingFactoryContract(env);
+    // await deploySPStakingFactoryContract(env);
     // await deployERC20StakingFactoryContract(env);
     // await deployCrowdloanFactoryContract(env);
-    // await deployLinearCalculatorContract(env);
+    await deployLinearCalculatorContract(env);
     // await deployDelegateDappsStakingContract(env);
     // await deployAstarDappStakingFactoryContract(env);
     let tx;
@@ -147,15 +147,16 @@ async function main() {
 
     // tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
     // console.log(`Admin register MintableERC20Factory`);
-    // tx = await committeeContract.adminAddContract(env.LinearCalculator);
-    // console.log(`Admin register linear calculator`);
+    tx = await committeeContract.adminAddContract(env.LinearCalculator);
+    console.log(`Admin register linear calculator`);
+
+    return;
     // tx = await committeeContract.adminAddContract(env.CrowdloanFactory);
     // console.log(`Admin register CrowdloanFactory`);
     // tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
     // console.log(`Admin register ERC20StakingFactory`);
-    tx = await committeeContract.adminAddContract(env.AstarDappStakingFactory);
-    console.log(`Admin register AstarDappStakingFactory`);
-    return;
+    // tx = await committeeContract.adminAddContract(env.AstarDappStakingFactory);
+    // console.log(`Admin register AstarDappStakingFactory`);
 
     // tx = await committeeContract.adminAddFeeFreeAddress(env.CrowdloanFactory);
     // console.log(`Admin set address:${env.CrowdloanFactory} to fee free list`);

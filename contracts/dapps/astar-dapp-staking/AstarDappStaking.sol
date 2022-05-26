@@ -139,6 +139,11 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     // I suggest move this method to Delegate contract
     function checkAndClaim() public {
         uint256 era = dappsStaking().read_current_era();
+        if (totalStakedAmount < dappsStaking().minimumStake()) {
+            lastClaimEra = era - 1;
+            eraInfo[lastClaimEra].isClaimed = true;
+            return;
+        }
         uint256 diff = era - lastClaimEra - 1;
         uint256 oldBalance;
         uint256 newBalance;
