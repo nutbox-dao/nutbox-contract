@@ -4,4 +4,6 @@ pragma solidity ^0.8.0;
 
 interface IAstarFactory {
     function delegateDappsStakingContract() external view returns (address);
+
+    function minimumActiveAmount() external view returns (uint256);
 }

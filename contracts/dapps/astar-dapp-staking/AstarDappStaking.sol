@@ -10,6 +10,7 @@ import "../../interfaces/IPool.sol";
 import "../../ERC20Helper.sol";
 import "./DelegateDappsStaking.sol";
 import "./IAstarFactory.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @dev Proxy contract of Astar Dapp staking pool.
@@ -67,7 +68,9 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
     string public name;
     uint256 private lastClaimEra;
     bool isSetDestination = false;
+    uint256 activedAmount;
 
+    event PoolActived();
     event Staked(address indexed community, address indexed who, uint256 amount);
     event UnStaked(address indexed community, address indexed who, uint256 amount);
     event Withdraw(address indexed community, address indexed who, uint256 amount);
@@ -96,6 +99,25 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
     function dappsStaking() private view returns (DelegateDappsStaking) {
         return DelegateDappsStaking(IAstarFactory(factory).delegateDappsStakingContract());
+    }
+
+    function active() external payable {
+        require(msg.value + activedAmount >= IAstarFactory(factory).minimumActiveAmount(), "Insufficient active value");
+        activedAmount += msg.value;
+        emit PoolActived();
+    }
+
+    function withdraw_fund() external payable {
+        require(msg.sender == Ownable(community).owner(), "Only admin can withdraw fund");
+        require(!ICommunity(community).poolActived(address(this)) && totalStakedAmount > 0, "Can withdraw from an active pool");
+
+        bool hasSent = payable(msg.sender).send(activedAmount);
+        require(hasSent, "Failed to transfer Fund");
+        activedAmount = 0;
+    }
+
+    function isActived() public view returns (bool) {
+        return activedAmount >= IAstarFactory(factory).minimumActiveAmount();
     }
 
     // can move this method to Delegate contract
@@ -166,6 +188,7 @@ contract AstarDappStaking is IPool, ERC20Helper, ReentrancyGuard {
 
     function stake() public payable nonReentrant {
         require(ICommunity(community).poolActived(address(this)), "Pool has been closed");
+        require(isActived(), "Pool not actived");
         uint256 amount = msg.value;
         require(amount > 0, "Must stake some token");
         checkAndClaim();

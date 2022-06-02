@@ -130,33 +130,32 @@ async function main() {
     env.DelegateDappsStaking = '0xD83Fb1383A76BeaBc13Edba6D92358eDa9145AA8'
     env.AstarDappStakingFactory = '0xbBAc3A06eB1918EfC33af78e83E9A3b2D9fe81f3'
 
-    // await deployCommitteeContract(env);
-    // await deployMintableERC20FactoryContract(env);
-    // await deployCommunityFactoryContract(env);
+    await deployCommitteeContract(env);
+    await deployMintableERC20FactoryContract(env);
+    await deployCommunityFactoryContract(env);
     // await deploySPStakingFactoryContract(env);
-    // await deployERC20StakingFactoryContract(env);
-    // await deployCrowdloanFactoryContract(env);
+    await deployERC20StakingFactoryContract(env);
+    await deployCrowdloanFactoryContract(env);
     await deployLinearCalculatorContract(env);
-    // await deployDelegateDappsStakingContract(env);
-    // await deployAstarDappStakingFactoryContract(env);
+    await deployDelegateDappsStakingContract(env);
+    await deployAstarDappStakingFactoryContract(env);
     let tx;
 
     const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
-    // tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
-    // console.log('Admin set factory to committee whitelist');
+    tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
+    console.log('Admin set factory to committee whitelist');
 
-    // tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
-    // console.log(`Admin register MintableERC20Factory`);
+    tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
+    console.log(`Admin register MintableERC20Factory`);
     tx = await committeeContract.adminAddContract(env.LinearCalculator);
     console.log(`Admin register linear calculator`);
 
-    return;
-    // tx = await committeeContract.adminAddContract(env.CrowdloanFactory);
-    // console.log(`Admin register CrowdloanFactory`);
-    // tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
-    // console.log(`Admin register ERC20StakingFactory`);
-    // tx = await committeeContract.adminAddContract(env.AstarDappStakingFactory);
-    // console.log(`Admin register AstarDappStakingFactory`);
+    tx = await committeeContract.adminAddContract(env.CrowdloanFactory);
+    console.log(`Admin register CrowdloanFactory`);
+    tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
+    console.log(`Admin register ERC20StakingFactory`);
+    tx = await committeeContract.adminAddContract(env.AstarDappStakingFactory);
+    console.log(`Admin register AstarDappStakingFactory`);
 
     // tx = await committeeContract.adminAddFeeFreeAddress(env.CrowdloanFactory);
     // console.log(`Admin set address:${env.CrowdloanFactory} to fee free list`);

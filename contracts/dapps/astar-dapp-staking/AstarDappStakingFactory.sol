@@ -20,8 +20,11 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable, IAstarFactory {
     address public immutable communityFactory;
     address public override delegateDappsStakingContract;
 
+    uint256 public override minimumActiveAmount = 1 ether;
+
     event DelegateContractChange(address indexed oldContract, address indexed newContract);
     event AStarDappStakingCreated(address indexed pool, address indexed community, string name, address dapp);
+    event MinimumActiveAmountChange(uint256 old, uint256 minimumActiveAmount);
 
     constructor(address _communityFactory, address _delegateDappsStakingContract) {
         require(_communityFactory != address(0), "Invalid argument");
@@ -36,6 +39,12 @@ contract AstarDappStakingFactory is IPoolFactory, Ownable, IAstarFactory {
         address old = delegateDappsStakingContract;
         delegateDappsStakingContract = _delegateDappsStakingContract;
         emit DelegateContractChange(old, _delegateDappsStakingContract);
+    }
+
+    function adminSetDelegateContract(uint256 _minimumActiveAmount) external onlyOwner {
+        uint256 old = minimumActiveAmount;
+        minimumActiveAmount = _minimumActiveAmount;
+        emit MinimumActiveAmountChange(old, minimumActiveAmount);
     }
 
     function createPool(
