@@ -9,6 +9,7 @@ async function deployTokenContract(env, name, symbol) {
         name,
         symbol,
         ethers.utils.parseUnits("20000000.0", 18),
+        env.wallet.address,
         env.wallet.address
     );
     await contract.deployed();
@@ -25,9 +26,9 @@ async function main() {
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
 
-    let tx = await deployTokenContract(env, 'Wrapped ETH', 'WETH');
+    let tx = await deployTokenContract(env, 'BEP ATOM', 'ATOM');
     // await deployTokenContract(env, 'Ethereum Token', 'ETH');
-    // await deployTokenContract(env, 'PancakeSwap Token', 'CAKE');
+    await deployTokenContract(env, 'BEP STEEM', 'STEEM');
     // await deployTokenContract(env, 'BTCB Token', 'BTCB')
 }
 
