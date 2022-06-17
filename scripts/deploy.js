@@ -168,30 +168,30 @@ async function main() {
     await deployERC1155StakingFactoryContract(env);
     // await deployLinearCalculatorContract(env);
     // await deployGaugeContract(env);
-    await deployTreasuryFactoryContract(env);
+    // await deployTreasuryFactoryContract(env);
     let tx;
-    const treasuryFactory = new ethers.Contract("0x8428aD36744a9917112c2A9a40C4f48FCF80e39E", TreasuryFactoryJson.abi, env.wallet);
-    const eth = "0x3F3BFe3b0363c3e0a713C0Ce338DbFd31b987581"
-    const cake = "0x9574e5728E4Ea28d832E12d4d1a80225DD93B689"
-    const ts = '0x33B78D217F271Ecb3DA1bB61F9ABB7d49425dd14'
-    const pnut = '0x9187C7B1284F6583aD960eB2b7074a0df563E346'
-    const atom = '0xf0D4597E13715b372497EeaC05a0e9aa5b10f929'
-    const steem = '0xC07FA2B98f8BE846da87e3F03dB1A77dBd4b4485'
-    tx = await treasuryFactory.adminAddReward(atom)
-    await waitForTx(env.provider, tx.hash)
-    tx = await treasuryFactory.adminAddReward(steem)
-    await waitForTx(env.provider, tx.hash)
-    tx = await treasuryFactory.adminRemoveReward(eth)
-    await waitForTx(env.provider, tx.hash)
-    tx = await treasuryFactory.adminRemoveReward(cake)
-    await waitForTx(env.provider, tx.hash)
-    tx = await treasuryFactory.adminRemoveReward(ts)
-    await waitForTx(env.provider, tx.hash)
-    tx = await treasuryFactory.adminRemoveReward(pnut)
-    await waitForTx(env.provider, tx.hash)
-    return;
+    // const treasuryFactory = new ethers.Contract("0x8428aD36744a9917112c2A9a40C4f48FCF80e39E", TreasuryFactoryJson.abi, env.wallet);
+    // const eth = "0x3F3BFe3b0363c3e0a713C0Ce338DbFd31b987581"
+    // const cake = "0x9574e5728E4Ea28d832E12d4d1a80225DD93B689"
+    // const ts = '0x33B78D217F271Ecb3DA1bB61F9ABB7d49425dd14'
+    // const pnut = '0x9187C7B1284F6583aD960eB2b7074a0df563E346'
+    // const atom = '0xf0D4597E13715b372497EeaC05a0e9aa5b10f929'
+    // const steem = '0xC07FA2B98f8BE846da87e3F03dB1A77dBd4b4485'
+    // tx = await treasuryFactory.adminAddReward(atom)
+    // await waitForTx(env.provider, tx.hash)
+    // tx = await treasuryFactory.adminAddReward(steem)
+    // await waitForTx(env.provider, tx.hash)
+    // tx = await treasuryFactory.adminRemoveReward(eth)
+    // await waitForTx(env.provider, tx.hash)
+    // tx = await treasuryFactory.adminRemoveReward(cake)
+    // await waitForTx(env.provider, tx.hash)
+    // tx = await treasuryFactory.adminRemoveReward(ts)
+    // await waitForTx(env.provider, tx.hash)
+    // tx = await treasuryFactory.adminRemoveReward(pnut)
+    // await waitForTx(env.provider, tx.hash)
+    // return;
 
-    const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
+    // const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
 
     // tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
     // console.log('Admin set factory to committee whitelist');
@@ -238,7 +238,7 @@ async function main() {
     // console.log('Admin set gauge to nut power');
 
     // set gauge param
-    const gauge = new ethers.Contract(env.Gauge, GaugeJson.abi, env.wallet)
+    // const gauge = new ethers.Contract(env.Gauge, GaugeJson.abi, env.wallet)
     // tx = await gauge.adminSetRewardNUTPerBlock(ethers.utils.parseUnits('2.5', 18))
     // console.log('Admin set gauge distribution to 2.5 nut per block');
 
@@ -247,8 +247,8 @@ async function main() {
     // console.log('Transfer cosmos staking factory ownership to committee', tx.hash);
     // tx = await nutPowerContract.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
     // console.log('Transfer np ownership to committee', tx.hash);
-    tx = await gauge.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
-    console.log('Transfer gauge ownership to committee', tx.hash);
+    // tx = await gauge.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
+    // console.log('Transfer gauge ownership to committee', tx.hash);
 
     // set transaction fee
     // tx = await committeeContract.adminSetFee(
