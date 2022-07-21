@@ -16,13 +16,19 @@ contract Reputation is ERC1155PresetMinterPauser {
     bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     // admin can burn user's reputation
     bytes32 public constant BURN_ROLE = keccak256("BURN_ROLE");
+    bytes32 public constant URLSETTER_ROLE = keccak256("URLSETTER_ROLE");
 
     // total supplys of id
     mapping(uint256 => uint256) private _supplys;
 
+    mapping(uint256 => string) private tokenURI;
+
+    event URI(string _uri, uint256 _id);
+
     constructor(string memory uri_) ERC1155PresetMinterPauser(uri_){
         _setupRole(TRANSFER_ROLE, _msgSender());
         _setupRole(BURN_ROLE, _msgSender());
+        _setupRole(URLSETTER_ROLE, _msgSender());
     }
 
     function supplysOf(uint256 id) public view returns (uint256) {
@@ -48,6 +54,16 @@ contract Reputation is ERC1155PresetMinterPauser {
         require(account != address(0), "Reputation query for the zero address");
         uint256 balance = balanceOf(account, id);
         return balance * 1e12 / supplysOf(id);
+    }
+
+    function setURI(uint _id, string memory _uri) external {
+        require(hasRole(URLSETTER_ROLE, _msgSender()), "Must have url setter role to set");
+        tokenURI[_id] = _uri;
+        emit URI(_uri, _id);
+    }
+
+    function uri(uint _id) public override view returns (string memory) {
+        return tokenURI[_id];
     }
 
     // override this internal method
