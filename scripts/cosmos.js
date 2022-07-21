@@ -5,6 +5,31 @@ const CosmosStaking = require('../build/contracts/CosmosStaking.json');
 
 const cosmosPoolId = '0x10fe5a57fc5a4e314a1fbed4a0829c4c00fb5d13'
 
+const stringToHex = (str) => {
+    let val = "";
+    for (let i = 0; i < str.length; i++) {
+      if (val == "") {
+        val = str.charCodeAt(i).toString(16);
+      } else {
+        val += str.charCodeAt(i).toString(16);
+      }
+    }
+    return val;
+  }
+  
+  const hexToString = (str) => {
+    if (str.length % 2 !== 0) {
+      console.log('Not a hex');
+      return ""
+    }
+    let val = "";
+    for (let i = 0; i < str.length; i += 2) {
+      const n = parseInt(str[i] + str[i + 1], 16)
+      val += String.fromCharCode(n);
+    }
+    return val;
+  }
+
 async function main () {
     let env = {};
     env.url = process.env.TESTENDPOINT || 'http://localhost:8545';
