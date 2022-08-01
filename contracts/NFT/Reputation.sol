@@ -23,8 +23,6 @@ contract Reputation is ERC1155PresetMinterPauser {
 
     mapping(uint256 => string) private tokenURI;
 
-    event URI(string _uri, uint256 _id);
-
     constructor(string memory uri_) ERC1155PresetMinterPauser(uri_){
         _setupRole(TRANSFER_ROLE, _msgSender());
         _setupRole(BURN_ROLE, _msgSender());
