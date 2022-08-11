@@ -26,7 +26,7 @@ async function main() {
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
 
-    let tx = await deployTokenContract(env, 'BEP ATOM', 'ATOM');
+    // let tx = await deployTokenContract(env, 'BEP ATOM', 'ATOM');
     // await deployTokenContract(env, 'Ethereum Token', 'ETH');
     await deployTokenContract(env, 'BEP STEEM', 'STEEM');
     // await deployTokenContract(env, 'BTCB Token', 'BTCB')
