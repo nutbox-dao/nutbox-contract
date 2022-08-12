@@ -1,10 +1,11 @@
 
 require('dotenv').config();
 const ethers = require('ethers');
-const { waitForTx } = require('./utils')
+const { waitForTx, sleep } = require('./utils')
 const _ = require('lodash');
 
 const TaskJson = require('../build/contracts/Task.json');
+const ERC20Json = require('../build/contracts/ERC20.json');
 
 const TaskContract = '0x38468F161BAC57aacD1E2c37aB279D6bfDBe3405'  // bsc test
 const rewardToken = '0x328916Db048F3CfEb4445F90E14899d0296e33Aa'   // bsc test
@@ -33,16 +34,20 @@ async function commitList(provider, contract, id, addresses, amounts) {
     }
 }
 
-async function cancel(provider, contract, id) {
-    const tx = await contract.cancelTask(id);
-    await waitForTx(provider, tx.hash);
-    const taskInfo = await contract.taskInfo(id);
-    const openningTasks = await contract.openningTasks();
-    console.log(taskInfo, openningTasks);
-}
-
 async function distribute(provider, contract, id) {
+    let tx = await contract.distribute(id);
+    await waitForTx(provider, tx.hash)
+    let taskInfo = await contract.taskInfo(id);
+    let openningTasks = await contract.openningTasks();
+    console.log(6, taskInfo);
+    console.log(7, openningTasks);
 
+    tx = await contract.disconnect(id);
+    await waitForTx(provider, tx.hash);
+    taskInfo = await contract.taskInfo(id);
+    openningTasks = await contract.openningTasks();
+    console.log(8, taskInfo);
+    console.log(9, openningTasks);
 }
 
 function generateList(n) {
@@ -66,7 +71,7 @@ function randomEthAddress() {
 }
 
 async function main() {
-    const [addressed, amounts, amount] = generateList();
+    let [addresses, amounts, amount] = generateList(398);
     let env = {};
     env.url = process.env.TESTENDPOINT || 'http://localhost:8545';
     env.privateKey = process.env.TESTKEY;
@@ -78,6 +83,33 @@ async function main() {
     env.gasPrice = await env.provider.getGasPrice();
 
     const contract = new ethers.Contract(TaskContract, TaskJson.abi, env.wallet)
+    const ercContract = new ethers.Contract(rewardToken, ERC20Json.abi, env.wallet);
+
+    let tx = await ercContract.approve(TaskContract, ethers.constants.MaxUint256);
+    await waitForTx(env.provider, tx.hash)
+
+    // task1
+    await createNewTask(env.provider, contract, id1, new Date().getTime() / 1000 + 10, rewardToken, amount)
+    let taskInfo = await contract.taskInfo(id1);
+    console.log(0, taskInfo);
+
+    await sleep(8000);
+
+    await commitList(env.provider, contract, id1, addresses, amounts);
+
+    await distribute(env.provider, contract, id1);
+
+    // task2
+    [addresses, amounts, amount] = generateList(639);
+    await createNewTask(env.provider, contract, id2, new Date().getTime() / 1000 + 10, rewardToken, amount)
+    taskInfo = await contract.taskInfo(id2);
+    console.log(0, taskInfo);
+
+    await sleep(8000);
+
+    await commitList(env.provider, contract, id2, addresses, amounts);
+
+    await distribute(env.provider, contract, id2);
 }
 
 main()

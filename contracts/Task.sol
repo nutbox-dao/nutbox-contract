@@ -19,12 +19,10 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     // task status: 
     // Openning: when user create a new task; 
     // Pending: when we fill the user list; 
-    // Cancel: when the owner cancel and return back his token;
     // Closed: The task finished, token distribute to the users;
     enum TaskState {
         Openning, 
         Pending,
-        Cancel,
         Closed
     }
 
@@ -56,7 +54,6 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     mapping(uint256 => Task) private taskList;
 
     event NewTask(address indexed owner, address indexed token, uint256 amount, uint256 endTime);
-    event CancelTask(uint256 indexed id);
     event Distribute(uint256 indexed id, uint256 count);
     event AdminFillTaskList(uint256 indexed id, uint256 count);
     event TaskStateChange(uint256 indexed id, uint8 state);
@@ -106,18 +103,6 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         }
         taskList[id].batchSize += 1;
         emit AdminFillTaskList(id, users.length);
-    }
-
-    // The task creator can cancel the task created by himself when he disagree the rewards list
-    function cancelTask(uint256 id) public nonReentrant {
-        require(taskList[id].owner == msg.sender, 'You are not the task creator');
-        require(taskList[id].taskState == TaskState.Pending, 'Cant cancel the task that not in pending state');
-        releaseERC20(taskList[id].token, msg.sender, taskList[id].amount);
-        taskList[id].taskState = TaskState.Cancel;
-        openningTaskIds.remove(id);
-        pendingTaskIds.remove(id);
-        emit CancelTask(id);
-        emit TaskStateChange(id, uint8(TaskState.Cancel));
     }
 
     // The task creator trigger the distribution batch by batch
