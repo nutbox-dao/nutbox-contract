@@ -7,19 +7,19 @@ const _ = require('lodash');
 const TaskJson = require('../build/contracts/Task.json');
 const ERC20Json = require('../build/contracts/ERC20.json');
 
-const TaskContract = '0x40254d34f14Edb875457Baf878eaEdFc2192960D'  // bsc test
-const rewardToken = '0x2Acbc367Df32C852c53c33a8c21D1592627a86f3'   // bsc test
+const TaskContract = '0xb945b0616f508b7d9782e2DBD3c966b6Ef194313'  // bsc test
+const rewardToken = '0x4fB809615d0D60053850A78546a4B4B80C02A7F0'   // bsc test
 const id1 = '208975624545445';
 const id2 = '149465164894515';
 
 async function createNewTask(provider, contract, id, endTime, token, amount) {
-    const tx = await contract.newTask(id, endTime, token, amount)
+    const tx = await contract.newTask(id, endTime, token, amount, 10, 1000, 1)
     await waitForTx(provider, tx.hash)
 }
 
 async function commitList(provider, contract, id, addresses, amounts) {
-    const addressBatches = _.chunk(addresses, 10);
-    const amountBatches = _.chunk(amounts, 10);
+    const addressBatches = _.chunk(addresses, 500);
+    const amountBatches = _.chunk(amounts, 500);
     for (let i = 0; i < addressBatches.length; i++) {
         const tx = await contract.commitList(id, addressBatches[i], amountBatches[i], i == addressBatches.length - 1);
         await waitForTx(provider, tx.hash);
@@ -65,9 +65,6 @@ function randomEthAddress() {
 
 async function main() {
     let [addresses, amounts, amount] = generateList(398);
-    console.log("addresses: ", addresses)
-    console.log("amounts: ", amounts)
-    console.log("amount: ", amount)
     let env = {};
     env.url = process.env.TESTENDPOINT || 'http://localhost:8545';
     env.privateKey = process.env.TESTKEY;
@@ -91,27 +88,28 @@ async function main() {
 
     await sleep(8000);
 
-    tx = await contract.commitList(id1, addresses, amounts, true);
-    await waitForTx(env.provider, tx.hash);
-
+    await commitList(env.provider, contract, id1, addresses, amounts);
+    await contract.cleanList(id1, 500);
     taskInfo = await contract.taskInfo(id1);
-    console.log(0, taskInfo);
-
-    // await commitList(env.provider, contract, id1, addresses, amounts);
-
-    // await distribute(env.provider, contract, id1);
+    console.log("cleanList: ", taskInfo);
+    await commitList(env.provider, contract, id1, addresses, amounts);
+    await distribute(env.provider, contract, id1);
 
     // task2
-    // [addresses, amounts, amount] = generateList(639);
-    // await createNewTask(env.provider, contract, id2, parseInt(new Date().getTime() / 1000 + 10), rewardToken, amount)
-    // taskInfo = await contract.taskInfo(id2);
-    // console.log(0, taskInfo);
+    [addresses, amounts, amount] = generateList(639);
+    await createNewTask(env.provider, contract, id2, parseInt(new Date().getTime() / 1000 + 5), rewardToken, amount)
+    taskInfo = await contract.taskInfo(id2);
+    console.log(0, taskInfo);
 
-    // await sleep(8000);
+    await sleep(8000);
 
-    // await commitList(env.provider, contract, id2, addresses, amounts);
+    await commitList(env.provider, contract, id2, addresses, amounts);
 
-    // await distribute(env.provider, contract, id2);
+    await distribute(env.provider, contract, id2);
+    await distribute(env.provider, contract, id2);
+
+
+
 }
 
 main()
