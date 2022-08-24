@@ -40,11 +40,11 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         uint256 amount; // reward amount
         TaskState taskState;
         uint256 id; // task id
-        uint256 batchSize; // total batches
-        uint256 currentBatch; // when owner trigger the distribution, he need to distribute batch by batch, this is record whitch batch he has distributed
-        uint256 topCount;
-        uint256 maxCount;
-        uint256 topValue;
+        uint256 currentIndex; // user tags that are currently distributed
+        uint256 topCount; // Define the number of top
+        uint256 maxCount; // Maximum number of rewards
+        uint256 topValue; // Rank reward value
+        uint256 feedTotal; // amount already filled
     }
 
     // all tasks id
@@ -97,19 +97,21 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
 
     function cleanList(uint256 id, uint256 limit) public onlyOwner {
         require(taskList[id].id == id, "Invalid task id");
-        require(taskList[id].currentBatch == 0, "can't be cleared");
+        require(taskList[id].currentIndex == 0, "can't be cleared");
         uint256 len = limit;
         if (len >= rewardList[id].length) {
             len = rewardList[id].length;
         }
         while (len > 0) {
             rewardList[id].pop();
-            len = rewardList[id].length;
+            len--;
         }
-        if(taskList[id].taskState != TaskState.Openning){
-            taskList[id].taskState = TaskState.Openning;
+        if (rewardList[id].length == 0) {
+            taskList[id].feedTotal = 0;
+            if (taskList[id].taskState != TaskState.Openning) {
+                taskList[id].taskState = TaskState.Openning;
+            }
         }
-        taskList[id].batchSize = 0;
     }
 
     // Admin(wormhole) calculate the rewards list adn write into this contract batch by batch
@@ -123,48 +125,43 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         require(taskList[id].endTime < block.timestamp, "Task has not finish");
         require(taskList[id].taskState == TaskState.Openning, "Task is not opening");
         require(users.length == amounts.length, "Wrong data");
-        require(users.length <= BATCH_SIZE, "batch limit exceeded");
-
+        require(users.length <= BATCH_SIZE, "Batch limit exceeded");
+        require(users.length + rewardList[id].length <= taskList[id].maxCount, "Exceeded the maximum number of participants");
+        for (uint256 i = 0; i < users.length; i++) {
+            rewardList[id].push(RewardInfo(users[i], amounts[i]));
+            taskList[id].feedTotal += amounts[i];
+        }
+        require(taskList[id].feedTotal <= taskList[id].amount, "Invalid reward amount");
         if (isLast) {
             taskList[id].taskState = TaskState.Pending;
             openningTaskIds.remove(id);
             pendingTaskIds.add(id);
             emit TaskStateChange(id, uint8(TaskState.Pending));
         }
-        uint256 total = 0;
-        for (uint256 i = 0; i < users.length; i++) {
-            rewardList[id].push(RewardInfo(users[i], amounts[i]));
-            total += amounts[i];
-            require(total <= taskList[id].amount, "Invalid reward amount");
-        }
-
-        taskList[id].batchSize += 1;
         emit AdminFillTaskList(id, users.length);
     }
 
     // The task creator trigger the distribution batch by batch
-    function distribute(uint256 id) public nonReentrant {
+    function distribute(uint256 id, uint256 _limit) public nonReentrant {
         // require(taskList[id].owner == msg.sender, 'You are not the task creator');
         require(taskList[id].id == id, "Invalid task id");
         require(taskList[id].taskState == TaskState.Pending, "Cant distribute the task that not in pending state");
 
-        uint256 index = taskList[id].currentBatch * BATCH_SIZE;
+        uint256 limit = _limit;
+        if (limit > BATCH_SIZE) limit = BATCH_SIZE;
+        uint256 index = taskList[id].currentIndex;
+        uint256 distCount = 0;
 
-        if (rewardList[id].length <= BATCH_SIZE || taskList[id].currentBatch == taskList[id].batchSize - 1) {
-            for (uint256 i = index; i < rewardList[id].length; i++) {
-                releaseERC20(taskList[id].token, rewardList[id][i].user, rewardList[id][i].amount);
-            }
+        for (; index < rewardList[id].length && ++distCount < limit; index++) {
+            releaseERC20(taskList[id].token, rewardList[id][index].user, rewardList[id][index].amount);
+        }
+        taskList[id].currentIndex = index;
+        emit Distribute(id, distCount);
+        if (index >= rewardList[id].length - 1) {
             taskList[id].taskState = TaskState.Closed;
             openningTaskIds.remove(id);
             pendingTaskIds.remove(id);
             emit TaskStateChange(id, uint8(TaskState.Closed));
-            emit Distribute(id, rewardList[id].length % BATCH_SIZE);
-        } else {
-            for (uint256 i = index; i < index + BATCH_SIZE; i++) {
-                releaseERC20(taskList[id].token, rewardList[id][i].user, rewardList[id][i].amount);
-            }
-            taskList[id].currentBatch += 1;
-            emit Distribute(id, BATCH_SIZE);
         }
     }
 
@@ -184,12 +181,13 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
 
     function getRewardList(uint256 id, uint256 batch) public view returns (RewardInfo[] memory rewards) {
         TaskInfo storage task = taskList[id];
-        if (task.taskState == TaskState.Openning || batch >= task.batchSize) {
+        uint256 batchSize = rewardList[id].length / BATCH_SIZE + (rewardList[id].length % BATCH_SIZE == 0 ? 0 : 1);
+        if (task.taskState == TaskState.Openning || batch >= batchSize) {
             return rewards;
         }
 
         uint256 startIndex = batch * BATCH_SIZE;
-        uint256 endIndex = batch == task.batchSize - 1 ? startIndex + (rewardList[id].length % BATCH_SIZE) : (batch + 1) * BATCH_SIZE;
+        uint256 endIndex = batch == batchSize - 1 ? startIndex + (rewardList[id].length % BATCH_SIZE) : (batch + 1) * BATCH_SIZE;
         rewards = new RewardInfo[](endIndex - startIndex);
         uint256 j = 0;
         for (uint256 i = startIndex; i < endIndex; i++) {
