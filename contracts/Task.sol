@@ -20,10 +20,12 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     // Openning: when user create a new task;
     // Pending: when we fill the user list;
     // Closed: The task finished, token distribute to the users;
+    // Clean: clear the list of rewardList
     enum TaskState {
         Openning,
         Pending,
-        Closed
+        Closed,
+        Clean
     }
 
     struct RewardInfo {
@@ -98,6 +100,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     function cleanList(uint256 id, uint256 limit) public onlyOwner {
         require(taskList[id].id == id, "Invalid task id");
         require(taskList[id].currentIndex == 0, "can't be cleared");
+        taskList[id].taskState = TaskState.Clean;
         uint256 len = limit;
         if (len >= rewardList[id].length) {
             len = rewardList[id].length;
@@ -108,9 +111,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         }
         if (rewardList[id].length == 0) {
             taskList[id].feedTotal = 0;
-            if (taskList[id].taskState != TaskState.Openning) {
-                taskList[id].taskState = TaskState.Openning;
-            }
+            taskList[id].taskState = TaskState.Openning;
         }
     }
 
@@ -152,12 +153,13 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         uint256 index = taskList[id].currentIndex;
         uint256 distCount = 0;
 
-        for (; index < rewardList[id].length && ++distCount < limit; index++) {
+        for (; index < rewardList[id].length && distCount < limit; index++) {
             releaseERC20(taskList[id].token, rewardList[id][index].user, rewardList[id][index].amount);
+            distCount++;
         }
         taskList[id].currentIndex = index;
         emit Distribute(id, distCount);
-        if (index >= rewardList[id].length - 1) {
+        if (index >= rewardList[id].length) {
             taskList[id].taskState = TaskState.Closed;
             openningTaskIds.remove(id);
             pendingTaskIds.remove(id);

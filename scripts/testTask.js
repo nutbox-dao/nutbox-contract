@@ -7,8 +7,8 @@ const _ = require('lodash');
 const TaskJson = require('../build/contracts/Task.json');
 const ERC20Json = require('../build/contracts/ERC20.json');
 
-const TaskContract = '0xF470fc7B223D06104d34efB45fF157A6368025db'  // bsc test
-const rewardToken = '0xBa222C854FF80fA765Bb3Bc36e841f923eC18161'   // bsc test
+const TaskContract = '0x07b26d63BE4976f5EE4fE53d1795418974FcdD23'  // bsc test
+const rewardToken = '0x11dA6900191c187Ac706a4788a6ea9c68ceB4857'   // bsc test
 const id1 = '208975624545445';
 const id2 = '149465164894515';
 
@@ -118,12 +118,15 @@ async function main() {
         contract.getRewardList(id2, 0),
         contract.getRewardList(id2, 1),
         contract.taskInfo(id1),
-        contract.taskInfo(id2)
+        contract.taskInfo(id2),
+        ercContract.balanceOf(TaskContract)
     ]).then(results => {
+        console.log("=============================Test end==========================");
         console.log("users: id1 =", results[0].length, " id2 =", results[1].length + results[2].length);
         console.log("id1 user1: ", results[0][0]);
-        console.log(id1 + ": ", results[3]);
-        console.log(id2 + ": ", results[4]);
+        console.log("id1: ", results[3]);
+        console.log("id2: ", results[4]);
+        console.log("Task constract balance: ", results[5])
     });
 }
 
