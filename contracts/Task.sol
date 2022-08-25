@@ -45,7 +45,6 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         uint256 currentIndex; // user tags that are currently distributed
         uint256 topCount; // Define the number of top
         uint256 maxCount; // Maximum number of rewards
-        uint256 topValue; // Rank reward value
         uint256 feedTotal; // amount already filled
     }
 
@@ -73,8 +72,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         address token,
         uint256 amount,
         uint256 topCount,
-        uint256 maxCount,
-        uint256 topValue
+        uint256 maxCount
     ) public nonReentrant {
         require(taskList[id].endTime == 0, "Task has been created");
         require(ERC20(token).balanceOf(msg.sender) >= amount, "Insufficient balance");
@@ -89,7 +87,6 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         taskList[id].id = id;
         taskList[id].topCount = topCount;
         taskList[id].maxCount = maxCount;
-        taskList[id].topValue = topValue;
 
         taskIds.push(id);
         openningTaskIds.add(id);
