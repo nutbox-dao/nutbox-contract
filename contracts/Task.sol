@@ -98,6 +98,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         require(taskList[id].id == id, "Invalid task id");
         require(taskList[id].currentIndex == 0, "can't be cleared");
         taskList[id].taskState = TaskState.Clean;
+        pendingTaskIds.remove(id);
         uint256 len = limit;
         if (len >= rewardList[id].length) {
             len = rewardList[id].length;
@@ -109,6 +110,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         if (rewardList[id].length == 0) {
             taskList[id].feedTotal = 0;
             taskList[id].taskState = TaskState.Openning;
+            openningTaskIds.add(id);
         }
     }
 
