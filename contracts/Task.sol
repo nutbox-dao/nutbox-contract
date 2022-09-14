@@ -100,11 +100,11 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         uint256 amount
     ) public nonReentrant {
         require(taskList[id].endTime > 0, "Task has not been created");
-        require(ERC20(token).balanceOf(msg.sender) >= amount, "Insufficient balance");
-        require(taskList[id].tastState = TaskState.Openning, "Wrong task state");
+        require(ERC20(taskList[id].token).balanceOf(msg.sender) >= amount, "Insufficient balance");
+        require(taskList[id].taskState == TaskState.Openning, "Wrong task state");
         lockERC20(taskList[id].token, msg.sender, address(this), amount);
         taskList[id].amount += amount;
-        emit AddReward(id, msg.sender, amount)
+        emit AddReward(id, msg.sender, amount);
     }
 
     function cleanList(uint256 id, uint256 limit) public onlyOwner {
