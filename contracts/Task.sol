@@ -58,6 +58,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     mapping(uint256 => RewardInfo[]) private rewardList; // filled by wormhole
 
     event NewTask(address indexed owner, address indexed token, uint256 amount, uint256 endTime);
+    event AddReward(uint256 indexed taskId, address indexed contributor, uint256 amount);
     event Distribute(uint256 indexed id, uint256 count);
     event AdminFillTaskList(uint256 indexed id, uint256 count);
     event TaskStateChange(uint256 indexed id, uint8 state);
@@ -92,6 +93,18 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         openningTaskIds.add(id);
 
         emit NewTask(msg.sender, token, amount, endTime);
+    }
+
+    function appendReward(
+        uint256 id,
+        uint256 amount
+    ) public nonReentrant {
+        require(taskList[id].endTime > 0, "Task has not been created");
+        require(ERC20(token).balanceOf(msg.sender) >= amount, "Insufficient balance");
+        require(taskList[id].tastState = TaskState.Openning, "Wrong task state");
+        lockERC20(taskList[id].token, msg.sender, address(this), amount);
+        taskList[id].amount += amount;
+        emit AddReward(id, msg.sender, amount)
     }
 
     function cleanList(uint256 id, uint256 limit) public onlyOwner {
@@ -141,7 +154,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         emit AdminFillTaskList(id, users.length);
     }
 
-    function redeem(uint256 id) public onlyOwner {
+    function redeem(uint256 id) public nonReentrant onlyOwner {
         require(taskList[id].endTime > 0, "Task has not been created");
         require(taskList[id].endTime < block.timestamp, "Task has not finish");
         require(taskList[id].taskState == TaskState.Openning, "Task is not opening");
