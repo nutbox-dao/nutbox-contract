@@ -141,6 +141,19 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         emit AdminFillTaskList(id, users.length);
     }
 
+    function redeem(uint256 id) public onlyOwner {
+        require(taskList[id].endTime > 0, "Task has not been created");
+        require(taskList[id].endTime < block.timestamp, "Task has not finish");
+        require(taskList[id].taskState == TaskState.Openning, "Task is not opening");
+        require(rewardList[id].length == 0, "Task has already been commitList");
+        if (taskList[id].amount > 0) {
+            releaseERC20(taskList[id].token, taskList[id].owner, taskList[id].amount);
+        }
+        taskList[id].taskState = TaskState.Closed;
+        openningTaskIds.remove(id);
+        emit TaskStateChange(id, uint8(TaskState.Closed));
+    }
+
     // The task creator trigger the distribution batch by batch
     function distribute(uint256 id, uint256 _limit) public nonReentrant {
         // require(taskList[id].owner == msg.sender, 'You are not the task creator');
