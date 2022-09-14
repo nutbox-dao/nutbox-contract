@@ -159,11 +159,11 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         require(taskList[id].endTime < block.timestamp, "Task has not finish");
         require(taskList[id].taskState == TaskState.Openning, "Task is not opening");
         require(rewardList[id].length == 0, "Task has already been commitList");
+        taskList[id].taskState = TaskState.Closed;
+        openningTaskIds.remove(id);
         if (taskList[id].amount > 0) {
             releaseERC20(taskList[id].token, taskList[id].owner, taskList[id].amount);
         }
-        taskList[id].taskState = TaskState.Closed;
-        openningTaskIds.remove(id);
         emit TaskStateChange(id, uint8(TaskState.Closed));
     }
 
