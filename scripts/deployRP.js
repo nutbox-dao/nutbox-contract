@@ -5,8 +5,9 @@ const ReputationJson = require('../build/contracts/Reputation.json');
 
 async function deployRPContract(env) {
     let factory = new ethers.ContractFactory(ReputationJson.abi, ReputationJson.bytecode, env.wallet);
-    let contract = await factory.deploy('https://test.web3id.pro',
-    { gasPrice: 10000000000 });
+    let contract = await factory.deploy('https://test.web3id.pro', {
+        gasPrice: env.gasPrice
+    });
     await contract.deployed();
     console.log("✓ Reputation contract deployed", contract.address);
     return contract.address;
@@ -22,7 +23,7 @@ async function main() {
 
     env.gasPrice = await env.provider.getGasPrice();
 
-    const res = await deployRPContract(env)
+    const tx = await deployRPContract(env)
     
     console.log(tx.hash);
 }
