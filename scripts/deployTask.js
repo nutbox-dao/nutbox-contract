@@ -22,9 +22,14 @@ async function main() {
 
     env.gasPrice = await env.provider.getGasPrice();
 
-    const contract = await deployTaskContract(env)
-    
-    console.log(contract);
+    // const contract = await deployTaskContract(env)
+    // console.log(contract);
+
+    // const CurationContract = new ethers.Contract(contract, TaskJson.abi, env.wallet)
+    const CurationContract = new ethers.Contract("0xBD9A7D0abAB3FfB42685CC0F73c2C2Ac1a59b74B", TaskJson.abi, env.wallet)
+
+    const tx = await CurationContract.transferOwnership("0xABD00D4e135de477265C326877bEfC80B28712F1");
+    console.log(tx.hash);
 }
 
 main()
