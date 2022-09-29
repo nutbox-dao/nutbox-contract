@@ -9,8 +9,9 @@ async function deployTokenContract(env, name, symbol) {
         name,
         symbol,
         ethers.utils.parseUnits("20000000.0", 18),
+        '0x8343233717e6E7bD64C1fA5225F73c4104DE373a',
         env.wallet.address,
-        env.wallet.address
+        {gasPrice: 30000000000}
     );
     await contract.deployed();
     console.log("✓ Token deployed:", name, contract.address);
@@ -28,7 +29,7 @@ async function main() {
 
     // let tx = await deployTokenContract(env, 'BEP ATOM', 'ATOM');
     // await deployTokenContract(env, 'Ethereum Token', 'ETH');
-    await deployTokenContract(env, 'BEP STEEM', 'STEEM');
+    await deployTokenContract(env, 'TEST USDT', 'T_USDT');
     // await deployTokenContract(env, 'BTCB Token', 'BTCB')
 }
 
