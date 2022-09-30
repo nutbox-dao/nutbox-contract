@@ -21,13 +21,13 @@
 // const HDWalletProvider = require('@truffle/hdwallet-provider');
 // const infuraKey = "fj4jll3k.....";
 //
-// const fs = require('fs');
+const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 require('dotenv').config();
 const ethers = require('ethers');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
-const MNEMONIC = '';
+const MNEMONIC = fs.readFileSync(".secret").toString().trim();
 
 module.exports = {
   /**
@@ -53,12 +53,16 @@ module.exports = {
      network_id: "*",       // Any network (default: none)
     },
     bscmain: {
-      provider: () => new HDWalletProvider(MNEMONIC, 'https://bsc-dataseed.binance.org'),
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://bsc-dataseed.binance.org'),
       network_id: 56,
       confirmations: 10,
       timeoutBlocks: 200,
       skipDryRun: true
     },
+    polygon:{
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://polygon-rpc.com'),
+      network_id: 137,
+    }
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port
