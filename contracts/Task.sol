@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./ERC20Helper.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "./interfaces/IWormholeFund.sol";
 
 /**
  * Wormhole remote task Database
@@ -31,6 +32,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     struct RewardInfo {
         address user;
         uint256 amount;
+        uint256 twitterId;
     }
 
     uint256 constant BATCH_SIZE = 500;
@@ -57,6 +59,9 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     mapping(uint256 => TaskInfo) private taskList;
     mapping(uint256 => RewardInfo[]) private rewardList; // filled by wormhole
 
+    // Fund contract
+    IWormholeFund private fundContract;
+
     event NewTask(address indexed owner, address indexed token, uint256 amount, uint256 endTime);
     event AddReward(uint256 indexed taskId, address indexed contributor, uint256 amount);
     event Distribute(uint256 indexed id, uint256 count);
@@ -64,6 +69,11 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     event TaskStateChange(uint256 indexed id, uint8 state);
 
     constructor() {}
+
+    function setFundContract(address fund) public onlyOwner {
+        require(fund != address(0), "invalid fund address");
+        fundContract = IWormholeFund(fund);
+    }
 
     // create a new task
     // every one can create a task
@@ -95,10 +105,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         emit NewTask(msg.sender, token, amount, endTime);
     }
 
-    function appendReward(
-        uint256 id,
-        uint256 amount
-    ) public nonReentrant {
+    function appendReward(uint256 id, uint256 amount) public nonReentrant {
         require(taskList[id].endTime > 0, "Task has not been created");
         require(ERC20(taskList[id].token).balanceOf(msg.sender) >= amount, "Insufficient balance");
         require(taskList[id].taskState == TaskState.Openning, "Wrong task state");
@@ -132,16 +139,18 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         uint256 id,
         address[] memory users,
         uint256[] memory amounts,
+        uint256[] memory twitters,
         bool isLast
     ) public nonReentrant onlyOwner {
         require(taskList[id].endTime > 0, "Task has not been created");
         require(taskList[id].endTime < block.timestamp, "Task has not finish");
         require(taskList[id].taskState == TaskState.Openning, "Task is not opening");
         require(users.length == amounts.length, "Wrong data");
+        require(users.length == twitters.length, "Wrong data");
         require(users.length <= BATCH_SIZE, "Batch limit exceeded");
         require(users.length + rewardList[id].length <= taskList[id].maxCount, "Exceeded the maximum number of participants");
         for (uint256 i = 0; i < users.length; i++) {
-            rewardList[id].push(RewardInfo(users[i], amounts[i]));
+            rewardList[id].push(RewardInfo(users[i], amounts[i], twitters[i]));
             taskList[id].feedTotal += amounts[i];
         }
         require(taskList[id].feedTotal <= taskList[id].amount, "Invalid reward amount");
@@ -179,9 +188,15 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         uint256 distCount = 0;
 
         for (; index < rewardList[id].length && distCount < limit; index++) {
-            releaseERC20(taskList[id].token, rewardList[id][index].user, rewardList[id][index].amount);
+            if (rewardList[id][index].user == address(0)) {
+                fundContract.pushAward(rewardList[id][index].twitterId, taskList[id].token, rewardList[id][index].amount);
+                releaseERC20(taskList[id].token, address(fundContract), rewardList[id][index].amount);
+            } else {
+                releaseERC20(taskList[id].token, rewardList[id][index].user, rewardList[id][index].amount);
+            }
             distCount++;
         }
+
         taskList[id].currentIndex = index;
         emit Distribute(id, distCount);
         if (index >= rewardList[id].length) {
