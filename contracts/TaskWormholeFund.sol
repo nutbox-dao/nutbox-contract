@@ -89,6 +89,18 @@ contract TaskWormholeFund is Ownable, ERC20Helper, IWormholeFund {
     }
 
     /**
+    @dev To claim a single user's token, if the number of token types is greater than maxClaimTokens, multiple claims are required.
+    @param twitterId twitter id
+    @param addr user eth address
+    */
+    function claim(uint256 twitterId, address addr) public onlyOwner {
+        require(addr != address(0), "Address cannot be 0x00");
+        require(userAddress[twitterId] == address(0), "User address is already bound");
+        userAddress[twitterId] = addr;
+        claim(twitterId);
+    }
+
+    /**
     @dev Claim user tokens in batches
     @param twitterIds twitter ids
     */
