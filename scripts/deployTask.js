@@ -1,6 +1,6 @@
 require('dotenv').config();
 const ethers = require('ethers');
-const { getEnv } = require('./utils');
+const { getEnv, waitForTx } = require('./utils');
 
 const TaskJson = require('../build/contracts/Task.json');
 const FundJson = require("../build/contracts/TaskWormholeFund.json");
@@ -17,6 +17,11 @@ async function deployTaskContract(env) {
     factory = new ethers.ContractFactory(FundJson.abi, FundJson.bytecode, env.wallet);
     let fund = await factory.deploy({ gasPrice: env.gasPrice });
     await fund.deployed();
+
+    const tx = await contract.setFundContract(fund.address, {
+        gasPrice: env.gasPrice
+    });
+    await waitForTx(tx);
     console.log("✓ Fund contract deployed", fund.address);
 }
 
