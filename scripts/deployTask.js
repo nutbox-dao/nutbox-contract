@@ -18,6 +18,11 @@ async function deployTaskContract(env) {
     let fund = await factory.deploy({ gasPrice: env.gasPrice });
     await fund.deployed();
     console.log("✓ Fund contract deployed", fund.address);
+
+    await contract.setFundContract(fund.address);
+    console.log("✓ Bind the fund address");
+    await fund.setTaskContract(contract.address);
+    console.log("✓ Bind the task address");
 }
 
 async function deployTokenContract(env, name, symbol) {

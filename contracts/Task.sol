@@ -60,7 +60,7 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
     mapping(uint256 => RewardInfo[]) private rewardList; // filled by wormhole
 
     // Fund contract
-    IWormholeFund private fundContract;
+    IWormholeFund public fundContract;
 
     event NewTask(address indexed owner, address indexed token, uint256 amount, uint256 endTime);
     event AddReward(uint256 indexed taskId, address indexed contributor, uint256 amount);
