@@ -186,15 +186,20 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
         if (limit > BATCH_SIZE) limit = BATCH_SIZE;
         uint256 index = taskList[id].currentIndex;
         uint256 distCount = 0;
+        uint256 fundAmount = 0;
 
         for (; index < rewardList[id].length && distCount < limit; index++) {
             if (rewardList[id][index].user == address(0)) {
                 fundContract.pushAward(rewardList[id][index].twitterId, taskList[id].token, rewardList[id][index].amount);
-                releaseERC20(taskList[id].token, address(fundContract), rewardList[id][index].amount);
+                // releaseERC20(taskList[id].token, address(fundContract), rewardList[id][index].amount);
+                fundAmount += rewardList[id][index].amount;
             } else {
                 releaseERC20(taskList[id].token, rewardList[id][index].user, rewardList[id][index].amount);
             }
             distCount++;
+        }
+        if (fundAmount > 0) {
+            releaseERC20(taskList[id].token, address(fundContract), fundAmount);
         }
 
         taskList[id].currentIndex = index;
