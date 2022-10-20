@@ -203,6 +203,9 @@ contract Task is Ownable, ReentrancyGuard, ERC20Helper {
             taskList[id].taskState = TaskState.Closed;
             openningTaskIds.remove(id);
             pendingTaskIds.remove(id);
+            if (taskList[id].amount - taskList[id].feedTotal > 0) {
+                releaseERC20(taskList[id].token, taskList[id].owner, taskList[id].amount - taskList[id].feedTotal);
+            }
             emit TaskStateChange(id, uint8(TaskState.Closed));
         }
     }
