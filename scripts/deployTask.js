@@ -24,9 +24,12 @@ async function deployTaskContract(env) {
     await waitForTx(tx);
     console.log("✓ Fund contract deployed", fund.address);
 
-    await contract.setFundContract(fund.address);
+    // let fund = new ethers.Contract("0x21975Ddd770DCf76480c5Bd045F0919C5E239c36", FundJson.abi, env.wallet);
+    // let contract = new ethers.Contract("0x5D166D160a86A198c8634f9F9A22b8b6aE13ca18", TaskJson.abi, env.wallet);
+
+    await contract.setFundContract(fund.address, { gasPrice: env.gasPrice });
     console.log("✓ Bind the fund address");
-    await fund.setTaskContract(contract.address);
+    await fund.setTaskContract(contract.address, { gasPrice: env.gasPrice });
     console.log("✓ Bind the task address");
 }
 
