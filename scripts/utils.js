@@ -31,9 +31,21 @@ async function getEnv() {
     return env;
 }
 
+async function advanceTime(env, second) {
+    let time = parseInt(new Date().getTime() / 1000) + second;
+    // console.log("time: ", time);
+    if (env.url == process.env.LOCAL_RPC) {
+        let result = await env.provider.send("evm_setTime", [time]);
+        result = await env.provider.send("evm_mine");
+    } else {
+        await sleep(second * 1000);
+    }
+}
+
 module.exports = {
     sleep,
     waitForTx,
     utf8ToHex,
-    getEnv
+    getEnv,
+    advanceTime
 }
