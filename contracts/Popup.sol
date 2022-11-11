@@ -107,7 +107,7 @@ contract Popup is Ownable, ERC20Helper {
         require(popup.rewards.length == 0, "already submitted");
         require(popup.status == PopupState.normal, "A popup in a normal state can only be submitted");
         require(popup.winnerCount >= rewards.length, "invalid rewards");
-        require(popup.endTime >= block.timestamp, "End time not reached");
+        require(popup.endTime <= block.timestamp, "End time not reached");
 
         uint256 amount = 0;
         for (uint256 i = 0; i < rewards.length; i++) {
