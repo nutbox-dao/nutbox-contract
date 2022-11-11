@@ -27,7 +27,8 @@ async function getEnv() {
     // env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
     // console.log(`url: ${env.url}, gasLimit: ${process.env.GASLIMIT}, gasPrice: ${env.gasPrice}`);
-    console.log(`url: ${env.url}, address: ${env.wallet.address}, gasPrice: ${env.gasPrice}`);
+    let balance = await env.wallet.getBalance();
+    console.log(`url: ${env.url}, address: ${env.wallet.address}, balance:${ethers.utils.formatEther(balance)}, gasPrice: ${env.gasPrice}`);
     return env;
 }
 
