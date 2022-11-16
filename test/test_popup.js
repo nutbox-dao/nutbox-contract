@@ -6,8 +6,8 @@ const erc20Json = require('../build/contracts/ERC20PresetMinterPauser.json')
 const PopupJson = require('../build/contracts/Popup.json');
 
 
-const popupAddress = "0x27AA0a725A81789D794d1Ce2F489dEFD8Aa26aA7";
-const erc20Address = "0x03f4d19EB7121A754a9f3e31FD3E6622bc57D8E8";
+const popupAddress = "0x62f0468B59Ff10D66FB21c7A6df8dBC3F73c3739";
+const erc20Address = "0x110fC7b51d43241Fa7c5F587b8E620724f376Bc7";
 
 const curationId = "208975624545445";
 const popupTweetId = "149465164894515";
@@ -92,7 +92,21 @@ async function main() {
     console.log("balance: ", ethers.utils.formatEther(balance2), ethers.utils.formatEther(balance.sub(balance2)));
 }
 
+async function main2(){
+    let env = await getEnv();
+    const Popup = new ethers.Contract(popupAddress, PopupJson.abi, env.wallet);
+    const Erc20 = new ethers.Contract(erc20Address, erc20Json.abi, env.wallet);
 
-main()
+    console.log("approve to %s...", Popup.address);
+    let tx = await Erc20.approve(Popup.address, ethers.constants.MaxUint256);
+    await waitForTx(env.provider, tx.hash);
+
+    console.log("transfer to %s...", env.wallet.address);
+    tx = await Erc20.mint(env.wallet.address, bonus);
+    await waitForTx(env.provider, tx.hash);
+
+}
+
+main2()
     .catch(console.error)
     .finally(() => process.exit());
