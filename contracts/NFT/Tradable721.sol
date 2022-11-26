@@ -110,8 +110,8 @@ contract Tradable721 is ERC721PresetMinterPauserAutoId {
     }
 
     function _burn(uint256 tokenId) internal virtual override {
+        address owner = ERC721.ownerOf(tokenId);
         super._burn(tokenId);
-        address owner = ownerOf(tokenId);
         _removeTokenFrom(owner, tokenId);
     }
 
