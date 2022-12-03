@@ -7,9 +7,13 @@ const PopupJson = require('../build/contracts/Popup.json');
 
 async function deployPopupContract(env) {
     let factory = new ethers.ContractFactory(PopupJson.abi, PopupJson.bytecode, env.wallet);
-    let contract = await factory.deploy({ gasPrice: env.gasPrice });
+    let gasPrice = env.gasPrice;
+    let contract = await factory.deploy({ gasPrice });
     await contract.deployed();
     console.log("✓ Popup contract deployed", contract.address);
+    let owner ="0xb850d021D8876a359FBFd34988d0C6A21A29edf9";
+    await contract.transferOwnership(owner, { gasPrice });
+    console.log(`✓ transferOwnership to ${owner}`);
 }
 
 async function deployTokenContract(env, name, symbol) {
@@ -25,7 +29,7 @@ async function deployTokenContract(env, name, symbol) {
 }
 
 async function main() {
-    let env = await getEnv();
+    let env = await getEnv(false);
     await deployPopupContract(env)
     if (env.url == process.env.LOCAL_RPC) {
         await deployTokenContract(env, "TEST", "TEST");

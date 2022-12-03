@@ -53,7 +53,7 @@ module.exports = {
      network_id: "*",       // Any network (default: none)
     },
     bscmain: {
-      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://bsc-dataseed.binance.org'),
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://bsc.nodereal.io'),
       network_id: 56,
       confirmations: 10,
       timeoutBlocks: 200,
