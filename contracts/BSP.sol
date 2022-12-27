@@ -20,7 +20,7 @@ contract BSP is Ownable, AccessControlEnumerable, ERC20Burnable {
     }
 
     function steemToBsp(string memory steem, address to, uint256 amount) public {
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have minter role to mint");
+        // require(hasRole(MINTER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have minter role to mint");
         require(to != address(0), "Wrong target address");
         _mint(to, amount);
         emit SteemToBSP(steem, to, amount);
