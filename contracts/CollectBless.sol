@@ -7,10 +7,11 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./Random.sol";
 import "./Utils.sol";
 
-contract CollectBless is Ownable {
+contract CollectBless is Ownable, ReentrancyGuard {
     /**
     Prize type
      */
@@ -336,7 +337,7 @@ contract CollectBless is Ownable {
         emit OpenBox(msg.sender, outIds);
     }
 
-    function _openBox(address to, uint256 idx) private returns (uint256) {
+    function _openBox(address to, uint256 idx) private nonReentrant returns (uint256) {
         bytes32 seed = random.getRandom(0);
         bool isBlind = true;
         uint256 wIdx = 0;
