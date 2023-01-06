@@ -33,7 +33,7 @@ async function deployERC1155(env) {
 }
 
 async function createERC20(env) {
-    cERC20 = new ethers.Contract("0x07093De36d8087Acd62F42cb429C2cd9D3d463FA", ERC20.abi, env.wallet);
+    cERC20 = new ethers.Contract("0xb11caA994bF93D1371F7c8b40b59443d986cC4a9", ERC20.abi, env.wallet);
     await cERC20.mint(env.wallet.address, ethers.utils.parseEther("1000"));
 }
 
@@ -43,7 +43,7 @@ async function createERC721(env) {
 }
 
 async function createERC1155(env) {
-    cERC1155 = new ethers.Contract("0x1Ee9B9fDF756c89441D77F47E1F309f8CdD51545", ERC1155.abi, env.wallet);
+    cERC1155 = new ethers.Contract("0xaFAD6BCb2958bc7158618392809872FE8Ff4fD82", ERC1155.abi, env.wallet);
     await cERC1155.mint(env.wallet.address, 1, 10, "0x00");
 }
 
@@ -164,12 +164,13 @@ async function test_openBox(env) {
     let userWeights = await cCollectBless.userWeights(env.wallet.address);
     console.log("\tuserWeights: ", userWeights.toString());
 
-    let uob = await cCollectBless.getUserOpenBoxs(env.wallet.address);
-    let userOpenBoxs = [];
-    for (let i = 0; i < uob.length; i++) {
-        userOpenBoxs.push(uob[i].toNumber());
-    }
-    console.log("\tuserOpenBoxs: ", userOpenBoxs);
+    // let uob = await cCollectBless.getUserOpenBoxs(env.wallet.address);
+    let uob = await cCollectBless.getUserOpendBox(env.wallet.address);
+    // let userOpenBoxs = [];
+    // for (let i = 0; i < uob.length; i++) {
+    //     userOpenBoxs.push(uob[i].toNumber());
+    // }
+    console.log("\tuserOpenBoxs: ", uob);
 }
 
 async function test_collectBless(env) {

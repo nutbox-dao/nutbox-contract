@@ -491,15 +491,16 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
 
     function getUserOpendBox(address user) public view returns (BlindBox[] memory boxes) {
         uint256[] memory ids = userOpenBoxs[user];
-        if (ids.length == 0){
+        if (ids.length == 0) {
             return boxes;
         }
-        for(uint256 i=0; i < ids.length; i++) {
+        boxes = new BlindBox[](ids.length);
+        for (uint256 i = 0; i < ids.length; i++) {
             boxes[i] = blindBoxs[ids[i]];
         }
         return boxes;
     }
-    
+
     function onERC721Received(
         address,
         address,
