@@ -33,7 +33,7 @@ async function deployERC1155(env) {
 }
 
 async function createERC20(env) {
-    cERC20 = new ethers.Contract("0xb11caA994bF93D1371F7c8b40b59443d986cC4a9", ERC20.abi, env.wallet);
+    cERC20 = new ethers.Contract("0x9CC8917f0abf9Ceb97cf0EB22cED8d6eC2cdeAB5", ERC20.abi, env.wallet);
     await cERC20.mint(env.wallet.address, ethers.utils.parseEther("1000"));
 }
 
@@ -43,7 +43,7 @@ async function createERC721(env) {
 }
 
 async function createERC1155(env) {
-    cERC1155 = new ethers.Contract("0xaFAD6BCb2958bc7158618392809872FE8Ff4fD82", ERC1155.abi, env.wallet);
+    cERC1155 = new ethers.Contract("0x4785f69141543047fb01f4f6Fc673bb69A97f994", ERC1155.abi, env.wallet);
     await cERC1155.mint(env.wallet.address, 1, 10, "0x00");
 }
 
@@ -174,13 +174,51 @@ async function test_openBox(env) {
 }
 
 async function test_collectBless(env) {
-    cCollectBless = new ethers.Contract(CollectBless.networks[chainId].address, CollectBless.abi, env.wallet);
-
     await test_erc20(env);
     await test_erc721(env);
     await test_erc1155(env);
     await test_mintCrad(env);
     await test_openBox(env);
+}
+
+async function showCollectBless(env) {
+    console.log("\n\nShow CollectBless contract info......");
+
+    let random = await cCollectBless.random();
+    console.log("\trandom: ", random);
+
+    let blessCard = await cCollectBless.blessCard();
+    console.log("\tblessCard: ", blessCard);
+
+    let ppt = await cCollectBless.prizePoolToken();
+    console.log("\tprizePoolToken: ", ppt);
+
+    let amount = await cCollectBless.prizePoolAmount();
+    console.log("\tprizePoolAmount: ", ethers.utils.formatEther(amount));
+
+    let blindBoxCount = await cCollectBless.blindBoxCount();
+    console.log("\tblindBoxCount: ", blindBoxCount.toString());
+
+    let totalWeights = await cCollectBless.totalWeights();
+    console.log("\ttotalWeights: ", totalWeights.toString());
+
+    let mintBoxCounts = await cCollectBless.mintBoxCounts(env.wallet.address);
+    console.log("\tmintBoxCounts: ", mintBoxCounts.toString());
+
+    let openBoxCounts = await cCollectBless.openBoxCounts(env.wallet.address);
+    console.log("\topenBoxCounts: ", openBoxCounts.toString());
+
+    let rareCardPrice = await cCollectBless.rareCardPrice();
+    console.log("\trareCardPrice: ", ethers.utils.formatEther(rareCardPrice));
+
+    let blindBoxPrice = await cCollectBless.blindBoxPrice();
+    console.log("\tblindBoxPrice: ", ethers.utils.formatEther(blindBoxPrice));
+
+    let rareCardCount = await cCollectBless.rareCardCount();
+    console.log("\trareCardCount: ", rareCardCount.toString());
+
+    let eventEndTime = await cCollectBless.eventEndTime();
+    console.log("\teventEndTime: ", new Date(eventEndTime.toNumber() * 1000));
 }
 
 
@@ -194,12 +232,19 @@ async function main() {
         return;
     }
 
-    // approve USDT to CollectBless contract
+    cCollectBless = new ethers.Contract(CollectBless.networks[chainId].address, CollectBless.abi, env.wallet);
     prizePoolToken = new ethers.Contract(ERC20.networks[chainId].address, ERC20.abi, env.wallet);
+    blessCardNFT = new ethers.Contract(ERC1155.networks[chainId].address, ERC1155.abi, env.wallet);
+
+    if (args.show) {
+        await showCollectBless(env);
+        return;
+    }
+
+    // approve USDT to CollectBless contract
     await prizePoolToken.mint(env.wallet.address, ethers.utils.parseEther("100000"));
     await prizePoolToken.approve(CollectBless.networks[chainId].address, ethers.constants.MaxUint256);
 
-    blessCardNFT = new ethers.Contract(ERC1155.networks[chainId].address, ERC1155.abi, env.wallet);
     // approve to CollectBless contract
     await blessCardNFT.setApprovalForAll(CollectBless.networks[chainId].address, true);
 
@@ -210,6 +255,7 @@ const parser = new ArgumentParser({
     description: 'Argparse example'
 });
 parser.add_argument('-D', '--deploy', { help: 'deploy', action: 'store_true' });
+parser.add_argument('-S', '--show', { help: 'show info', action: 'store_true' });
 const args = parser.parse_args();
 
 main()
