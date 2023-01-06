@@ -489,14 +489,24 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         }
     }
 
-    function getUserOpendBox(address user) public view returns (BlindBox[] memory boxes) {
+    function getUserOpendBox(address user, uint256 startIndex, uint256 lastIndex) public view returns (BlindBox[] memory boxes) {
+        require(startIndex < lastIndex, 'Wrong index param');
         uint256[] memory ids = userOpenBoxs[user];
         if (ids.length == 0) {
             return boxes;
         }
-        boxes = new BlindBox[](ids.length);
-        for (uint256 i = 0; i < ids.length; i++) {
-            boxes[i] = blindBoxs[ids[i]];
+        uint256 len = ids.length;
+        if (len <= startIndex) {
+            return boxes;
+        }
+        if (len <= lastIndex) {
+            lastIndex = len;
+        }
+        boxes = new BlindBox[](lastIndex - startIndex);
+        uint256 i = 0;
+        for (uint256 j = startIndex; j < lastIndex; j++) {
+            boxes[i] = blindBoxs[ids[j]];
+            i++;
         }
         return boxes;
     }
