@@ -99,9 +99,9 @@ contract CollectBless is Ownable, ReentrancyGuard {
     mapping(address => uint256) public openBoxCounts;
 
     // user address => blind box ids
-    mapping(address => uint256[]) userOpenBoxs;
+    mapping(address => uint256[]) public userOpenBoxs;
     // user address => total weights
-    mapping(address => uint256) userWeights;
+    mapping(address => uint256) public userWeights;
 
     uint256 public rareCradId = 5;
 
@@ -481,5 +481,16 @@ contract CollectBless is Ownable, ReentrancyGuard {
                 IERC1155(bb.token).safeTransferFrom(address(this), bb.creator, bb.nftId, bb.amount, data);
             }
         }
+    }
+
+    function getUserOpendBox(address user) public view returns (BlindBox[] memory boxes) {
+        uint256[] memory ids = userOpenBoxs[user];
+        if (ids.length == 0){
+            return boxes;
+        }
+        for(uint256 i=0; i < ids.length; i++) {
+            boxes[i] = blindBoxs[ids[i]];
+        }
+        return boxes;
     }
 }
