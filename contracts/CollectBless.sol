@@ -427,12 +427,17 @@ contract CollectBless is Ownable, ReentrancyGuard {
     /**
     Claim an unopened blind box
      */
-    function claimBlindBox() public {
+    function claimBlindBox(uint256 _limit) public {
         require(eventEndTime < block.timestamp, "The event is not over yet");
+
+        uint256 limit = 300;
+        if (_limit != 0) {
+            limit = _limit;
+        }
 
         if (mintBoxCounts[msg.sender] - openBoxCounts[msg.sender] > 0) {
             uint256 j = 0;
-            for (uint256 i = 0; j < 300 && i < blindBoxPool.length; j++) {
+            for (uint256 i = 0; j < limit && i < blindBoxPool.length; j++) {
                 BlindBox storage bb = blindBoxs[blindBoxPool[i]];
                 if (bb.creator == msg.sender) {
                     openBoxCounts[msg.sender] += 1;
