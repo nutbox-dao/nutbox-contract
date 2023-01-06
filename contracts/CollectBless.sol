@@ -8,10 +8,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "./Random.sol";
 import "./Utils.sol";
 
-contract CollectBless is Ownable, ReentrancyGuard {
+contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Receiver {
     /**
     Prize type
      */
@@ -99,9 +101,9 @@ contract CollectBless is Ownable, ReentrancyGuard {
     mapping(address => uint256) public openBoxCounts;
 
     // user address => blind box ids
-    mapping(address => uint256[]) userOpenBoxs;
+    mapping(address => uint256[]) public userOpenBoxs;
     // user address => total weights
-    mapping(address => uint256) userWeights;
+    mapping(address => uint256) public userWeights;
 
     uint256 public rareCradId = 5;
 
@@ -481,5 +483,38 @@ contract CollectBless is Ownable, ReentrancyGuard {
                 IERC1155(bb.token).safeTransferFrom(address(this), bb.creator, bb.nftId, bb.amount, data);
             }
         }
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) public pure override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) public pure override returns (bytes4) {
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) public pure override returns (bytes4) {
+        return 0;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
+        return interfaceId == type(IERC721Receiver).interfaceId || interfaceId == type(IERC1155Receiver).interfaceId;
     }
 }

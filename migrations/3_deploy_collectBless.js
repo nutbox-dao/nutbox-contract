@@ -26,11 +26,5 @@ module.exports = async function (deployer, network) {
         } catch (e) {
             await deployer.deploy(ERC20PresetMinterPauser, "Test USDT", "USDT");
         }
-
-        try {
-            await ERC1155PresetMinterPauser.at(ERC1155PresetMinterPauser.address);
-        } catch (e) {
-            await deployer.deploy(ERC1155PresetMinterPauser, "");
-        }
     }
 }
