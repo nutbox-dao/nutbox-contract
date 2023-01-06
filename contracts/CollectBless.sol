@@ -118,6 +118,8 @@ contract CollectBless is Ownable, ReentrancyGuard {
     // Bonuses already claimed by the user
     mapping(address => uint256) public alreadyReceived;
 
+    bytes32 private randomFactor;
+
     event MintBox(address indexed creator, uint256[] ids);
     event OpenBox(address indexed user, uint256[] ids);
 
@@ -142,6 +144,9 @@ contract CollectBless is Ownable, ReentrancyGuard {
         weightsConfig.push(15);
         weightsConfig.push(10);
         weightsConfig.push(5);
+
+        bytes32 seed = random.getRandom(0);
+        randomFactor = keccak256(abi.encodePacked(randomFactor, seed));
     }
 
     /**
@@ -156,6 +161,10 @@ contract CollectBless is Ownable, ReentrancyGuard {
      */
     function setBlindBoxPrice(uint256 price) public onlyOwner {
         blindBoxPrice = price;
+    }
+
+    function setEventEndTime(uint256 newTime) public onlyOwner {
+        eventEndTime = newTime;
     }
 
     /**
@@ -330,28 +339,33 @@ contract CollectBless is Ownable, ReentrancyGuard {
         rareCardCount -= quantity;
 
         uint256[] memory outIds = new uint256[](quantity);
+        bytes32 seed = random.getRandom(0);
+        randomFactor = keccak256(abi.encodePacked(randomFactor, seed));
         for (uint256 i = 0; i < quantity; i++) {
-            outIds[i] = _openBox(msg.sender, i);
+            outIds[i] = _openBox(msg.sender, i, seed);
         }
 
         emit OpenBox(msg.sender, outIds);
     }
 
-    function _openBox(address to, uint256 idx) private nonReentrant returns (uint256) {
-        bytes32 seed = random.getRandom(0);
+    function _openBox(
+        address to,
+        uint256 idx,
+        bytes32 seed
+    ) private nonReentrant returns (uint256) {
         bool isBlind = true;
         uint256 wIdx = 0;
         if (blindBoxPool.length < 1) {
             isBlind = false;
         } else {
-            uint256 w = Utils.randomUint(abi.encodePacked(seed, to, idx, "blind"), 1, 100);
+            uint256 w = Utils.randomUint(abi.encodePacked(seed, randomFactor, to, idx, "blind"), 1, 100);
             if (w > 50) {
                 isBlind = false;
             }
         }
 
         if (isBlind) {
-            uint256 index = Utils.randomUint(abi.encodePacked(seed, to, idx, "eIndex"), 0, blindBoxPool.length - 1);
+            uint256 index = Utils.randomUint(abi.encodePacked(seed, randomFactor, to, idx, "eIndex"), 0, blindBoxPool.length - 1);
             BlindBox storage bb = blindBoxs[blindBoxPool[index]];
 
             if (bb.prizeType == PrizeType.ERC20) {
@@ -364,7 +378,7 @@ contract CollectBless is Ownable, ReentrancyGuard {
             }
 
             seed = random.getRandom(bb.seedBlock);
-            wIdx = Utils.randomWeight(abi.encodePacked(seed, to, idx, "weights"), weightsConfig, 100);
+            wIdx = Utils.randomWeight(abi.encodePacked(seed, randomFactor, to, idx, "weights"), weightsConfig, 100);
             bb.weights = weightsValue[wIdx];
 
             // del from pool
@@ -384,7 +398,7 @@ contract CollectBless is Ownable, ReentrancyGuard {
             bb.prizeType = PrizeType.NONE;
             bb.creator = address(0);
             bb.token = address(0);
-            wIdx = Utils.randomWeight(abi.encodePacked(seed, to, idx, "weights"), weightsConfig, 100);
+            wIdx = Utils.randomWeight(abi.encodePacked(seed, randomFactor, to, idx, "weights"), weightsConfig, 100);
             bb.weights = weightsValue[wIdx];
 
             userOpenBoxs[to].push(blindBoxCount);

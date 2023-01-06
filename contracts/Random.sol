@@ -17,7 +17,9 @@ contract Random {
                 if (blockNumber >= block.number) blockNumber -= 256;
                 randomN = blockhash(blockNumber);
             }
-            randoms[blockNumber] = randomN;
+            if (blockNumber != 0) {
+                randoms[blockNumber] = randomN;
+            }
         }
         return keccak256(abi.encode(randomN, blockNumber));
     }
