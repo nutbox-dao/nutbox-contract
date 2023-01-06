@@ -21,6 +21,9 @@ async function init_collectBless(env) {
     d1.setUTCDate(d1.getUTCDate() + 1);
     let endTime = parseInt(d1.getTime() / 1000);
     await collectBlessContract.init(blessCardAddress, erc20Address, randomAddress, endTime);
+
+    const blessCardContract = new ethers.Contract(blessCardAddress, ERC1155.abi, env.wallet);
+    await blessCardContract.grantRole("0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6", collectBlessAddress);
 }
 
 async function main() {

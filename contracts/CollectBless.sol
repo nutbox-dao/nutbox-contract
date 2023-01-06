@@ -101,7 +101,7 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
     mapping(address => uint256) public openBoxCounts;
 
     // user address => blind box ids
-    mapping(address => uint256[]) public userOpenBoxs;
+    mapping(address => uint256[]) userOpenBoxs;
     // user address => total weights
     mapping(address => uint256) public userWeights;
 
@@ -167,6 +167,10 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
 
     function setEventEndTime(uint256 newTime) public onlyOwner {
         eventEndTime = newTime;
+    }
+
+    function getUserOpenBoxs(address user) public view returns (uint256[] memory) {
+        return userOpenBoxs[user];
     }
 
     /**
