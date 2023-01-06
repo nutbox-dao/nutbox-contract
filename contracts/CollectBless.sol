@@ -437,6 +437,7 @@ contract CollectBless is Ownable, ReentrancyGuard {
 
         if (mintBoxCounts[msg.sender] - openBoxCounts[msg.sender] > 0) {
             uint256 j = 0;
+            bytes memory data = new bytes(1);
             for (uint256 i = 0; j < limit && i < blindBoxPool.length; j++) {
                 BlindBox storage bb = blindBoxs[blindBoxPool[i]];
                 if (bb.creator == msg.sender) {
@@ -448,12 +449,36 @@ contract CollectBless is Ownable, ReentrancyGuard {
                     } else if (bb.prizeType == PrizeType.ERC721) {
                         IERC721(bb.token).safeTransferFrom(address(this), msg.sender, bb.nftId);
                     } else if (bb.prizeType == PrizeType.ERC1155) {
-                        bytes memory data = new bytes(1);
                         IERC1155(bb.token).safeTransferFrom(address(this), msg.sender, bb.nftId, bb.amount, data);
                     }
                 } else {
                     i++;
                 }
+            }
+        }
+    }
+
+    function claimBlindBox2(uint256 _limit) public {
+        require(eventEndTime < block.timestamp, "The event is not over yet");
+
+        uint256 limit = 300;
+        if (_limit != 0) {
+            limit = _limit;
+        }
+
+        uint256 j = 0;
+        bytes memory data = new bytes(1);
+        for (int256 i = int256(blindBoxPool.length - 1); j < limit && i >= 0; j++) {
+            BlindBox storage bb = blindBoxs[blindBoxPool[uint256(i)]];
+            openBoxCounts[bb.creator] += 1;
+            blindBoxPool.pop();
+            i = int256(blindBoxPool.length - 1);
+            if (bb.prizeType == PrizeType.ERC20) {
+                IERC20(bb.token).transfer(bb.creator, bb.amount);
+            } else if (bb.prizeType == PrizeType.ERC721) {
+                IERC721(bb.token).safeTransferFrom(address(this), bb.creator, bb.nftId);
+            } else if (bb.prizeType == PrizeType.ERC1155) {
+                IERC1155(bb.token).safeTransferFrom(address(this), bb.creator, bb.nftId, bb.amount, data);
             }
         }
     }
