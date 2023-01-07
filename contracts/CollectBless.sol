@@ -302,6 +302,21 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         rareCardCount += quantity;
     }
 
+    function mintRareCardBatch(address[] memory tos, uint256[] memory quantities) public nonReentrant {
+        require(eventEndTime > block.timestamp, "has ended");
+        require(tos.length == quantities.length, "invalid datas");
+
+        uint256 fee;
+        bytes memory data = new bytes(1);
+        for (uint256 i = 0; i < tos.length; i++) {
+            fee += rareCardPrice * quantities[i];
+            blessCard.mint(tos[i], rareCradId, quantities[i], data);
+            rareCardCount += quantities[i];
+        }
+        prizePoolToken.transferFrom(msg.sender, address(this), fee);
+        prizePoolAmount += fee;
+    }
+
     /**
     Mint normal card
      */
@@ -489,8 +504,12 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         }
     }
 
-    function getUserOpendBox(address user, uint256 startIndex, uint256 lastIndex) public view returns (BlindBox[] memory boxes) {
-        require(startIndex < lastIndex, 'Wrong index param');
+    function getUserOpendBox(
+        address user,
+        uint256 startIndex,
+        uint256 lastIndex
+    ) public view returns (BlindBox[] memory boxes) {
+        require(startIndex < lastIndex, "Wrong index param");
         uint256[] memory ids = userOpenBoxs[user];
         if (ids.length == 0) {
             return boxes;
