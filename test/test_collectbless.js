@@ -33,7 +33,7 @@ async function deployERC1155(env) {
 }
 
 async function createERC20(env) {
-    cERC20 = new ethers.Contract("0x9CC8917f0abf9Ceb97cf0EB22cED8d6eC2cdeAB5", ERC20.abi, env.wallet);
+    cERC20 = new ethers.Contract("0x1eaDb5710Aa72e801efC86E96f2126474F002533", ERC20.abi, env.wallet);
     await cERC20.mint(env.wallet.address, ethers.utils.parseEther("1000"));
 }
 
@@ -43,7 +43,7 @@ async function createERC721(env) {
 }
 
 async function createERC1155(env) {
-    cERC1155 = new ethers.Contract("0x4785f69141543047fb01f4f6Fc673bb69A97f994", ERC1155.abi, env.wallet);
+    cERC1155 = new ethers.Contract("0xA74AAC65a3ab5F407Bcddf816f8E0c583d3E4C26", ERC1155.abi, env.wallet);
     await cERC1155.mint(env.wallet.address, 1, 10, "0x00");
 }
 
@@ -165,12 +165,40 @@ async function test_openBox(env) {
     console.log("\tuserWeights: ", userWeights.toString());
 
     // let uob = await cCollectBless.getUserOpenBoxs(env.wallet.address);
-    let uob = await cCollectBless.getUserOpendBox(env.wallet.address);
+    let uob = await cCollectBless.getUserOpendBox(env.wallet.address, 0, 10);
     // let userOpenBoxs = [];
     // for (let i = 0; i < uob.length; i++) {
     //     userOpenBoxs.push(uob[i].toNumber());
     // }
     console.log("\tuserOpenBoxs: ", uob);
+}
+
+async function test_cashPrize(env) {
+    await showCollectBless(env);
+    console.log("\n\ntest_cashPrize......");
+
+    // generate block, end event
+    let d1 = new Date();
+    d1.setUTCDate(d1.getUTCDate() + 1);
+    await env.provider.send("evm_setTime", [parseInt(d1.getTime())]);
+    await env.provider.send("evm_mine");
+
+    let balance = await prizePoolToken.balanceOf(env.wallet.address);
+    console.log("\tbalance: ", ethers.utils.formatEther(balance));
+
+    await cCollectBless.cashPrize();
+
+    let balance2 = await prizePoolToken.balanceOf(env.wallet.address);
+    console.log("\tbalance2: ", ethers.utils.formatEther(balance2));
+}
+
+async function test_claimBlindBox(env){
+    await showCollectBless(env);
+    console.log("\n\ntest_claimBlindBox......");
+
+    await cCollectBless.claimBlindBox(300);
+
+    await showCollectBless(env);
 }
 
 async function test_collectBless(env) {
@@ -179,6 +207,8 @@ async function test_collectBless(env) {
     await test_erc1155(env);
     await test_mintCrad(env);
     await test_openBox(env);
+    await test_cashPrize(env);
+    await test_claimBlindBox(env);
 }
 
 async function showCollectBless(env) {
@@ -219,6 +249,9 @@ async function showCollectBless(env) {
 
     let eventEndTime = await cCollectBless.eventEndTime();
     console.log("\teventEndTime: ", new Date(eventEndTime.toNumber() * 1000));
+
+    let balance = await prizePoolToken.balanceOf(cCollectBless.address);
+    console.log("\tbalance: ", ethers.utils.formatEther(balance));
 }
 
 
