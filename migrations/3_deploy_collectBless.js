@@ -21,7 +21,7 @@ module.exports = async function (deployer, network) {
     await deployer.link(Utils, CollectBless);
     await deployer.deploy(CollectBless);
 
-    if (network == "development") {
+    if (network == "development" || network == "bsctest") {
         try {
             await ERC20PresetMinterPauser.at(ERC20PresetMinterPauser.address);
         } catch (e) {

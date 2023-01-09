@@ -48,9 +48,9 @@ module.exports = {
     // options below to some value.
     //
     development: {
-     host: "127.0.0.1",     // Localhost (default: none)
-     port: 8545,            // Standard Ethereum port (default: none)
-     network_id: "*",       // Any network (default: none)
+      host: "127.0.0.1",     // Localhost (default: none)
+      port: 8545,            // Standard Ethereum port (default: none)
+      network_id: "*",       // Any network (default: none)
     },
     bscmain: {
       provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://bsc.nodereal.io'),
@@ -59,9 +59,13 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true
     },
-    polygon:{
+    polygon: {
       provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://polygon-rpc.com'),
       network_id: 137,
+    },
+    bsctest: {
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), "https://data-seed-prebsc-2-s3.binance.org:8545"),
+      network_id: 97
     }
     // Another network with more advanced options...
     // advanced: {
@@ -101,11 +105,11 @@ module.exports = {
       version: "0.8.0",    // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {          // See the solidity docs for advice about optimization and evmVersion
-       optimizer: {
-         enabled: true,
-         runs: 200
-       },
-       evmVersion: "constantinople"
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+        evmVersion: "constantinople"
       }
     }
   },

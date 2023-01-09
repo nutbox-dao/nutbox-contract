@@ -18,12 +18,14 @@ async function init_collectBless(env) {
     let erc20Address = ERC20.networks[chainId].address;
     const collectBlessContract = new ethers.Contract(collectBlessAddress, CollectBless.abi, env.wallet);
     let d1 = new Date();
-    d1.setUTCDate(d1.getUTCDate() + 1);
+    d1.setUTCDate(d1.getUTCDate() + 3);
     let endTime = parseInt(d1.getTime() / 1000);
     await collectBlessContract.init(blessCardAddress, erc20Address, randomAddress, endTime);
 
     const blessCardContract = new ethers.Contract(blessCardAddress, ERC1155.abi, env.wallet);
     await blessCardContract.grantRole("0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6", collectBlessAddress);
+
+    await collectBlessContract.transferOwnership("0x31ea10e78F9F1e61861DE6bA10ad090904abC1d6");
 }
 
 async function main() {
