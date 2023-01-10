@@ -1,0 +1,291 @@
+{
+  "contractName": "IAstarDappStakingConfig",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "precision",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minimumStake",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "maxUnlockingChunks",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"maxUnlockingChunks\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minimumStake\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"precision\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"minimumStake()\":{\"notice\":\"Minimum stake amount\"},\"precision()\":{\"notice\":\"The factor by which the molecule is magnified. default: 10^18\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/dapps/astar-dapp-staking/IAstarDappStakingConfig.sol\":\"IAstarDappStakingConfig\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/dapps/astar-dapp-staking/IAstarDappStakingConfig.sol\":{\"keccak256\":\"0x5cfb0bdc911db16e26f7303cb437f400af49aa617c2fd8e72b0b67fa71068749\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://016b88548da803b882a708f432477c078c44ad8e91b21961a4df215455ec7e56\",\"dweb:/ipfs/QmefNYAPfiGs7GKhxbTzKp9o5cwjYxiJgb4JQTKB4Wazb3\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\ninterface IAstarDappStakingConfig {\n    /**\n    @notice The factor by which the molecule is magnified. default: 10^18\n    */\n    function precision() external view returns (uint256);\n\n    /**\n    @notice Minimum stake amount\n    */\n    function minimumStake() external view returns (uint256);\n\n    function maxUnlockingChunks() external view returns (uint256);\n}\n",
+  "sourcePath": "/Users/necklace/work/nutbox/nutbox-contract/contracts/dapps/astar-dapp-staking/IAstarDappStakingConfig.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/dapps/astar-dapp-staking/IAstarDappStakingConfig.sol",
+    "exportedSymbols": {
+      "IAstarDappStakingConfig": [
+        6849
+      ]
+    },
+    "id": 6850,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6831,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:23:27"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "id": 6849,
+        "linearizedBaseContracts": [
+          6849
+        ],
+        "name": "IAstarDappStakingConfig",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 6832,
+              "nodeType": "StructuredDocumentation",
+              "src": "98:84:27",
+              "text": "@notice The factor by which the molecule is magnified. default: 10^18"
+            },
+            "functionSelector": "d3b5dc3b",
+            "id": 6837,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "precision",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6833,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "205:2:27"
+            },
+            "returnParameters": {
+              "id": 6836,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6835,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6837,
+                  "src": "231:7:27",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6834,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "231:7:27",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "230:9:27"
+            },
+            "scope": 6849,
+            "src": "187:53:27",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 6838,
+              "nodeType": "StructuredDocumentation",
+              "src": "246:43:27",
+              "text": "@notice Minimum stake amount"
+            },
+            "functionSelector": "ec5ffac2",
+            "id": 6843,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "minimumStake",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6839,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "315:2:27"
+            },
+            "returnParameters": {
+              "id": 6842,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6841,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6843,
+                  "src": "341:7:27",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6840,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "341:7:27",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "340:9:27"
+            },
+            "scope": 6849,
+            "src": "294:56:27",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "functionSelector": "6cbcfa49",
+            "id": 6848,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "maxUnlockingChunks",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 6844,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "383:2:27"
+            },
+            "returnParameters": {
+              "id": 6847,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6846,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 6848,
+                  "src": "409:7:27",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 6845,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "409:7:27",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "408:9:27"
+            },
+            "scope": 6849,
+            "src": "356:62:27",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 6850,
+        "src": "58:362:27"
+      }
+    ],
+    "src": "33:388:27"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.7",
+  "updatedAt": "2022-05-26T06:57:12.301Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "minimumStake()": {
+        "notice": "Minimum stake amount"
+      },
+      "precision()": {
+        "notice": "The factor by which the molecule is magnified. default: 10^18"
+      }
+    },
+    "version": 1
+  }
+}

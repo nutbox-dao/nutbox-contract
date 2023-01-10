@@ -1,0 +1,141 @@
+{
+  "contractName": "IAstarFactory",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "delegateDappsStakingContract",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"delegateDappsStakingContract\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/dapps/astar-dapp-staking/IAstarFactory.sol\":\"IAstarFactory\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/dapps/astar-dapp-staking/IAstarFactory.sol\":{\"keccak256\":\"0x6d95a0ad8f337f6607a4c6b2dc87014824865e949b865b1f9aecf5b3d0d1d8e1\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://df475d37f5b324ae0e2a7dab6259f9b83ee257320a06e9820d6c8b54cb66d33e\",\"dweb:/ipfs/QmNy7iWWvq4P7Aixy5LDMjkwwdnB1CMQ2xMk1Y8TUdrGEm\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\ninterface IAstarFactory {\n    function delegateDappsStakingContract() external view returns (address);\n}\n",
+  "sourcePath": "/Users/necklace/work/nutbox/nutbox-contract/contracts/dapps/astar-dapp-staking/IAstarFactory.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/dapps/astar-dapp-staking/IAstarFactory.sol",
+    "exportedSymbols": {
+      "IAstarFactory": [
+        10636
+      ]
+    },
+    "id": 10637,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 10630,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:23:31"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "id": 10636,
+        "linearizedBaseContracts": [
+          10636
+        ],
+        "name": "IAstarFactory",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "functionSelector": "d4d82be7",
+            "id": 10635,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "delegateDappsStakingContract",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10631,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "125:2:31"
+            },
+            "returnParameters": {
+              "id": 10634,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10633,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10635,
+                  "src": "151:7:31",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10632,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "151:7:31",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "150:9:31"
+            },
+            "scope": 10636,
+            "src": "88:72:31",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 10637,
+        "src": "58:104:31"
+      }
+    ],
+    "src": "33:130:31"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.7",
+  "updatedAt": "2022-05-24T06:51:52.127Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

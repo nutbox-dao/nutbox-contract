@@ -1,0 +1,1698 @@
+{
+  "contractName": "DappsStaking",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "read_current_era",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "read_unbonding_period",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "era",
+          "type": "uint32"
+        }
+      ],
+      "name": "read_era_reward",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "era",
+          "type": "uint32"
+        }
+      ],
+      "name": "read_era_staked",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "staker",
+          "type": "bytes"
+        }
+      ],
+      "name": "read_staked_amount",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "contract_id",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "staker",
+          "type": "bytes"
+        }
+      ],
+      "name": "read_staked_amount_on_contract",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "contract_id",
+          "type": "address"
+        }
+      ],
+      "name": "read_contract_stake",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "register",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "name": "bond_and_stake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "name": "unbond_and_unstake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdraw_unbonded",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "claim_staker",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "name": "claim_dapp",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum DappsStaking.RewardDestination",
+          "name": "reward_destination",
+          "type": "uint8"
+        }
+      ],
+      "name": "set_reward_destination",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "smart_contract",
+          "type": "address"
+        }
+      ],
+      "name": "withdraw_from_unregistered",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "origin_smart_contract",
+          "type": "address"
+        },
+        {
+          "internalType": "uint128",
+          "name": "amount",
+          "type": "uint128"
+        },
+        {
+          "internalType": "address",
+          "name": "target_smart_contract",
+          "type": "address"
+        }
+      ],
+      "name": "nomination_transfer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"name\":\"bond_and_stake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"name\":\"claim_dapp\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"claim_staker\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"origin_smart_contract\",\"type\":\"address\"},{\"internalType\":\"uint128\",\"name\":\"amount\",\"type\":\"uint128\"},{\"internalType\":\"address\",\"name\":\"target_smart_contract\",\"type\":\"address\"}],\"name\":\"nomination_transfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"contract_id\",\"type\":\"address\"}],\"name\":\"read_contract_stake\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"read_current_era\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"era\",\"type\":\"uint32\"}],\"name\":\"read_era_reward\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"era\",\"type\":\"uint32\"}],\"name\":\"read_era_staked\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"staker\",\"type\":\"bytes\"}],\"name\":\"read_staked_amount\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"contract_id\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"staker\",\"type\":\"bytes\"}],\"name\":\"read_staked_amount_on_contract\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"read_unbonding_period\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"register\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"enum DappsStaking.RewardDestination\",\"name\":\"reward_destination\",\"type\":\"uint8\"}],\"name\":\"set_reward_destination\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"name\":\"unbond_and_unstake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"smart_contract\",\"type\":\"address\"}],\"name\":\"withdraw_from_unregistered\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdraw_unbonded\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"nomination_transfer(address,uint128,address)\":{\"params\":{\"amount\":\"amount to transfer from origin to target\",\"origin_smart_contract\":\"origin smart contract address\",\"target_smart_contract\":\"target smart contract address\"}},\"read_contract_stake(address)\":{\"returns\":{\"_0\":\"total, The most recent total staked amount on contract\"}},\"read_current_era()\":{\"returns\":{\"_0\":\"era, The current era\"}},\"read_era_reward(uint32)\":{\"returns\":{\"_0\":\"reward, Total network reward for the given era\"}},\"read_era_staked(uint32)\":{\"returns\":{\"_0\":\"staked, Total staked amount for the given era\"}},\"read_staked_amount(bytes)\":{\"params\":{\"staker\":\"in form of 20 or 32 hex bytes\"},\"returns\":{\"_0\":\"amount, Staked amount by the staker\"}},\"read_staked_amount_on_contract(address,bytes)\":{\"params\":{\"contract_id\":\"contract evm address\",\"staker\":\"in form of 20 or 32 hex bytes\"},\"returns\":{\"_0\":\"amount, Staked amount by the staker\"}},\"read_unbonding_period()\":{\"returns\":{\"_0\":\"period, The unbonding period in eras\"}},\"set_reward_destination(uint8)\":{\"params\":{\"reward_destination\":\"instruction on how the reward payout should be handled\"}},\"withdraw_from_unregistered(address)\":{\"params\":{\"smart_contract\":\"smart contract address\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"bond_and_stake(address,uint128)\":{\"notice\":\"Stake provided amount on the contract.\"},\"claim_dapp(address,uint128)\":{\"notice\":\"Claim one era of unclaimed dapp rewards for the specified contract and era.\"},\"claim_staker(address)\":{\"notice\":\"Claim one era of unclaimed staker rewards for the specifeid contract.         Staker account is derived from the caller address.\"},\"nomination_transfer(address,uint128,address)\":{\"notice\":\"Transfer part or entire nomination from origin smart contract to target smart contract\"},\"read_contract_stake(address)\":{\"notice\":\"Read the staked amount from the era when the amount was last staked/unstaked\"},\"read_current_era()\":{\"notice\":\"Read current era.\"},\"read_era_reward(uint32)\":{\"notice\":\"Read Total network reward for the given era\"},\"read_era_staked(uint32)\":{\"notice\":\"Read Total staked amount for the given era\"},\"read_staked_amount(bytes)\":{\"notice\":\"Read Staked amount for the staker\"},\"read_staked_amount_on_contract(address,bytes)\":{\"notice\":\"Read Staked amount on a given contract for the staker\"},\"read_unbonding_period()\":{\"notice\":\"Read unbonding period constant.\"},\"register(address)\":{\"notice\":\"Register provided contract.\"},\"set_reward_destination(uint8)\":{\"notice\":\"Set reward destination for staker rewards\"},\"unbond_and_unstake(address,uint128)\":{\"notice\":\"Start unbonding process and unstake balance from the contract.\"},\"withdraw_from_unregistered(address)\":{\"notice\":\"Withdraw staked funds from an unregistered contract.\"},\"withdraw_unbonded()\":{\"notice\":\"Withdraw all funds that have completed the unbonding process.\"}},\"notice\":\"Interface to the precompiled contract on Shibuya/Shiden/Astar Predeployed at the address 0x0000000000000000000000000000000000005001\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/dapps/astar-dapp-staking/DappsStaking.sol\":\"DappsStaking\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/dapps/astar-dapp-staking/DappsStaking.sol\":{\"keccak256\":\"0x82bca13771babe2e842f34fa57fc68b1c19e5943fe2b03ee35cba5db7696328f\",\"license\":\"BSD-3-Clause\",\"urls\":[\"bzz-raw://8b0be03dccd225fcab6c15fb34c20b33d2d221f28b7a522c494a4e53861c5348\",\"dweb:/ipfs/QmdRPiimAdTtzi9b44uwo1FvkyVmqixQsR4smvcw2Zz3SJ\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// Copy from: https://github.com/AstarNetwork/astar-frame/blob/polkadot-v0.9.19/precompiles/dapps-staking/DappsStaking.sol\n\n// SPDX-License-Identifier: BSD-3-Clause\n\npragma solidity >=0.7.0;\n\n/// Interface to the precompiled contract on Shibuya/Shiden/Astar\n/// Predeployed at the address 0x0000000000000000000000000000000000005001\ninterface DappsStaking {\n\n    // Storage getters\n\n    /// @notice Read current era.\n    /// @return era, The current era\n    function read_current_era() external view returns (uint256);\n\n    /// @notice Read unbonding period constant.\n    /// @return period, The unbonding period in eras\n    function read_unbonding_period() external view returns (uint256);\n\n    /// @notice Read Total network reward for the given era\n    /// @return reward, Total network reward for the given era\n    function read_era_reward(uint32 era) external view returns (uint128);\n\n    /// @notice Read Total staked amount for the given era\n    /// @return staked, Total staked amount for the given era\n    function read_era_staked(uint32 era) external view returns (uint128);\n\n    /// @notice Read Staked amount for the staker\n    /// @param staker in form of 20 or 32 hex bytes\n    /// @return amount, Staked amount by the staker\n    function read_staked_amount(bytes calldata staker) external view returns (uint128);\n\n    /// @notice Read Staked amount on a given contract for the staker\n    /// @param contract_id contract evm address\n    /// @param staker in form of 20 or 32 hex bytes\n    /// @return amount, Staked amount by the staker\n    function read_staked_amount_on_contract(address contract_id, bytes calldata staker) external view returns (uint128);\n\n    /// @notice Read the staked amount from the era when the amount was last staked/unstaked\n    /// @return total, The most recent total staked amount on contract\n    function read_contract_stake(address contract_id) external view returns (uint128);\n\n\n    // Extrinsic calls\n\n    /// @notice Register provided contract.\n    function register(address) external;\n\n    /// @notice Stake provided amount on the contract.\n    function bond_and_stake(address, uint128) external;\n\n    /// @notice Start unbonding process and unstake balance from the contract.\n    function unbond_and_unstake(address, uint128) external;\n\n    /// @notice Withdraw all funds that have completed the unbonding process.\n    function withdraw_unbonded() external;\n\n    /// @notice Claim one era of unclaimed staker rewards for the specifeid contract.\n    ///         Staker account is derived from the caller address.\n    function claim_staker(address) external;\n\n    /// @notice Claim one era of unclaimed dapp rewards for the specified contract and era.\n    function claim_dapp(address, uint128) external;\n\n    /// Instruction how to handle reward payout for staker.\n    /// `FreeBalance` - Reward will be paid out to the staker (free balance).\n    /// `StakeBalance` - Reward will be paid out to the staker and is immediately restaked (locked balance)\n    enum RewardDestination {FreeBalance, StakeBalance}\n\n    /// @notice Set reward destination for staker rewards\n    /// @param reward_destination instruction on how the reward payout should be handled\n    function set_reward_destination(RewardDestination reward_destination) external;\n    \n    /// @notice Withdraw staked funds from an unregistered contract.\n    /// @param smart_contract smart contract address\n    function withdraw_from_unregistered(address smart_contract) external;\n\n    /// @notice Transfer part or entire nomination from origin smart contract to target smart contract\n    /// @param origin_smart_contract origin smart contract address\n    /// @param amount amount to transfer from origin to target\n    /// @param target_smart_contract target smart contract address\n    function nomination_transfer(address origin_smart_contract, uint128 amount, address target_smart_contract) external;\n}",
+  "sourcePath": "/Users/necklace/work/nutbox/nutbox-contract/contracts/dapps/astar-dapp-staking/DappsStaking.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/dapps/astar-dapp-staking/DappsStaking.sol",
+    "exportedSymbols": {
+      "DappsStaking": [
+        10216
+      ]
+    },
+    "id": 10217,
+    "license": "BSD-3-Clause",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 10094,
+        "literals": [
+          "solidity",
+          ">=",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "166:24:28"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 10095,
+          "nodeType": "StructuredDocumentation",
+          "src": "192:140:28",
+          "text": "Interface to the precompiled contract on Shibuya/Shiden/Astar\n Predeployed at the address 0x0000000000000000000000000000000000005001"
+        },
+        "fullyImplemented": false,
+        "id": 10216,
+        "linearizedBaseContracts": [
+          10216
+        ],
+        "name": "DappsStaking",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 10096,
+              "nodeType": "StructuredDocumentation",
+              "src": "386:66:28",
+              "text": "@notice Read current era.\n @return era, The current era"
+            },
+            "functionSelector": "e608d80b",
+            "id": 10101,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "read_current_era",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10097,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "482:2:28"
+            },
+            "returnParameters": {
+              "id": 10100,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10099,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10101,
+                  "src": "508:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 10098,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "508:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "507:9:28"
+            },
+            "scope": 10216,
+            "src": "457:60:28",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10102,
+              "nodeType": "StructuredDocumentation",
+              "src": "523:96:28",
+              "text": "@notice Read unbonding period constant.\n @return period, The unbonding period in eras"
+            },
+            "functionSelector": "db62b201",
+            "id": 10107,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "read_unbonding_period",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10103,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "654:2:28"
+            },
+            "returnParameters": {
+              "id": 10106,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10105,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10107,
+                  "src": "680:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 10104,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "680:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "679:9:28"
+            },
+            "scope": 10216,
+            "src": "624:65:28",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10108,
+              "nodeType": "StructuredDocumentation",
+              "src": "695:118:28",
+              "text": "@notice Read Total network reward for the given era\n @return reward, Total network reward for the given era"
+            },
+            "functionSelector": "d9424b16",
+            "id": 10115,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "read_era_reward",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10111,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10110,
+                  "mutability": "mutable",
+                  "name": "era",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10115,
+                  "src": "843:10:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
+                  },
+                  "typeName": {
+                    "id": 10109,
+                    "name": "uint32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "843:6:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint32",
+                      "typeString": "uint32"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "842:12:28"
+            },
+            "returnParameters": {
+              "id": 10114,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10113,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10115,
+                  "src": "878:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10112,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "878:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "877:9:28"
+            },
+            "scope": 10216,
+            "src": "818:69:28",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10116,
+              "nodeType": "StructuredDocumentation",
+              "src": "893:116:28",
+              "text": "@notice Read Total staked amount for the given era\n @return staked, Total staked amount for the given era"
+            },
+            "functionSelector": "18386693",
+            "id": 10123,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "read_era_staked",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10119,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10118,
+                  "mutability": "mutable",
+                  "name": "era",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10123,
+                  "src": "1039:10:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
+                  },
+                  "typeName": {
+                    "id": 10117,
+                    "name": "uint32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1039:6:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint32",
+                      "typeString": "uint32"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1038:12:28"
+            },
+            "returnParameters": {
+              "id": 10122,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10121,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10123,
+                  "src": "1074:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10120,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1074:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1073:9:28"
+            },
+            "scope": 10216,
+            "src": "1014:69:28",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10124,
+              "nodeType": "StructuredDocumentation",
+              "src": "1089:149:28",
+              "text": "@notice Read Staked amount for the staker\n @param staker in form of 20 or 32 hex bytes\n @return amount, Staked amount by the staker"
+            },
+            "functionSelector": "de0e8c64",
+            "id": 10131,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "read_staked_amount",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10127,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10126,
+                  "mutability": "mutable",
+                  "name": "staker",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10131,
+                  "src": "1271:21:28",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 10125,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1271:5:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1270:23:28"
+            },
+            "returnParameters": {
+              "id": 10130,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10129,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10131,
+                  "src": "1317:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10128,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1317:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1316:9:28"
+            },
+            "scope": 10216,
+            "src": "1243:83:28",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10132,
+              "nodeType": "StructuredDocumentation",
+              "src": "1332:217:28",
+              "text": "@notice Read Staked amount on a given contract for the staker\n @param contract_id contract evm address\n @param staker in form of 20 or 32 hex bytes\n @return amount, Staked amount by the staker"
+            },
+            "functionSelector": "dd33172d",
+            "id": 10141,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "read_staked_amount_on_contract",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10137,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10134,
+                  "mutability": "mutable",
+                  "name": "contract_id",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10141,
+                  "src": "1594:19:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10133,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1594:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 10136,
+                  "mutability": "mutable",
+                  "name": "staker",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10141,
+                  "src": "1615:21:28",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 10135,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1615:5:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1593:44:28"
+            },
+            "returnParameters": {
+              "id": 10140,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10139,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10141,
+                  "src": "1661:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10138,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1661:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1660:9:28"
+            },
+            "scope": 10216,
+            "src": "1554:116:28",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10142,
+              "nodeType": "StructuredDocumentation",
+              "src": "1676:159:28",
+              "text": "@notice Read the staked amount from the era when the amount was last staked/unstaked\n @return total, The most recent total staked amount on contract"
+            },
+            "functionSelector": "539d5957",
+            "id": 10149,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "read_contract_stake",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10145,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10144,
+                  "mutability": "mutable",
+                  "name": "contract_id",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10149,
+                  "src": "1869:19:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10143,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1869:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1868:21:28"
+            },
+            "returnParameters": {
+              "id": 10148,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10147,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10149,
+                  "src": "1913:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10146,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1913:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1912:9:28"
+            },
+            "scope": 10216,
+            "src": "1840:82:28",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10150,
+              "nodeType": "StructuredDocumentation",
+              "src": "1953:39:28",
+              "text": "@notice Register provided contract."
+            },
+            "functionSelector": "4420e486",
+            "id": 10155,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "register",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10153,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10152,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10155,
+                  "src": "2015:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10151,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2015:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2014:9:28"
+            },
+            "returnParameters": {
+              "id": 10154,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2032:0:28"
+            },
+            "scope": 10216,
+            "src": "1997:36:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10156,
+              "nodeType": "StructuredDocumentation",
+              "src": "2039:50:28",
+              "text": "@notice Stake provided amount on the contract."
+            },
+            "functionSelector": "52b73e41",
+            "id": 10163,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "bond_and_stake",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10161,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10158,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10163,
+                  "src": "2118:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10157,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2118:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 10160,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10163,
+                  "src": "2127:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10159,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2127:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2117:18:28"
+            },
+            "returnParameters": {
+              "id": 10162,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2144:0:28"
+            },
+            "scope": 10216,
+            "src": "2094:51:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10164,
+              "nodeType": "StructuredDocumentation",
+              "src": "2151:74:28",
+              "text": "@notice Start unbonding process and unstake balance from the contract."
+            },
+            "functionSelector": "c7841dd2",
+            "id": 10171,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "unbond_and_unstake",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10169,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10166,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10171,
+                  "src": "2258:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10165,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2258:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 10168,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10171,
+                  "src": "2267:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10167,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2267:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2257:18:28"
+            },
+            "returnParameters": {
+              "id": 10170,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2284:0:28"
+            },
+            "scope": 10216,
+            "src": "2230:55:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10172,
+              "nodeType": "StructuredDocumentation",
+              "src": "2291:73:28",
+              "text": "@notice Withdraw all funds that have completed the unbonding process."
+            },
+            "functionSelector": "77a0fe02",
+            "id": 10175,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "withdraw_unbonded",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10173,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2395:2:28"
+            },
+            "returnParameters": {
+              "id": 10174,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2406:0:28"
+            },
+            "scope": 10216,
+            "src": "2369:38:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10176,
+              "nodeType": "StructuredDocumentation",
+              "src": "2413:148:28",
+              "text": "@notice Claim one era of unclaimed staker rewards for the specifeid contract.\n         Staker account is derived from the caller address."
+            },
+            "functionSelector": "a0b9d8be",
+            "id": 10181,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "claim_staker",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10179,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10178,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10181,
+                  "src": "2588:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10177,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2588:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2587:9:28"
+            },
+            "returnParameters": {
+              "id": 10180,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2605:0:28"
+            },
+            "scope": 10216,
+            "src": "2566:40:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10182,
+              "nodeType": "StructuredDocumentation",
+              "src": "2612:87:28",
+              "text": "@notice Claim one era of unclaimed dapp rewards for the specified contract and era."
+            },
+            "functionSelector": "1b70ba65",
+            "id": 10189,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "claim_dapp",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10187,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10184,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10189,
+                  "src": "2724:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10183,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2724:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 10186,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10189,
+                  "src": "2733:7:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10185,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2733:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2723:18:28"
+            },
+            "returnParameters": {
+              "id": 10188,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2750:0:28"
+            },
+            "scope": 10216,
+            "src": "2704:47:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "canonicalName": "DappsStaking.RewardDestination",
+            "id": 10192,
+            "members": [
+              {
+                "id": 10190,
+                "name": "FreeBalance",
+                "nodeType": "EnumValue",
+                "src": "3027:11:28"
+              },
+              {
+                "id": 10191,
+                "name": "StakeBalance",
+                "nodeType": "EnumValue",
+                "src": "3040:12:28"
+              }
+            ],
+            "name": "RewardDestination",
+            "nodeType": "EnumDefinition",
+            "src": "3003:50:28"
+          },
+          {
+            "documentation": {
+              "id": 10193,
+              "nodeType": "StructuredDocumentation",
+              "src": "3059:142:28",
+              "text": "@notice Set reward destination for staker rewards\n @param reward_destination instruction on how the reward payout should be handled"
+            },
+            "functionSelector": "4b1b0e86",
+            "id": 10199,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "set_reward_destination",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10197,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10196,
+                  "mutability": "mutable",
+                  "name": "reward_destination",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10199,
+                  "src": "3238:36:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_enum$_RewardDestination_$10192",
+                    "typeString": "enum DappsStaking.RewardDestination"
+                  },
+                  "typeName": {
+                    "id": 10195,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 10194,
+                      "name": "RewardDestination",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 10192,
+                      "src": "3238:17:28"
+                    },
+                    "referencedDeclaration": 10192,
+                    "src": "3238:17:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_enum$_RewardDestination_$10192",
+                      "typeString": "enum DappsStaking.RewardDestination"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "3237:38:28"
+            },
+            "returnParameters": {
+              "id": 10198,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "3284:0:28"
+            },
+            "scope": 10216,
+            "src": "3206:79:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10200,
+              "nodeType": "StructuredDocumentation",
+              "src": "3295:117:28",
+              "text": "@notice Withdraw staked funds from an unregistered contract.\n @param smart_contract smart contract address"
+            },
+            "functionSelector": "ba0ab99c",
+            "id": 10205,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "withdraw_from_unregistered",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10203,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10202,
+                  "mutability": "mutable",
+                  "name": "smart_contract",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10205,
+                  "src": "3453:22:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10201,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "3453:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "3452:24:28"
+            },
+            "returnParameters": {
+              "id": 10204,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "3485:0:28"
+            },
+            "scope": 10216,
+            "src": "3417:69:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 10206,
+              "nodeType": "StructuredDocumentation",
+              "src": "3492:295:28",
+              "text": "@notice Transfer part or entire nomination from origin smart contract to target smart contract\n @param origin_smart_contract origin smart contract address\n @param amount amount to transfer from origin to target\n @param target_smart_contract target smart contract address"
+            },
+            "functionSelector": "2f2000cd",
+            "id": 10215,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "nomination_transfer",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 10213,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 10208,
+                  "mutability": "mutable",
+                  "name": "origin_smart_contract",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10215,
+                  "src": "3821:29:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10207,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "3821:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 10210,
+                  "mutability": "mutable",
+                  "name": "amount",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10215,
+                  "src": "3852:14:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint128",
+                    "typeString": "uint128"
+                  },
+                  "typeName": {
+                    "id": 10209,
+                    "name": "uint128",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "3852:7:28",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint128",
+                      "typeString": "uint128"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 10212,
+                  "mutability": "mutable",
+                  "name": "target_smart_contract",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 10215,
+                  "src": "3868:29:28",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 10211,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "3868:7:28",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "3820:78:28"
+            },
+            "returnParameters": {
+              "id": 10214,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "3907:0:28"
+            },
+            "scope": 10216,
+            "src": "3792:116:28",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 10217,
+        "src": "332:3578:28"
+      }
+    ],
+    "src": "166:3744:28"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.7",
+  "updatedAt": "2022-05-24T06:51:52.116Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "nomination_transfer(address,uint128,address)": {
+        "params": {
+          "amount": "amount to transfer from origin to target",
+          "origin_smart_contract": "origin smart contract address",
+          "target_smart_contract": "target smart contract address"
+        }
+      },
+      "read_contract_stake(address)": {
+        "returns": {
+          "_0": "total, The most recent total staked amount on contract"
+        }
+      },
+      "read_current_era()": {
+        "returns": {
+          "_0": "era, The current era"
+        }
+      },
+      "read_era_reward(uint32)": {
+        "returns": {
+          "_0": "reward, Total network reward for the given era"
+        }
+      },
+      "read_era_staked(uint32)": {
+        "returns": {
+          "_0": "staked, Total staked amount for the given era"
+        }
+      },
+      "read_staked_amount(bytes)": {
+        "params": {
+          "staker": "in form of 20 or 32 hex bytes"
+        },
+        "returns": {
+          "_0": "amount, Staked amount by the staker"
+        }
+      },
+      "read_staked_amount_on_contract(address,bytes)": {
+        "params": {
+          "contract_id": "contract evm address",
+          "staker": "in form of 20 or 32 hex bytes"
+        },
+        "returns": {
+          "_0": "amount, Staked amount by the staker"
+        }
+      },
+      "read_unbonding_period()": {
+        "returns": {
+          "_0": "period, The unbonding period in eras"
+        }
+      },
+      "set_reward_destination(uint8)": {
+        "params": {
+          "reward_destination": "instruction on how the reward payout should be handled"
+        }
+      },
+      "withdraw_from_unregistered(address)": {
+        "params": {
+          "smart_contract": "smart contract address"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "bond_and_stake(address,uint128)": {
+        "notice": "Stake provided amount on the contract."
+      },
+      "claim_dapp(address,uint128)": {
+        "notice": "Claim one era of unclaimed dapp rewards for the specified contract and era."
+      },
+      "claim_staker(address)": {
+        "notice": "Claim one era of unclaimed staker rewards for the specifeid contract.         Staker account is derived from the caller address."
+      },
+      "nomination_transfer(address,uint128,address)": {
+        "notice": "Transfer part or entire nomination from origin smart contract to target smart contract"
+      },
+      "read_contract_stake(address)": {
+        "notice": "Read the staked amount from the era when the amount was last staked/unstaked"
+      },
+      "read_current_era()": {
+        "notice": "Read current era."
+      },
+      "read_era_reward(uint32)": {
+        "notice": "Read Total network reward for the given era"
+      },
+      "read_era_staked(uint32)": {
+        "notice": "Read Total staked amount for the given era"
+      },
+      "read_staked_amount(bytes)": {
+        "notice": "Read Staked amount for the staker"
+      },
+      "read_staked_amount_on_contract(address,bytes)": {
+        "notice": "Read Staked amount on a given contract for the staker"
+      },
+      "read_unbonding_period()": {
+        "notice": "Read unbonding period constant."
+      },
+      "register(address)": {
+        "notice": "Register provided contract."
+      },
+      "set_reward_destination(uint8)": {
+        "notice": "Set reward destination for staker rewards"
+      },
+      "unbond_and_unstake(address,uint128)": {
+        "notice": "Start unbonding process and unstake balance from the contract."
+      },
+      "withdraw_from_unregistered(address)": {
+        "notice": "Withdraw staked funds from an unregistered contract."
+      },
+      "withdraw_unbonded()": {
+        "notice": "Withdraw all funds that have completed the unbonding process."
+      }
+    },
+    "notice": "Interface to the precompiled contract on Shibuya/Shiden/Astar Predeployed at the address 0x0000000000000000000000000000000000005001",
+    "version": 1
+  }
+}

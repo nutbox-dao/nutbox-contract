@@ -1,0 +1,189 @@
+{
+  "contractName": "ICommunityTokenFactory",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "meta",
+          "type": "bytes"
+        }
+      ],
+      "name": "createCommunityToken",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"meta\",\"type\":\"bytes\"}],\"name\":\"createCommunityToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the community token factory.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interfaces/ICommunityTokenFactory.sol\":\"ICommunityTokenFactory\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interfaces/ICommunityTokenFactory.sol\":{\"keccak256\":\"0x9a69a2d0752d3002d55ec2734724891fdab03de0a88e15ff297d85a3878924b2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c54fcdeb38c2292e11b14d0ff2b2d772ab8e14ce56d080685fede2f38749ff1d\",\"dweb:/ipfs/QmZdUicfe2kiGG5WaYpYN9yzNoXN7X3AmCMaosF4Vj6kzz\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.8.0;\npragma experimental ABIEncoderV2;\n\n/**\n * @dev Interface of the community token factory.\n */\ninterface ICommunityTokenFactory {\n\n    function createCommunityToken(bytes calldata meta)\n        external\n        returns (address);\n}",
+  "sourcePath": "/Users/necklace/work/nutbox/nutbox-contract/contracts/interfaces/ICommunityTokenFactory.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/interfaces/ICommunityTokenFactory.sol",
+    "exportedSymbols": {
+      "ICommunityTokenFactory": [
+        13087
+      ]
+    },
+    "id": 13088,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 13077,
+        "literals": [
+          "solidity",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:22:45"
+      },
+      {
+        "id": 13078,
+        "literals": [
+          "experimental",
+          "ABIEncoderV2"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "56:33:45"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 13079,
+          "nodeType": "StructuredDocumentation",
+          "src": "91:57:45",
+          "text": " @dev Interface of the community token factory."
+        },
+        "fullyImplemented": false,
+        "id": 13087,
+        "linearizedBaseContracts": [
+          13087
+        ],
+        "name": "ICommunityTokenFactory",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "functionSelector": "3120db1b",
+            "id": 13086,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "createCommunityToken",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 13082,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 13081,
+                  "mutability": "mutable",
+                  "name": "meta",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 13086,
+                  "src": "219:19:45",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_calldata_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 13080,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "219:5:45",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "218:21:45"
+            },
+            "returnParameters": {
+              "id": 13085,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 13084,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 13086,
+                  "src": "274:7:45",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 13083,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "274:7:45",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "273:9:45"
+            },
+            "scope": 13087,
+            "src": "189:94:45",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 13088,
+        "src": "149:136:45"
+      }
+    ],
+    "src": "33:252:45"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.11",
+  "updatedAt": "2022-12-27T12:17:35.223Z",
+  "devdoc": {
+    "details": "Interface of the community token factory.",
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

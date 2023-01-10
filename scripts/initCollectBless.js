@@ -21,13 +21,20 @@ async function init_collectBless(env) {
     let d1 = new Date();
     d1.setUTCDate(d1.getUTCDate() + 3);
     let endTime = parseInt(d1.getTime() / 1000);
+
+    console.log("init CollectBless contract......");
     await collectBlessContract.init(blessCardAddress, erc20Address, randomAddress, endTime);
 
     const blessCardContract = new ethers.Contract(blessCardAddress, BlessCard.abi, env.wallet);
+    // mint role
+    console.log(`grantRole MINTER_ROLE to ${collectBlessAddress} ......`);
     await blessCardContract.grantRole("0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6", collectBlessAddress);
+    // burn role
+    console.log(`grantRole BURN_ROLE to ${collectBlessAddress} ......`);
     await blessCardContract.grantRole("0xe97b137254058bd94f28d2f3eb79e2d34074ffb488d042e3bc958e0a57d2fa22", collectBlessAddress);
 
     if (chainId != 1337){
+        console.log('set Owner......');
         await collectBlessContract.transferOwnership("0x31ea10e78F9F1e61861DE6bA10ad090904abC1d6");
     }
 }
