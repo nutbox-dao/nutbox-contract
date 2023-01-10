@@ -122,6 +122,12 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
 
     bytes32 private randomFactor;
 
+    // whitelist nft start id
+    uint256 public whitelistIdCount = 99;
+
+    // mint user => id
+    mapping(address => uint256) public whitelistId;
+
     event MintBox(address indexed creator, uint256[] ids);
     event OpenBox(address indexed user, uint256[] ids);
 
@@ -279,8 +285,46 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
             bb.amount = 1;
             bb.nftId = nftId;
 
-            blindBoxPool.push(blindBoxCount);
+            blindBoxPool.push(bb.id);
         }
+
+        emit MintBox(msg.sender, ids);
+    }
+
+    function mintWhitelistNFT(uint256 quantity) public {
+        require(quantity >= 1, "quantity is too small");
+
+        uint256 fee = blindBoxPrice * quantity;
+        prizePoolToken.transferFrom(msg.sender, address(this), fee);
+
+        prizePoolAmount += fee;
+        mintBoxCounts[msg.sender] += quantity;
+
+        uint256 nftId = whitelistId[msg.sender];
+        if (nftId == 0) {
+            whitelistIdCount += 1;
+            nftId = whitelistIdCount;
+            whitelistId[msg.sender] = nftId;
+        }
+
+        uint256[] memory ids = new uint256[](quantity);
+        for (uint256 i = 0; i < quantity; i++) {
+            blindBoxCount += 1;
+            ids[i] = blindBoxCount;
+            BlindBox storage bb = blindBoxs[blindBoxCount];
+            bb.id = blindBoxCount;
+            bb.prizeType = PrizeType.ERC1155;
+            bb.creator = msg.sender;
+            bb.token = address(blessCard);
+            bb.seedBlock = block.number + 1;
+            bb.amount = 1;
+            bb.nftId = nftId;
+
+            blindBoxPool.push(bb.id);
+        }
+
+        bytes memory data = new bytes(1);
+        blessCard.mint(address(this), nftId, quantity, data);
 
         emit MintBox(msg.sender, ids);
     }
@@ -352,10 +396,13 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         ids[2] = 3;
         ids[3] = 4;
         ids[4] = rareCradId;
-        uint256[] memory amounts = new uint256[](quantity);
-        for (uint256 i = 0; i < quantity; i++) {
-            amounts[i] = quantity;
-        }
+        uint256[] memory amounts = new uint256[](5);
+        amounts[0] = quantity;
+        amounts[1] = quantity;
+        amounts[2] = quantity;
+        amounts[3] = quantity;
+        amounts[4] = quantity;
+
         blessCard.burnBatch(msg.sender, ids, amounts);
         rareCardCount -= quantity;
 

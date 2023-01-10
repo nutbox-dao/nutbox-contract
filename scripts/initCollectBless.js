@@ -3,6 +3,7 @@ const ethers = require('ethers');
 const { getEnv, waitForTx } = require('./utils');
 
 const CollectBless = require("../build/contracts/CollectBless.json");
+const BlessCard = require("../build/contracts/BlessCard.json");
 const Random = require("../build/contracts/Random.json");
 const Utils = require("../build/contracts/Utils.json");
 const ERC20 = require("../build/contracts/ERC20PresetMinterPauser.json");
@@ -11,7 +12,7 @@ const ERC1155 = require("../build/contracts/ERC1155PresetMinterPauser.json");
 
 async function init_collectBless(env) {
     let chainId = env.provider._network.chainId;
-    let blessCardAddress = ERC1155.networks[chainId].address;
+    let blessCardAddress = BlessCard.networks[chainId].address;
     let randomAddress = Random.networks[chainId].address;
     let utilsAddress = Utils.networks[chainId].address;
     let collectBlessAddress = CollectBless.networks[chainId].address;
@@ -22,10 +23,13 @@ async function init_collectBless(env) {
     let endTime = parseInt(d1.getTime() / 1000);
     await collectBlessContract.init(blessCardAddress, erc20Address, randomAddress, endTime);
 
-    const blessCardContract = new ethers.Contract(blessCardAddress, ERC1155.abi, env.wallet);
+    const blessCardContract = new ethers.Contract(blessCardAddress, BlessCard.abi, env.wallet);
     await blessCardContract.grantRole("0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6", collectBlessAddress);
+    await blessCardContract.grantRole("0xe97b137254058bd94f28d2f3eb79e2d34074ffb488d042e3bc958e0a57d2fa22", collectBlessAddress);
 
-    await collectBlessContract.transferOwnership("0x31ea10e78F9F1e61861DE6bA10ad090904abC1d6");
+    if (chainId != 1337){
+        await collectBlessContract.transferOwnership("0x31ea10e78F9F1e61861DE6bA10ad090904abC1d6");
+    }
 }
 
 async function main() {

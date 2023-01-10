@@ -4,6 +4,7 @@ const ethers = require('ethers');
 const { getEnv, waitForTx } = require('../scripts/utils');
 
 const CollectBless = require("../build/contracts/CollectBless.json");
+const BlessCard = require("../build/contracts/BlessCard.json");
 const Random = require("../build/contracts/Random.json");
 const Utils = require("../build/contracts/Utils.json");
 const ERC20 = require("../build/contracts/ERC20PresetMinterPauser.json");
@@ -33,7 +34,7 @@ async function deployERC1155(env) {
 }
 
 async function createERC20(env) {
-    cERC20 = new ethers.Contract("0x1eaDb5710Aa72e801efC86E96f2126474F002533", ERC20.abi, env.wallet);
+    cERC20 = new ethers.Contract("0x884cf7Fa4aaC2bb89f2137F3c7eB92AE01E4Ec5d", ERC20.abi, env.wallet);
     await cERC20.mint(env.wallet.address, ethers.utils.parseEther("1000"));
 }
 
@@ -43,7 +44,7 @@ async function createERC721(env) {
 }
 
 async function createERC1155(env) {
-    cERC1155 = new ethers.Contract("0xA74AAC65a3ab5F407Bcddf816f8E0c583d3E4C26", ERC1155.abi, env.wallet);
+    cERC1155 = new ethers.Contract("0x8d3AfbC64CE3d29f6c97427E4101814482865d23", ERC1155.abi, env.wallet);
     await cERC1155.mint(env.wallet.address, 1, 10, "0x00");
 }
 
@@ -179,7 +180,7 @@ async function test_cashPrize(env) {
 
     // generate block, end event
     let d1 = new Date();
-    d1.setUTCDate(d1.getUTCDate() + 1);
+    d1.setUTCDate(d1.getUTCDate() + 3);
     await env.provider.send("evm_setTime", [parseInt(d1.getTime())]);
     await env.provider.send("evm_mine");
 
@@ -192,7 +193,7 @@ async function test_cashPrize(env) {
     console.log("\tbalance2: ", ethers.utils.formatEther(balance2));
 }
 
-async function test_claimBlindBox(env){
+async function test_claimBlindBox(env) {
     await showCollectBless(env);
     console.log("\n\ntest_claimBlindBox......");
 
@@ -201,10 +202,29 @@ async function test_claimBlindBox(env){
     await showCollectBless(env);
 }
 
+async function test_mintWhitelistNFT(env){
+    console.log("\n\ntest_mintWhitelistNFT......");
+    await cCollectBless.mintWhitelistNFT(10);
+
+    let amount = await cCollectBless.prizePoolAmount();
+    console.log("\tprizePoolAmount: ", ethers.utils.formatEther(amount));
+
+    let mintBoxCounts = await cCollectBless.mintBoxCounts(env.wallet.address);
+    console.log("\tmintBoxCounts: ", mintBoxCounts.toString());
+
+    let blindBoxCount = await cCollectBless.blindBoxCount();
+    let blindBox = await cCollectBless.blindBoxs(blindBoxCount);
+    console.log("\tblindBox: ", blindBox);
+
+    let balance = await prizePoolToken.balanceOf(env.wallet.address);
+    console.log("\tbalance: ", ethers.utils.formatEther(balance));
+}
+
 async function test_collectBless(env) {
     await test_erc20(env);
     await test_erc721(env);
     await test_erc1155(env);
+    await test_mintWhitelistNFT(env);
     await test_mintCrad(env);
     await test_openBox(env);
     await test_cashPrize(env);
@@ -247,6 +267,9 @@ async function showCollectBless(env) {
     let rareCardCount = await cCollectBless.rareCardCount();
     console.log("\trareCardCount: ", rareCardCount.toString());
 
+    let whitelistIdCount = await cCollectBless.whitelistIdCount();
+    console.log("\twhitelistIdCount: ", whitelistIdCount.toString());
+
     let eventEndTime = await cCollectBless.eventEndTime();
     console.log("\teventEndTime: ", new Date(eventEndTime.toNumber() * 1000));
 
@@ -267,7 +290,7 @@ async function main() {
 
     cCollectBless = new ethers.Contract(CollectBless.networks[chainId].address, CollectBless.abi, env.wallet);
     prizePoolToken = new ethers.Contract(ERC20.networks[chainId].address, ERC20.abi, env.wallet);
-    blessCardNFT = new ethers.Contract(ERC1155.networks[chainId].address, ERC1155.abi, env.wallet);
+    blessCardNFT = new ethers.Contract(BlessCard.networks[chainId].address, BlessCard.abi, env.wallet);
 
     if (args.show) {
         await showCollectBless(env);
