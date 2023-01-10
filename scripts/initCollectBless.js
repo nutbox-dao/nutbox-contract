@@ -17,6 +17,10 @@ async function init_collectBless(env) {
     let utilsAddress = Utils.networks[chainId].address;
     let collectBlessAddress = CollectBless.networks[chainId].address;
     let erc20Address = ERC20.networks[chainId].address;
+    if (chainId == 137) {
+        erc20Address = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+    }
+    const erc20Contract = new ethers.Contract(erc20Address, ERC20.abi, env.wallet);
     const collectBlessContract = new ethers.Contract(collectBlessAddress, CollectBless.abi, env.wallet);
     let d1 = new Date();
     d1.setUTCDate(d1.getUTCDate() + 3);
@@ -33,9 +37,12 @@ async function init_collectBless(env) {
     console.log(`grantRole BURN_ROLE to ${collectBlessAddress} ......`);
     await blessCardContract.grantRole("0xe97b137254058bd94f28d2f3eb79e2d34074ffb488d042e3bc958e0a57d2fa22", collectBlessAddress);
 
-    if (chainId != 1337){
-        console.log('set Owner......');
-        await collectBlessContract.transferOwnership("0x31ea10e78F9F1e61861DE6bA10ad090904abC1d6");
+    if (chainId != 1337) {
+        console.log("approve erc20......");
+        await erc20Contract.approve(collectBlessAddress, ethers.constants.MaxUint256);
+
+        // console.log('set Owner......');
+        // await collectBlessContract.transferOwnership("0x31ea10e78F9F1e61861DE6bA10ad090904abC1d6");
     }
 }
 
