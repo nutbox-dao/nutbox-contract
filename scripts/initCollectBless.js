@@ -29,6 +29,12 @@ async function init_collectBless(env) {
     console.log("init CollectBless contract......");
     await collectBlessContract.init(blessCardAddress, erc20Address, randomAddress, endTime);
 
+    // set price
+    if (chainId == 137) {
+        await collectBlessContract.setRareCardPrice(ethers.utils.parseUnits("0.2", 6));
+        await collectBlessContract.setBlindBoxPrice(ethers.utils.parseUnits("1", 6));
+    }
+
     const blessCardContract = new ethers.Contract(blessCardAddress, BlessCard.abi, env.wallet);
     // mint role
     console.log(`grantRole MINTER_ROLE to ${collectBlessAddress} ......`);

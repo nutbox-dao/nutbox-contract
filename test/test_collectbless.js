@@ -202,7 +202,7 @@ async function test_claimBlindBox(env) {
     await showCollectBless(env);
 }
 
-async function test_mintWhitelistNFT(env){
+async function test_mintWhitelistNFT(env) {
     console.log("\n\ntest_mintWhitelistNFT......");
     await cCollectBless.mintWhitelistNFT(10);
 
@@ -244,7 +244,11 @@ async function showCollectBless(env) {
     console.log("\tprizePoolToken: ", ppt);
 
     let amount = await cCollectBless.prizePoolAmount();
-    console.log("\tprizePoolAmount: ", ethers.utils.formatEther(amount));
+    if (env.provider._network.chainId == 137) {
+        console.log("\tprizePoolAmount: ", ethers.utils.formatUnits(amount, 6));
+    } else {
+        console.log("\tprizePoolAmount: ", ethers.utils.formatEther(amount));
+    }
 
     let blindBoxCount = await cCollectBless.blindBoxCount();
     console.log("\tblindBoxCount: ", blindBoxCount.toString());
@@ -274,7 +278,11 @@ async function showCollectBless(env) {
     console.log("\teventEndTime: ", new Date(eventEndTime.toNumber() * 1000));
 
     let balance = await prizePoolToken.balanceOf(cCollectBless.address);
-    console.log("\tbalance: ", ethers.utils.formatEther(balance));
+    if (env.provider._network.chainId == 137) {
+        console.log("\tbalance: ", ethers.utils.formatUnits(balance, 6));
+    } else {
+        console.log("\tbalance: ", ethers.utils.formatEther(balance));
+    }
 }
 
 
