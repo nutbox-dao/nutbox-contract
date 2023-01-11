@@ -34,7 +34,7 @@ async function deployERC1155(env) {
 }
 
 async function createERC20(env) {
-    cERC20 = new ethers.Contract("0x884cf7Fa4aaC2bb89f2137F3c7eB92AE01E4Ec5d", ERC20.abi, env.wallet);
+    cERC20 = new ethers.Contract("0xe21cD5381389Ff54A2fa47902F5b9C49e8d723a8", ERC20.abi, env.wallet);
     await cERC20.mint(env.wallet.address, ethers.utils.parseEther("1000"));
 }
 
@@ -44,7 +44,7 @@ async function createERC721(env) {
 }
 
 async function createERC1155(env) {
-    cERC1155 = new ethers.Contract("0x8d3AfbC64CE3d29f6c97427E4101814482865d23", ERC1155.abi, env.wallet);
+    cERC1155 = new ethers.Contract("0x688d25641F9fD0a34f9c2719768FBeE91Bf2e858", ERC1155.abi, env.wallet);
     await cERC1155.mint(env.wallet.address, 1, 10, "0x00");
 }
 
@@ -63,9 +63,7 @@ async function test_erc20(env) {
     console.log("\tmintBoxCounts: ", mintBoxCounts.toString());
 
     let blindBoxCount = await cCollectBless.blindBoxCount();
-    let blindBox = await cCollectBless.blindBoxs(blindBoxCount);
-    console.log("\tblindBox: ", blindBox);
-    console.log("\tBlind Box token amount: ", ethers.utils.formatEther(blindBox.amount));
+    console.log("\tblindBoxCount: ", blindBoxCount.toString());
 
     let balance = await prizePoolToken.balanceOf(env.wallet.address);
     console.log("\tbalance: ", ethers.utils.formatEther(balance));
@@ -96,8 +94,7 @@ async function test_erc721(env) {
     console.log("\tmintBoxCounts: ", mintBoxCounts.toString());
 
     let blindBoxCount = await cCollectBless.blindBoxCount();
-    let blindBox = await cCollectBless.blindBoxs(blindBoxCount);
-    console.log("\tblindBox: ", blindBox);
+    console.log("\tblindBoxCount: ", blindBoxCount.toString());
 
     let balance = await prizePoolToken.balanceOf(env.wallet.address);
     console.log("\tbalance: ", ethers.utils.formatEther(balance));
@@ -118,8 +115,7 @@ async function test_erc1155(env) {
     console.log("\tmintBoxCounts: ", mintBoxCounts.toString());
 
     let blindBoxCount = await cCollectBless.blindBoxCount();
-    let blindBox = await cCollectBless.blindBoxs(blindBoxCount);
-    console.log("\tblindBox: ", blindBox);
+    console.log("\tblindBoxCount: ", blindBoxCount.toString());
 
     let balance = await prizePoolToken.balanceOf(env.wallet.address);
     console.log("\tbalance: ", ethers.utils.formatEther(balance));
@@ -213,8 +209,7 @@ async function test_mintWhitelistNFT(env) {
     console.log("\tmintBoxCounts: ", mintBoxCounts.toString());
 
     let blindBoxCount = await cCollectBless.blindBoxCount();
-    let blindBox = await cCollectBless.blindBoxs(blindBoxCount);
-    console.log("\tblindBox: ", blindBox);
+    console.log("\tblindBoxCount: ", blindBoxCount.toString());
 
     let balance = await prizePoolToken.balanceOf(env.wallet.address);
     console.log("\tbalance: ", ethers.utils.formatEther(balance));
