@@ -28,8 +28,13 @@ module.exports = async function (deployer, network) {
 
     await deployer.link(Utils, CollectBless);
     await deployer.deploy(CollectBless);
-    await deployer.link(Strings, BlessCard);
-    await deployer.deploy(BlessCard, "https://gateway.nutbox.app/ipns/k51qzi5uqu5dk7p615riqdzb88rxk0ghes2xl4uablyuomg4v7p2bokzqtjrku/");
+
+    try {
+        await BlessCard.at(BlessCard.address);
+    } catch (e) {
+        await deployer.link(Strings, BlessCard);
+        await deployer.deploy(BlessCard, "https://gateway.nutbox.app/ipns/k51qzi5uqu5dk7p615riqdzb88rxk0ghes2xl4uablyuomg4v7p2bokzqtjrku/");
+    }
 
     if (network == "development" || network == "bsctest") {
         try {
