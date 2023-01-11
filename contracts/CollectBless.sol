@@ -28,15 +28,12 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
     @dev Blind box data structure
      */
     struct BlindBox {
-        uint256 id;
         // prize type
         PrizeType prizeType;
         // Prize contract address
         address token;
         // Creator
         address creator;
-        // random weight
-        uint16 weights;
         // Number of prizes
         uint256 amount;
         uint256 nftId;
@@ -78,12 +75,16 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
      */
     uint256 public rareCardCount = 0;
 
-    /**
-    Blind box list
-    id => BlindBox
-     */
-    mapping(uint256 => BlindBox) public blindBoxs;
     uint256 public blindBoxCount = 0;
+    // Blind box id mapping
+    mapping(uint256 => uint256) private blindBoxs;
+    mapping(uint256 => uint16) private blindBoxsWeights;
+
+    uint256 private blindBoxId = 0;
+    uint256 constant emptyBoxId = 0;
+
+    // Blind box list id => BlindBox
+    mapping(uint256 => BlindBox) private _blindBoxs;
 
     /**
     Total Prize Pool Amount
@@ -153,6 +154,13 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         weightsConfig.push(10);
         weightsConfig.push(5);
 
+        _blindBoxs[emptyBoxId].prizeType = PrizeType.NONE;
+        _blindBoxs[emptyBoxId].token = address(0);
+        _blindBoxs[emptyBoxId].creator = address(0);
+        _blindBoxs[emptyBoxId].amount = 0;
+        _blindBoxs[emptyBoxId].nftId = 0;
+        _blindBoxs[emptyBoxId].seedBlock = 0;
+
         bytes32 seed = random.getRandom(0);
         randomFactor = keccak256(abi.encodePacked(randomFactor, seed));
     }
@@ -189,7 +197,7 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
     ) public {
         require(eventEndTime > block.timestamp, "has ended");
         require(token != address(0), "invalid token address");
-        require(quantity > 1, "quantity is too small");
+        require(quantity > 0, "quantity is too small");
 
         uint256 amount = totalAmount / quantity;
         require(amount > 1, "totalAmount is too small");
@@ -205,17 +213,18 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         mintBoxCounts[msg.sender] += quantity;
 
         uint256[] memory ids = new uint256[](quantity);
+        blindBoxId += 1;
+        BlindBox storage bb = _blindBoxs[blindBoxId];
+        bb.prizeType = PrizeType.ERC20;
+        bb.creator = msg.sender;
+        bb.token = token;
+        bb.seedBlock = block.number + 1;
+        bb.amount = amount;
+
         for (uint256 i = 0; i < quantity; i++) {
             blindBoxCount += 1;
+            blindBoxs[blindBoxCount] = blindBoxCount;
             ids[i] = blindBoxCount;
-            BlindBox storage bb = blindBoxs[blindBoxCount];
-            bb.id = blindBoxCount;
-            bb.prizeType = PrizeType.ERC20;
-            bb.creator = msg.sender;
-            bb.token = token;
-            bb.seedBlock = block.number + 1;
-            bb.amount = amount;
-
             blindBoxPool.push(blindBoxCount);
         }
         emit MintBox(msg.sender, ids);
@@ -236,13 +245,15 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         mintBoxCounts[msg.sender] += 1;
 
         blindBoxCount += 1;
-        BlindBox storage bb = blindBoxs[blindBoxCount];
-        bb.id = blindBoxCount;
+        blindBoxId += 1;
+        BlindBox storage bb = _blindBoxs[blindBoxId];
         bb.prizeType = PrizeType.ERC721;
         bb.creator = msg.sender;
         bb.token = addr;
         bb.seedBlock = block.number + 1;
         bb.nftId = nftId;
+
+        blindBoxs[blindBoxCount] = blindBoxId;
 
         blindBoxPool.push(blindBoxCount);
 
@@ -272,20 +283,21 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         prizePoolAmount += fee;
         mintBoxCounts[msg.sender] += quantity;
 
+        blindBoxId += 1;
+        BlindBox storage bb = _blindBoxs[blindBoxId];
+        bb.prizeType = PrizeType.ERC1155;
+        bb.creator = msg.sender;
+        bb.token = addr;
+        bb.seedBlock = block.number + 1;
+        bb.amount = 1;
+        bb.nftId = nftId;
+
         uint256[] memory ids = new uint256[](quantity);
         for (uint256 i = 0; i < quantity; i++) {
             blindBoxCount += 1;
             ids[i] = blindBoxCount;
-            BlindBox storage bb = blindBoxs[blindBoxCount];
-            bb.id = blindBoxCount;
-            bb.prizeType = PrizeType.ERC1155;
-            bb.creator = msg.sender;
-            bb.token = addr;
-            bb.seedBlock = block.number + 1;
-            bb.amount = 1;
-            bb.nftId = nftId;
-
-            blindBoxPool.push(bb.id);
+            blindBoxs[blindBoxCount] = blindBoxId;
+            blindBoxPool.push(blindBoxCount);
         }
 
         emit MintBox(msg.sender, ids);
@@ -308,19 +320,19 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         }
 
         uint256[] memory ids = new uint256[](quantity);
+        blindBoxId += 1;
+        BlindBox storage bb = _blindBoxs[blindBoxId];
+        bb.prizeType = PrizeType.ERC1155;
+        bb.creator = msg.sender;
+        bb.token = address(blessCard);
+        bb.seedBlock = block.number + 1;
+        bb.amount = 1;
+        bb.nftId = nftId;
+
         for (uint256 i = 0; i < quantity; i++) {
             blindBoxCount += 1;
             ids[i] = blindBoxCount;
-            BlindBox storage bb = blindBoxs[blindBoxCount];
-            bb.id = blindBoxCount;
-            bb.prizeType = PrizeType.ERC1155;
-            bb.creator = msg.sender;
-            bb.token = address(blessCard);
-            bb.seedBlock = block.number + 1;
-            bb.amount = 1;
-            bb.nftId = nftId;
-
-            blindBoxPool.push(bb.id);
+            blindBoxPool.push(blindBoxCount);
         }
 
         bytes memory data = new bytes(1);
@@ -434,7 +446,8 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
 
         if (isBlind) {
             uint256 index = Utils.randomUint(abi.encodePacked(seed, randomFactor, to, idx, "eIndex"), 0, blindBoxPool.length - 1);
-            BlindBox storage bb = blindBoxs[blindBoxPool[index]];
+            uint256 boxId = blindBoxs[blindBoxPool[index]];
+            BlindBox storage bb = _blindBoxs[boxId];
 
             if (bb.prizeType == PrizeType.ERC20) {
                 IERC20(bb.token).transfer(to, bb.amount);
@@ -447,31 +460,30 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
 
             seed = random.getRandom(bb.seedBlock);
             wIdx = Utils.randomWeight(abi.encodePacked(seed, randomFactor, to, idx, "weights"), weightsConfig, 100);
-            bb.weights = weightsValue[wIdx];
+            uint16 weights = weightsValue[wIdx];
+            blindBoxsWeights[boxId] = weights;
 
             // del from pool
             blindBoxPool[index] = blindBoxPool[blindBoxPool.length - 1];
             blindBoxPool.pop();
 
             openBoxCounts[bb.creator] += 1;
-            userOpenBoxs[to].push(bb.id);
-            userWeights[to] += bb.weights;
-            totalWeights += bb.weights;
+            userOpenBoxs[to].push(boxId);
+            userWeights[to] += weights;
+            totalWeights += weights;
 
-            return bb.id;
+            return boxId;
         } else {
             blindBoxCount += 1;
-            BlindBox storage bb = blindBoxs[blindBoxCount];
-            bb.id = blindBoxCount;
-            bb.prizeType = PrizeType.NONE;
-            bb.creator = address(0);
-            bb.token = address(0);
+            blindBoxs[blindBoxCount] = emptyBoxId;
             wIdx = Utils.randomWeight(abi.encodePacked(seed, randomFactor, to, idx, "weights"), weightsConfig, 100);
-            bb.weights = weightsValue[wIdx];
+            uint16 weights = weightsValue[wIdx];
+            blindBoxsWeights[blindBoxCount] = weights;
+
 
             userOpenBoxs[to].push(blindBoxCount);
-            userWeights[to] += bb.weights;
-            totalWeights += bb.weights;
+            userWeights[to] += weights;
+            totalWeights += weights;
 
             return blindBoxCount;
         }
@@ -507,7 +519,7 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
             uint256 j = 0;
             bytes memory data = new bytes(1);
             for (uint256 i = 0; j < limit && i < blindBoxPool.length; j++) {
-                BlindBox storage bb = blindBoxs[blindBoxPool[i]];
+                BlindBox storage bb = _blindBoxs[blindBoxs[blindBoxPool[i]]];
                 if (bb.creator == msg.sender) {
                     openBoxCounts[msg.sender] += 1;
                     blindBoxPool[i] = blindBoxPool[blindBoxPool.length - 1];
@@ -537,7 +549,7 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         uint256 j = 0;
         bytes memory data = new bytes(1);
         for (int256 i = int256(blindBoxPool.length - 1); j < limit && i >= 0; j++) {
-            BlindBox storage bb = blindBoxs[blindBoxPool[uint256(i)]];
+            BlindBox storage bb = _blindBoxs[blindBoxs[blindBoxPool[uint256(i)]]];
             openBoxCounts[bb.creator] += 1;
             blindBoxPool.pop();
             i = int256(blindBoxPool.length - 1);
@@ -555,26 +567,41 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         address user,
         uint256 startIndex,
         uint256 lastIndex
-    ) public view returns (BlindBox[] memory boxes) {
+    ) public view returns (BlindBox[] memory boxes, uint16[] memory weights) {
         require(startIndex < lastIndex, "Wrong index param");
         uint256[] memory ids = userOpenBoxs[user];
         if (ids.length == 0) {
-            return boxes;
+            return (boxes, weights);
         }
         uint256 len = ids.length;
         if (len <= startIndex) {
-            return boxes;
+            return (boxes, weights);
         }
         if (len <= lastIndex) {
             lastIndex = len;
         }
         boxes = new BlindBox[](lastIndex - startIndex);
+        weights = new uint16[](lastIndex - startIndex);
         uint256 i = 0;
         for (uint256 j = startIndex; j < lastIndex; j++) {
-            boxes[i] = blindBoxs[ids[j]];
+            boxes[i] = _blindBoxs[blindBoxs[ids[j]]];
+            weights[i] = blindBoxsWeights[blindBoxs[ids[j]]];
             i++;
         }
-        return boxes;
+        return (boxes, weights);
+    }
+
+    function getBoxsByIds(uint256[] memory ids) public view returns (BlindBox[] memory boxes, uint16[] memory weights) {
+        if (ids.length == 0) {
+            return (boxes, weights);
+        }
+        boxes = new BlindBox[](ids.length);
+        weights = new uint16[](ids.length);
+        for (uint256 i = 0; i < ids.length; i++) {
+            boxes[i] = _blindBoxs[blindBoxs[ids[i]]];
+            weights[i] = blindBoxsWeights[blindBoxs[ids[i]]];
+        }
+        return (boxes, weights);
     }
 
     function onERC721Received(
