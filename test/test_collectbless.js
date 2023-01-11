@@ -34,7 +34,7 @@ async function deployERC1155(env) {
 }
 
 async function createERC20(env) {
-    cERC20 = new ethers.Contract("0xe21cD5381389Ff54A2fa47902F5b9C49e8d723a8", ERC20.abi, env.wallet);
+    cERC20 = new ethers.Contract("0xde0014E1D3B1Ae0D8Dd551A447C83C04dA19e566", ERC20.abi, env.wallet);
     await cERC20.mint(env.wallet.address, ethers.utils.parseEther("1000"));
 }
 
@@ -44,7 +44,7 @@ async function createERC721(env) {
 }
 
 async function createERC1155(env) {
-    cERC1155 = new ethers.Contract("0x688d25641F9fD0a34f9c2719768FBeE91Bf2e858", ERC1155.abi, env.wallet);
+    cERC1155 = new ethers.Contract("0xec8c8D33d470A3264915D92ed6cC3dCBF8e9f126", ERC1155.abi, env.wallet);
     await cERC1155.mint(env.wallet.address, 1, 10, "0x00");
 }
 
@@ -138,6 +138,8 @@ async function test_mintCrad(env) {
 
     let balance = await prizePoolToken.balanceOf(env.wallet.address);
     console.log("\tbalance: ", ethers.utils.formatEther(balance));
+
+    await showCollectBless(env);
 }
 
 async function test_openBox(env) {

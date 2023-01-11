@@ -73,15 +73,16 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
     /**
     The number of rare cards
      */
-    uint256 public rareCardCount = 0;
+    uint256 public rareCardCount;
 
-    uint256 public blindBoxCount = 0;
+    uint256 public blindBoxCount;
     // Blind box id mapping
     // blindBox id => blindBox type id
     mapping(uint256 => uint256) private blindBoxTypes;
+    // blind box id => weights
     mapping(uint256 => uint16) private blindBoxsWeights;
 
-    uint256 private blindBoxTypeId = 0;
+    uint256 private blindBoxTypeId;
 
     // Blind box type id => BlindBox
     mapping(uint256 => BlindBox) private _blindBoxs;
@@ -89,7 +90,7 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
     /**
     Total Prize Pool Amount
      */
-    uint256 public prizePoolAmount = 0;
+    uint256 public prizePoolAmount;
 
     /**
     user address => count
@@ -438,9 +439,9 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         uint256 wIdx = 0;
         if (blindBoxPool.length < 1) {
             isBlind = false;
-        } else {
+        } else if (blindBoxPool.length >= rareCardCount) {} else {
             uint256 w = Utils.randomUint(abi.encodePacked(seed, randomFactor, to, idx, "blind"), 1, 100);
-            if (w > 50) {
+            if (w > 70) {
                 isBlind = false;
             }
         }
@@ -524,6 +525,7 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
                     openBoxCounts[bb.creator] += 1;
                     blindBoxPool[i] = blindBoxPool[blindBoxPool.length - 1];
                     blindBoxPool.pop();
+
                     if (bb.prizeType == PrizeType.ERC20) {
                         IERC20(bb.token).transfer(bb.creator, bb.amount);
                     } else if (bb.prizeType == PrizeType.ERC721) {
