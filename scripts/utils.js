@@ -24,12 +24,14 @@ async function getEnv(expand = true) {
     env.privateKey = process.env.LOCAL_KEY || process.env.TEST_KEY || process.env.MAIN_KEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
+    
     // env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
     if (expand)
         env.gasPrice = (env.gasPrice * 1.2).toFixed(0);
     // console.log(`url: ${env.url}, gasLimit: ${process.env.GASLIMIT}, gasPrice: ${env.gasPrice}`);
     let balance = await env.wallet.getBalance();
+    env.chainId = env.provider._network.chainId;
     console.log(`url: ${env.url}, address: ${env.wallet.address}, balance:${ethers.utils.formatEther(balance)}, gasPrice: ${env.gasPrice}`);
     return env;
 }

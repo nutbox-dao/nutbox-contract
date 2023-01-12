@@ -1,56 +1,46 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.7;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./Utils.sol";
 
 contract Curation is Ownable, ReentrancyGuard {
-    using EnumerableSet for EnumerableSet.UintSet;
-
-    // task status:
-    // Openning: when user create a new task;
-    // Pending: when we fill the user list;
-    // Closed: The task finished, token distribute to the users;
-    // Clean: clear the list of rewardList
-    enum TaskState {
-        Openning,
-        Pending,
-        Closed,
-        Clean
-    }
 
     struct TaskInfo {
         uint256 endTime; // after this timestamp, the owner can change the state
         address owner; // who create this task
         address token; // the reward token
         uint256 amount; // reward amount
-        TaskState taskState;
-        uint256 id; // task id
-        uint256 currentIndex; // user tags that are currently distributed
-        uint256 topCount; // Define the number of top
+        uint256 claimedAmount;
         uint256 maxCount; // Maximum number of rewards
         uint256 userCount; // The number of users who have claim.
     }
 
     event NewTask(address indexed owner, address indexed token, uint256 amount, uint256 endTime);
     event AddReward(uint256 indexed taskId, address indexed contributor, uint256 amount);
-    event TaskStateChange(uint256 indexed id, uint8 state);
-    event RewardInfo(uint256 indexed twitterId, address indexed user, address[] tokens, uint256[] amounts);
+    event Redeem(uint256 indexed id);
+    event RewardInfo(uint256 indexed twitterId, address indexed user, uint256[] taskIds, uint256[] amounts);
 
     // all tasks list
+    // curation id => TaskInfo
     mapping(uint256 => TaskInfo) private taskList;
-
-    // all tasks id
-    uint256[] public taskIds;
-    EnumerableSet.UintSet private openningTaskIds;
-    EnumerableSet.UintSet private pendingTaskIds;
 
     // Flag claimed users
     // twitterid => task id => bool
-    mapping(uint256 => mapping(uint256 => bool)) alreadyClaimed;
+    mapping(uint256 => mapping(uint256 => bool)) public alreadyClaimed;
+
+    address public signAddress;
+
+    constructor(address addr) {
+        signAddress = addr;
+    }
+
+    function setSignAddress(address addr) public onlyOwner {
+        signAddress = addr;
+    }
 
     // create a new task
     // every one can create a task
@@ -59,33 +49,25 @@ contract Curation is Ownable, ReentrancyGuard {
         uint256 endTime,
         address token,
         uint256 amount,
-        uint256 topCount,
         uint256 maxCount
     ) public {
         require(taskList[id].endTime == 0, "Task has been created");
-        require(IERC20(token).balanceOf(msg.sender) >= amount, "Insufficient balance");
         require(endTime > block.timestamp, "Wrong end time");
+        
         IERC20(token).transferFrom(msg.sender, address(this), amount);
 
         taskList[id].endTime = endTime;
         taskList[id].owner = msg.sender;
         taskList[id].token = token;
         taskList[id].amount = amount;
-        taskList[id].taskState = TaskState.Openning;
-        taskList[id].id = id;
-        taskList[id].topCount = topCount;
         taskList[id].maxCount = maxCount;
-
-        taskIds.push(id);
-        openningTaskIds.add(id);
 
         emit NewTask(msg.sender, token, amount, endTime);
     }
 
     function appendReward(uint256 id, uint256 amount) public {
         require(taskList[id].endTime > 0, "Task has not been created");
-        require(IERC20(taskList[id].token).balanceOf(msg.sender) >= amount, "Insufficient balance");
-        require(taskList[id].taskState == TaskState.Openning, "Wrong task state");
+        require(block.timestamp < taskList[id].endTime, "task is over");
         IERC20(taskList[id].token).transferFrom(msg.sender, address(this), amount);
         taskList[id].amount += amount;
         emit AddReward(id, msg.sender, amount);
@@ -94,13 +76,11 @@ contract Curation is Ownable, ReentrancyGuard {
     function redeem(uint256 id) public nonReentrant onlyOwner {
         require(taskList[id].endTime > 0, "Task has not been created");
         require(taskList[id].endTime < block.timestamp, "Task has not finish");
-        require(taskList[id].taskState == TaskState.Openning, "Task is not opening");
-        taskList[id].taskState = TaskState.Closed;
-        openningTaskIds.remove(id);
+
         if (taskList[id].amount > 0) {
             IERC20(taskList[id].token).transfer(taskList[id].owner, taskList[id].amount);
         }
-        emit TaskStateChange(id, uint8(TaskState.Closed));
+        emit Redeem(id);
     }
 
     function claimPrize(
@@ -111,19 +91,43 @@ contract Curation is Ownable, ReentrancyGuard {
     ) public nonReentrant {
         require(curationIds.length > 0, "get at least one");
         require(curationIds.length == amounts.length, "invalid data");
-        require(sign.length == 65, "invalid sign");
+        require(sign.length == 65, "invalid sign length");
+
+        bytes32 data = keccak256(abi.encodePacked(twitterId, curationIds, amounts));
+        require(_check(data, sign), "invalid sign");
+
+        for (uint256 i = 0; i < curationIds.length; i++) {
+            if (alreadyClaimed[twitterId][curationIds[i]] == false) {
+                TaskInfo storage curation = taskList[curationIds[i]];
+                require(curation.endTime < block.timestamp, "curation is not over");
+                require(amounts[i] <= curation.amount - curation.claimedAmount, "invalid amount");
+                require(curation.userCount + 1 <= curation.maxCount, "participation limit exceeded");
+
+                alreadyClaimed[twitterId][curationIds[i]] = true;
+                curation.userCount += 1;
+                curation.claimedAmount += amounts[i];
+
+                IERC20(curation.token).transfer(msg.sender, amounts[i]);
+            }
+        }
+        emit RewardInfo(twitterId, msg.sender, curationIds, amounts);
     }
 
-    // Get task's head info
+    function _check(bytes32 data, bytes calldata sign) internal view returns (bool) {
+        bytes32 r = bytes32(sign[:32]);
+        bytes32 s = bytes32(sign[32:64]);
+        uint8 v = uint8(bytes1(sign[64:]));
+        if (v < 27) {
+            if (v == 0 || v == 1) v += 27;
+        }
+        bytes memory profix = "\x19Ethereum Signed Message:\n32";
+        bytes32 info = keccak256(abi.encodePacked(profix, data));
+        address addr = ecrecover(info, v, r, s);
+        return addr == signAddress;
+    }
+
+    // Get task's info
     function taskInfo(uint256 id) public view returns (TaskInfo memory task) {
         task = taskList[id];
-    }
-
-    function openningTasks() public view returns (uint256[] memory ids) {
-        ids = openningTaskIds.values();
-    }
-
-    function pendingTasks() public view returns (uint256[] memory ids) {
-        ids = pendingTaskIds.values();
     }
 }
