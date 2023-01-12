@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./Utils.sol";
 
 contract Curation is Ownable, ReentrancyGuard {
 
@@ -53,7 +52,7 @@ contract Curation is Ownable, ReentrancyGuard {
     ) public {
         require(taskList[id].endTime == 0, "Task has been created");
         require(endTime > block.timestamp, "Wrong end time");
-        
+
         IERC20(token).transferFrom(msg.sender, address(this), amount);
 
         taskList[id].endTime = endTime;
