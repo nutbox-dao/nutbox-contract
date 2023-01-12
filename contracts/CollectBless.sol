@@ -574,28 +574,30 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         address user,
         uint256 startIndex,
         uint256 lastIndex
-    ) public view returns (BlindBox[] memory boxes, uint16[] memory weights) {
+    ) public view returns (uint256[] memory boxIds, BlindBox[] memory boxes, uint16[] memory weights) {
         require(startIndex < lastIndex, "Wrong index param");
         uint256[] memory ids = userOpenBoxs[user];
         if (ids.length == 0) {
-            return (boxes, weights);
+            return (boxIds, boxes, weights);
         }
         uint256 len = ids.length;
         if (len <= startIndex) {
-            return (boxes, weights);
+            return (boxIds, boxes, weights);
         }
         if (len <= lastIndex) {
             lastIndex = len;
         }
         boxes = new BlindBox[](lastIndex - startIndex);
         weights = new uint16[](lastIndex - startIndex);
+        boxIds = new uint256[](lastIndex - startIndex);
         uint256 i = 0;
         for (uint256 j = startIndex; j < lastIndex; j++) {
             boxes[i] = _blindBoxs[blindBoxTypes[ids[j]]];
             weights[i] = blindBoxsWeights[ids[j]];
+            boxIds[i] = ids[j];
             i++;
         }
-        return (boxes, weights);
+        return (boxIds, boxes, weights);
     }
 
     function getBoxsByIds(uint256[] memory ids) public view returns (BlindBox[] memory boxes, uint16[] memory weights) {
