@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Curation is Ownable, ReentrancyGuard {
-
     struct TaskInfo {
         uint256 endTime; // after this timestamp, the owner can change the state
         address owner; // who create this task
@@ -84,6 +83,7 @@ contract Curation is Ownable, ReentrancyGuard {
 
     function claimPrize(
         uint256 twitterId,
+        address addr,
         uint256[] calldata curationIds,
         uint256[] calldata amounts,
         bytes calldata sign
@@ -92,7 +92,7 @@ contract Curation is Ownable, ReentrancyGuard {
         require(curationIds.length == amounts.length, "invalid data");
         require(sign.length == 65, "invalid sign length");
 
-        bytes32 data = keccak256(abi.encodePacked(twitterId, curationIds, amounts));
+        bytes32 data = keccak256(abi.encodePacked(twitterId, addr, curationIds, amounts));
         require(_check(data, sign), "invalid sign");
 
         for (uint256 i = 0; i < curationIds.length; i++) {
