@@ -91,6 +91,7 @@ contract Curation is Ownable, ReentrancyGuard {
         require(curationIds.length > 0, "get at least one");
         require(curationIds.length == amounts.length, "invalid data");
         require(sign.length == 65, "invalid sign length");
+        require(addr == msg.sender, "invalid addr");
 
         bytes32 data = keccak256(abi.encodePacked(twitterId, addr, curationIds, amounts));
         require(_check(data, sign), "invalid sign");
