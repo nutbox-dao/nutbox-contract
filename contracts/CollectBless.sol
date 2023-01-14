@@ -91,6 +91,7 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
     Total Prize Pool Amount
      */
     uint256 public prizePoolAmount;
+    uint256 public claimedAmount;
 
     /**
     user address => count
@@ -502,6 +503,7 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         if (value > 0) {
             alreadyReceived[msg.sender] = value;
             prizePoolToken.transfer(msg.sender, value);
+            claimedAmount += value;
         }
     }
 
@@ -574,7 +576,15 @@ contract CollectBless is Ownable, ReentrancyGuard, IERC721Receiver, IERC1155Rece
         address user,
         uint256 startIndex,
         uint256 lastIndex
-    ) public view returns (uint256[] memory boxIds, BlindBox[] memory boxes, uint16[] memory weights) {
+    )
+        public
+        view
+        returns (
+            uint256[] memory boxIds,
+            BlindBox[] memory boxes,
+            uint16[] memory weights
+        )
+    {
         require(startIndex < lastIndex, "Wrong index param");
         uint256[] memory ids = userOpenBoxs[user];
         if (ids.length == 0) {

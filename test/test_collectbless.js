@@ -241,10 +241,13 @@ async function showCollectBless(env) {
     console.log("\tprizePoolToken: ", ppt);
 
     let amount = await cCollectBless.prizePoolAmount();
+    let claimedAmount = await cCollectBless.claimedAmount();
     if (env.provider._network.chainId == 137) {
         console.log("\tprizePoolAmount: ", ethers.utils.formatUnits(amount, 6));
+        console.log("\tclaimedAmount: ", ethers.utils.formatUnits(claimedAmount, 6));
     } else {
         console.log("\tprizePoolAmount: ", ethers.utils.formatEther(amount));
+        console.log("\tclaimedAmount: ", ethers.utils.formatEther(claimedAmount));
     }
 
     let blindBoxCount = await cCollectBless.blindBoxCount();
