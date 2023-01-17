@@ -23,7 +23,7 @@ async function init_collectBless(env) {
     const erc20Contract = new ethers.Contract(erc20Address, ERC20.abi, env.wallet);
     const collectBlessContract = new ethers.Contract(collectBlessAddress, CollectBless.abi, env.wallet);
     let d1 = new Date();
-    d1.setUTCDate(d1.getUTCDate() + 3);
+    d1.setUTCDate(d1.getUTCDate() + 1);
     let endTime = parseInt(d1.getTime() / 1000);
 
     console.log("init CollectBless contract......");

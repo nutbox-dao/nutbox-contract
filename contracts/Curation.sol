@@ -31,6 +31,7 @@ contract Curation is Ownable, ReentrancyGuard {
     mapping(uint256 => mapping(uint256 => bool)) public alreadyClaimed;
 
     address public signAddress;
+    uint256 public chainId = 137;
 
     constructor(address addr) {
         signAddress = addr;
@@ -38,6 +39,14 @@ contract Curation is Ownable, ReentrancyGuard {
 
     function setSignAddress(address addr) public onlyOwner {
         signAddress = addr;
+    }
+
+    function checkClaim(uint256 twitterId, uint256[] calldata curationIds) public view returns (bool[] memory) {
+        bool[] memory result = new bool[](curationIds.length);
+        for (uint256 i = 0; i < curationIds.length; i++) {
+            result[i] = alreadyClaimed[twitterId][curationIds[i]];
+        }
+        return result;
     }
 
     // create a new task
@@ -93,13 +102,13 @@ contract Curation is Ownable, ReentrancyGuard {
         require(sign.length == 65, "invalid sign length");
         require(addr == msg.sender, "invalid addr");
 
-        bytes32 data = keccak256(abi.encodePacked(twitterId, addr, curationIds, amounts));
+        bytes32 data = keccak256(abi.encodePacked(twitterId, chainId, addr, curationIds, amounts));
         require(_check(data, sign), "invalid sign");
 
         for (uint256 i = 0; i < curationIds.length; i++) {
             if (alreadyClaimed[twitterId][curationIds[i]] == false) {
                 TaskInfo storage curation = taskList[curationIds[i]];
-                require(curation.endTime < block.timestamp, "curation is not over");
+                require(curation.endTime < block.timestamp, "curation is not over.");
                 require(amounts[i] <= curation.amount - curation.claimedAmount, "invalid amount");
                 require(curation.userCount + 1 <= curation.maxCount, "participation limit exceeded");
 

@@ -16,7 +16,7 @@ async function main() {
     let curationIds = [123, 234, 345, 456];
     let amounts = [10, 100, 1000, 10000];
 
-    let data = ethers.utils.solidityKeccak256(["uint256", "uint256[]", "uint256[]"], [twitterId, curationIds, amounts]);
+    let data = ethers.utils.solidityKeccak256(["uint256", "uint256", "address", "uint256[]", "uint256[]"], [twitterId, 137, env.wallet.address, curationIds, amounts]);
 
     console.log("data: ", data.length, data);
 
@@ -29,7 +29,7 @@ async function main() {
     let sig = ethers.utils.splitSignature(sign);
     console.log("sig: ", sig);
 
-    await cCuration.claimPrize(twitterId, curationIds, amounts, sign);
+    await cCuration.claimPrize(twitterId, env.wallet.address, curationIds, amounts, sign);
 }
 
 
