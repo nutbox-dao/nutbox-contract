@@ -33,7 +33,8 @@ contract Curation is Ownable, ReentrancyGuard {
     address public signAddress;
     uint256 public chainId = 137;
 
-    constructor(address addr) {
+    constructor(uint256 _chainId, address addr) {
+        chainId = _chainId;
         signAddress = addr;
     }
 
