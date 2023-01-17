@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -124,9 +124,9 @@ contract Curation is Ownable, ReentrancyGuard {
     }
 
     function _check(bytes32 data, bytes calldata sign) internal view returns (bool) {
-        bytes32 r = bytes32(sign[:32]);
-        bytes32 s = bytes32(sign[32:64]);
-        uint8 v = uint8(bytes1(sign[64:]));
+        bytes32 r = abi.decode(sign[:32], (bytes32));
+        bytes32 s = abi.decode(sign[32:64], (bytes32));
+        uint8 v = uint8(sign[64]);
         if (v < 27) {
             if (v == 0 || v == 1) v += 27;
         }

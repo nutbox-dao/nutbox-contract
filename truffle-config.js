@@ -60,8 +60,12 @@ module.exports = {
       skipDryRun: true
     },
     polygon: {
-      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://polygon-rpc.com'),
-      network_id: 137,
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://polygon-rpc.com/'),
+      network_id: 137
+    },
+    moonbeam: {
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://rpc.api.moonbeam.network'),
+      network_id: 1284
     },
     bsctest: {
       provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), "https://data-seed-prebsc-2-s3.binance.org:8545"),
@@ -102,14 +106,14 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.8.7",    // Fetch exact version from solc-bin (default: truffle's version)
+      version: "0.8.0",    // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {          // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: true,
           runs: 200
         },
-        evmVersion: "constantinople"
+        // evmVersion: "constantinople"
       }
     }
   },

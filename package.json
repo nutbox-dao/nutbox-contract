@@ -10,7 +10,7 @@
   "scripts": {
     "test": "truffle test",
     "so": "node -r 'global-agent/bootstrap' ./scripts/setOwner.js",
-    "show":"node -r 'global-agent/bootstrap' test/test_collectbless.js -S"
+    "show": "node -r 'global-agent/bootstrap' test/test_collectbless.js -S"
   },
   "repository": {
     "type": "git",
@@ -29,7 +29,6 @@
   "devDependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.7",
     "@openzeppelin/test-helpers": "^0.5.10",
-    "@truffle/hdwallet-provider": "^1.2.2",
     "chai": "^4.3.4",
     "dotenv": "^10.0.0",
     "hardhat": "^2.6.8",
@@ -43,6 +42,7 @@
     "@openzeppelin/contracts": "^4.4.1",
     "@polkadot/util": "^7.5.1",
     "@polkadot/util-crypto": "^7.5.1",
+    "@truffle/hdwallet-provider": "^2.1.5",
     "argparse": "^2.0.1",
     "commander": "^7.2.0",
     "ethers": "^5.3.1",
