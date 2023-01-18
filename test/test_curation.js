@@ -1,6 +1,6 @@
 require('dotenv').config();
 const ethers = require('ethers');
-const { getEnv, waitForTx, sleep } = require('../scripts/utils');
+const { getEnv, waitForTx, sleep,getGasPrice } = require('../scripts/utils');
 
 const ERC20 = require("../build/contracts/ERC20PresetMinterPauser.json");
 const Curation = require("../build/contracts/Curation.json");
@@ -93,6 +93,9 @@ async function main() {
 
     balance = await cERC20.balanceOf(address);
     console.log("balance: ", ethers.utils.formatEther(balance));
+
+    // let gasPrice = await getGasPrice(env);
+    // await cCuration.setSignAddress("0x4A584E33Dec216a124E36Aceb0B06Bc37642027B", { gasPrice });
 
 }
 
