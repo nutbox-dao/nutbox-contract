@@ -34,7 +34,7 @@ async function deployERC1155(env) {
 }
 
 async function createERC20(env) {
-    cERC20 = new ethers.Contract("0xde0014E1D3B1Ae0D8Dd551A447C83C04dA19e566", ERC20.abi, env.wallet);
+    cERC20 = new ethers.Contract("0x8357560Abff2d3f12D3E9E8A9873DeE8D2862750", ERC20.abi, env.wallet);
     await cERC20.mint(env.wallet.address, ethers.utils.parseEther("1000"));
 }
 
@@ -44,7 +44,7 @@ async function createERC721(env) {
 }
 
 async function createERC1155(env) {
-    cERC1155 = new ethers.Contract("0xec8c8D33d470A3264915D92ed6cC3dCBF8e9f126", ERC1155.abi, env.wallet);
+    cERC1155 = new ethers.Contract("0x4Cf2F9A229234397CE6209EdAA9dac1Ee8a31c91", ERC1155.abi, env.wallet);
     await cERC1155.mint(env.wallet.address, 1, 10, "0x00");
 }
 
@@ -296,8 +296,15 @@ async function main() {
         return;
     }
 
+    let erc20Address = null;
+    if (chainId == 137) {
+        erc20Address = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+    } else {
+        erc20Address = ERC20.networks[chainId].address;
+    }
+
     cCollectBless = new ethers.Contract(CollectBless.networks[chainId].address, CollectBless.abi, env.wallet);
-    prizePoolToken = new ethers.Contract(ERC20.networks[chainId].address, ERC20.abi, env.wallet);
+    prizePoolToken = new ethers.Contract(erc20Address, ERC20.abi, env.wallet);
     blessCardNFT = new ethers.Contract(BlessCard.networks[chainId].address, BlessCard.abi, env.wallet);
 
     if (args.show) {

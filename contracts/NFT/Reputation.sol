@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.sol";
@@ -73,7 +73,7 @@ contract Reputation is ERC1155PresetMinterPauser {
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
-        bytes memory data
+        bytes memory /*data*/
     ) internal override {
         if (from  == address(0)) { // mint
             for (uint256 i; i < ids.length; i++) {

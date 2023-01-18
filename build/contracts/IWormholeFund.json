@@ -25,7 +25,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"twitterId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"pushAward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"pushAward(uint256,address,uint256)\":{\"details\":\"Add an unclaimed reward, this method can only be called by the Task contract. When calling, the corresponding Token must be transferred.\",\"params\":{\"amount\":\"reward amount\",\"token\":\"reward token address\",\"twitterId\":\"user twitter id\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interfaces/IWormholeFund.sol\":\"IWormholeFund\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interfaces/IWormholeFund.sol\":{\"keccak256\":\"0x99c68973a6bcc2565cd57812bc839b0698ad5a7ffc1ca8e98683a0ee1b7cb018\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e1b874478f2e676265adcc3c1b6d215caf06f106769fda0c63f18caa4478fa79\",\"dweb:/ipfs/QmWFMvRVZn9PUVMPxri2DbLBJkbTh4d6y1u9j72M54e1hv\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.13+commit.abaa5c0e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"twitterId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"pushAward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"pushAward(uint256,address,uint256)\":{\"details\":\"Add an unclaimed reward, this method can only be called by the Task contract. When calling, the corresponding Token must be transferred.\",\"params\":{\"amount\":\"reward amount\",\"token\":\"reward token address\",\"twitterId\":\"user twitter id\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interfaces/IWormholeFund.sol\":\"IWormholeFund\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interfaces/IWormholeFund.sol\":{\"keccak256\":\"0x99c68973a6bcc2565cd57812bc839b0698ad5a7ffc1ca8e98683a0ee1b7cb018\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e1b874478f2e676265adcc3c1b6d215caf06f106769fda0c63f18caa4478fa79\",\"dweb:/ipfs/QmWFMvRVZn9PUVMPxri2DbLBJkbTh4d6y1u9j72M54e1hv\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -60,6 +60,7 @@
       {
         "abstract": false,
         "baseContracts": [],
+        "canonicalName": "IWormholeFund",
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
@@ -68,6 +69,7 @@
           13723
         ],
         "name": "IWormholeFund",
+        "nameLocation": "67:13:51",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
@@ -83,6 +85,7 @@
             "kind": "function",
             "modifiers": [],
             "name": "pushAward",
+            "nameLocation": "368:9:51",
             "nodeType": "FunctionDefinition",
             "parameters": {
               "id": 13720,
@@ -93,6 +96,7 @@
                   "id": 13715,
                   "mutability": "mutable",
                   "name": "twitterId",
+                  "nameLocation": "395:9:51",
                   "nodeType": "VariableDeclaration",
                   "scope": 13722,
                   "src": "387:17:51",
@@ -119,6 +123,7 @@
                   "id": 13717,
                   "mutability": "mutable",
                   "name": "token",
+                  "nameLocation": "422:5:51",
                   "nodeType": "VariableDeclaration",
                   "scope": 13722,
                   "src": "414:13:51",
@@ -146,6 +151,7 @@
                   "id": 13719,
                   "mutability": "mutable",
                   "name": "amount",
+                  "nameLocation": "445:6:51",
                   "nodeType": "VariableDeclaration",
                   "scope": 13722,
                   "src": "437:14:51",
@@ -184,172 +190,19 @@
           }
         ],
         "scope": 13724,
-        "src": "57:412:51"
-      }
-    ],
-    "src": "32:437:51"
-  },
-  "legacyAST": {
-    "absolutePath": "project:/contracts/interfaces/IWormholeFund.sol",
-    "exportedSymbols": {
-      "IWormholeFund": [
-        13723
-      ]
-    },
-    "id": 13724,
-    "license": "MIT",
-    "nodeType": "SourceUnit",
-    "nodes": [
-      {
-        "id": 13712,
-        "literals": [
-          "solidity",
-          "^",
-          "0.8",
-          ".0"
-        ],
-        "nodeType": "PragmaDirective",
-        "src": "32:23:51"
-      },
-      {
-        "abstract": false,
-        "baseContracts": [],
-        "contractDependencies": [],
-        "contractKind": "interface",
-        "fullyImplemented": false,
-        "id": 13723,
-        "linearizedBaseContracts": [
-          13723
-        ],
-        "name": "IWormholeFund",
-        "nodeType": "ContractDefinition",
-        "nodes": [
-          {
-            "documentation": {
-              "id": 13713,
-              "nodeType": "StructuredDocumentation",
-              "src": "87:267:51",
-              "text": "@dev Add an unclaimed reward, this method can only be called by the Task contract.\nWhen calling, the corresponding Token must be transferred.\n@param twitterId user twitter id\n@param token reward token address\n@param amount reward amount"
-            },
-            "functionSelector": "b34d3353",
-            "id": 13722,
-            "implemented": false,
-            "kind": "function",
-            "modifiers": [],
-            "name": "pushAward",
-            "nodeType": "FunctionDefinition",
-            "parameters": {
-              "id": 13720,
-              "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 13715,
-                  "mutability": "mutable",
-                  "name": "twitterId",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 13722,
-                  "src": "387:17:51",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  },
-                  "typeName": {
-                    "id": 13714,
-                    "name": "uint256",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "387:7:51",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_uint256",
-                      "typeString": "uint256"
-                    }
-                  },
-                  "visibility": "internal"
-                },
-                {
-                  "constant": false,
-                  "id": 13717,
-                  "mutability": "mutable",
-                  "name": "token",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 13722,
-                  "src": "414:13:51",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
-                  },
-                  "typeName": {
-                    "id": 13716,
-                    "name": "address",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "414:7:51",
-                    "stateMutability": "nonpayable",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_address",
-                      "typeString": "address"
-                    }
-                  },
-                  "visibility": "internal"
-                },
-                {
-                  "constant": false,
-                  "id": 13719,
-                  "mutability": "mutable",
-                  "name": "amount",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 13722,
-                  "src": "437:14:51",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  },
-                  "typeName": {
-                    "id": 13718,
-                    "name": "uint256",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "437:7:51",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_uint256",
-                      "typeString": "uint256"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "377:80:51"
-            },
-            "returnParameters": {
-              "id": 13721,
-              "nodeType": "ParameterList",
-              "parameters": [],
-              "src": "466:0:51"
-            },
-            "scope": 13723,
-            "src": "359:108:51",
-            "stateMutability": "nonpayable",
-            "virtual": false,
-            "visibility": "external"
-          }
-        ],
-        "scope": 13724,
-        "src": "57:412:51"
+        "src": "57:412:51",
+        "usedErrors": []
       }
     ],
     "src": "32:437:51"
   },
   "compiler": {
     "name": "solc",
-    "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
+    "version": "0.8.13+commit.abaa5c0e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.6",
-  "updatedAt": "2023-01-17T09:18:59.738Z",
+  "schemaVersion": "3.4.11",
+  "updatedAt": "2023-01-18T10:02:27.552Z",
   "devdoc": {
     "kind": "dev",
     "methods": {
