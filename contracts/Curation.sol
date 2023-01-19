@@ -84,8 +84,10 @@ contract Curation is Ownable, ReentrancyGuard {
     function redeem(uint256 id) public nonReentrant onlyOwner {
         require(taskList[id].endTime > 0, "Task has not been created");
         require(taskList[id].endTime < block.timestamp, "Task has not finish");
+        require(taskList[id].claimedAmount == 0, "this cannot be redeem");
 
         if (taskList[id].amount > 0) {
+            taskList[id].claimedAmount = taskList[id].amount;
             IERC20(taskList[id].token).transfer(taskList[id].owner, taskList[id].amount);
         }
         emit Redeem(id);
@@ -117,7 +119,9 @@ contract Curation is Ownable, ReentrancyGuard {
                 curation.userCount += 1;
                 curation.claimedAmount += amounts[i];
 
-                IERC20(curation.token).transfer(msg.sender, amounts[i]);
+                if (amounts[i] > 0) {
+                    IERC20(curation.token).transfer(msg.sender, amounts[i]);
+                }
             }
         }
         emit RewardInfo(twitterId, msg.sender, curationIds, amounts);
