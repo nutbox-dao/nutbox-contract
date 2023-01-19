@@ -116,10 +116,10 @@ contract Curation is Ownable, ReentrancyGuard {
                 require(curation.userCount + 1 <= curation.maxCount, "participation limit exceeded");
 
                 alreadyClaimed[twitterId][curationIds[i]] = true;
-                curation.userCount += 1;
-                curation.claimedAmount += amounts[i];
 
                 if (amounts[i] > 0) {
+                    curation.userCount += 1;
+                    curation.claimedAmount += amounts[i];
                     IERC20(curation.token).transfer(msg.sender, amounts[i]);
                 }
             }
