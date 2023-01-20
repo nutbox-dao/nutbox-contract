@@ -77,11 +77,11 @@ function saveJson(buildJson, chainId, address, transactionHash) {
     fs.writeFileSync(dir, obj, 'utf8');
 }
 
-async function deployContract(env, buildJson, params = [], links = []) {
+async function deployContract(env, buildJson, params = [], links = [], force = false, nosave = false) {
     let chainId = env.chainId;
     let contract;
     let needDeploy = false;
-    if (chainId in buildJson.networks) {
+    if (!force && chainId in buildJson.networks) {
         let address = buildJson.networks[chainId].address;
         contract = new ethers.Contract(address, buildJson.abi, env.wallet);
         try {
@@ -114,12 +114,16 @@ async function deployContract(env, buildJson, params = [], links = []) {
     }
 
     await contract.deployed();
-    saveJson(buildJson, chainId, contract.address, contract.deployTransaction.hash);
+    if (!nosave) {
+        saveJson(buildJson, chainId, contract.address, contract.deployTransaction.hash);
+    }
     console.log("\n=====================================");
     console.log(`${buildJson.contractName} Contract: `, contract.address);
     console.log("TransactionHash: ", contract.deployTransaction.hash);
+}
 
-
+async function deployContractForce(env, buildJson, params = [], links = [], nosave = true) {
+    await deployContract(env, buildJson, params, links, true, nosave)
 }
 
 module.exports = {
@@ -129,5 +133,6 @@ module.exports = {
     getEnv,
     advanceTime,
     getGasPrice,
-    deployContract
+    deployContract,
+    deployContractForce
 }
