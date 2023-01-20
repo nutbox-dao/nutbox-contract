@@ -242,7 +242,7 @@ async function showCollectBless(env) {
 
     let amount = await cCollectBless.prizePoolAmount();
     let claimedAmount = await cCollectBless.claimedAmount();
-    if (env.provider._network.chainId == 137) {
+    if (env.chainId == 137) {
         console.log("\tprizePoolAmount: ", ethers.utils.formatUnits(amount, 6));
         console.log("\tclaimedAmount: ", ethers.utils.formatUnits(claimedAmount, 6));
     } else {
@@ -263,10 +263,18 @@ async function showCollectBless(env) {
     console.log("\topenBoxCounts: ", openBoxCounts.toString());
 
     let rareCardPrice = await cCollectBless.rareCardPrice();
-    console.log("\trareCardPrice: ", ethers.utils.formatEther(rareCardPrice));
+    if (env.chainId == 137) {
+        console.log("\trareCardPrice: ", ethers.utils.formatUnits(rareCardPrice, 6));
+    } else {
+        console.log("\trareCardPrice: ", ethers.utils.formatEther(rareCardPrice));
+    }
 
     let blindBoxPrice = await cCollectBless.blindBoxPrice();
-    console.log("\tblindBoxPrice: ", ethers.utils.formatEther(blindBoxPrice));
+    if (env.chainId == 137) {
+        console.log("\tblindBoxPrice: ", ethers.utils.formatUnits(blindBoxPrice, 6));
+    } else {
+        console.log("\tblindBoxPrice: ", ethers.utils.formatEther(blindBoxPrice));
+    }
 
     let rareCardCount = await cCollectBless.rareCardCount();
     console.log("\trareCardCount: ", rareCardCount.toString());
