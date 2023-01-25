@@ -36,7 +36,7 @@ async function main() {
 const parser = new ArgumentParser({
     description: 'Argparse example'
 });
-parser.add_argument('-A', '--address', { help: 'contract address' });
+parser.add_argument('-A', '--address', { help: 'contract address, e.g. 0x603d00d2e2c8ebf4fbd05b4ddd07366504c04cf2' });
 parser.add_argument('-C', '--curation', { help: 'curation id, e.g. 31fab64a9270' });
 parser.add_argument('-S', '--show', { help: 'show curation info', action: 'store_true' });
 const args = parser.parse_args();
