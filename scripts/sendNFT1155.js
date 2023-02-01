@@ -94,6 +94,7 @@ async function main() {
                 else
                     console.log(addr, "...");
             } else if (d.length == 1) {
+                addr = addr.replaceAll("\"","");
                 let id = args.id ?? 5;
                 let amount = args.amount ?? 1;
                 if (ignore.includes(addr) == false)
