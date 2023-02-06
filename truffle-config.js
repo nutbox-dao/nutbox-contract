@@ -66,6 +66,11 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true
     },
+    enuls: {
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://evmapi.nuls.io'),
+      network_id: 119,
+      confirmations: 2
+    },
     moonbeam: {
       provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://rpc.api.moonbeam.network'),
       network_id: 1284
@@ -116,7 +121,7 @@ module.exports = {
           enabled: true,
           runs: 200
         },
-         // evmVersion: "constantinople"
+        // evmVersion: "constantinople"
       }
     }
   },
