@@ -68,6 +68,8 @@ contract AutoCuration is Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < curationIds.length; i++) {
             if (alreadyClaimed[twitterId][curationIds[i]] == false) {
                 alreadyClaimed[twitterId][curationIds[i]] = true;
+            } else {
+                revert("already received");
             }
         }
         IERC20(prizeToken).transfer(msg.sender, amount);
