@@ -33,6 +33,9 @@ contract Curation is Ownable, ReentrancyGuard {
     address public signAddress;
     uint256 public chainId = 137;
 
+    // mapping(address => uint256) private tmpValue;
+    // address[] private tmpList;
+
     constructor(uint256 _chainId, address addr) {
         chainId = _chainId;
         signAddress = addr;
@@ -120,10 +123,17 @@ contract Curation is Ownable, ReentrancyGuard {
                 if (amounts[i] > 0) {
                     curation.userCount += 1;
                     curation.claimedAmount += amounts[i];
+                    // tmpValue[curation.token] += amounts[i];
+                    // tmpList.push(curation.token);
                     IERC20(curation.token).transfer(msg.sender, amounts[i]);
                 }
             }
         }
+        // for (uint256 a = 0; a < tmpList.length; a++) {
+        //     IERC20(tmpList[a]).transfer(msg.sender, tmpValue[tmpList[a]]);
+        //     tmpValue[tmpList[a]] = 0;
+        // }
+        // delete tmpList;
         emit RewardInfo(twitterId, msg.sender, curationIds, amounts);
     }
 

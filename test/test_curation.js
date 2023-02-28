@@ -75,7 +75,7 @@ async function main() {
 
     // claim prize
     let { chainId, address, twitterId, curationIds, amounts, sig } = await genInfo(env);
-    tx = await cCuration.claimPrize(twitterId, address, curationIds, amounts, sig);
+    tx = await cCuration.claimPrize(twitterId, address, curationIds, amounts, sig); //gas used 217504,249236
     await waitForTx(env.provider, tx.hash);
 
     let balance = await cERC20.balanceOf(address);
@@ -88,7 +88,7 @@ async function main() {
     console.log("curation2: ", taskInfo);
 
     // error claim prize
-    tx = await cCuration.claimPrize(twitterId, address, curationIds, amounts, sig);
+    tx = await cCuration.claimPrize(twitterId, address, curationIds, amounts, sig); // gas used 41596,44184
     await waitForTx(env.provider, tx.hash);
 
     balance = await cERC20.balanceOf(address);
