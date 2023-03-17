@@ -59,7 +59,7 @@ contract Tradable721 is ERC721PresetMinterPauserAutoId {
         _tokenIdTracker.increment();
     }
 
-    function tokensOf(address owner, uint256 startIndex, uint256 endIndex) public view virtual returns (uint256[] memory) {
+    function tokensOf(address owner, uint256 startIndex, uint256 endIndex) public view virtual returns (uint256[] memory result) {
         require(owner != address(0), "owner is zero address");
         require(startIndex < endIndex, "invalid index");
 
@@ -69,10 +69,10 @@ contract Tradable721 is ERC721PresetMinterPauserAutoId {
         if (len > tokens.length) {
             len = tokens.length;
         } else if (len == 0) {
-            return tokens;
+            return result;
         }
 
-        uint256[] memory result = new uint256[](len);
+        result = new uint256[](len);
         for (uint256 i = 0; i != len; ++i) {
             result[i] = tokens[startIndex + i];
         }
