@@ -64,16 +64,16 @@ contract Tradable721 is ERC721PresetMinterPauserAutoId {
         require(startIndex <= endIndex, "invalid index");
 
         uint256[] storage tokens = ownerTokens[owner];
-        require(endIndex < tokens.length, "invalid index");
+        require(endIndex <= tokens.length, "invalid index");
 
         if (endIndex == 0) {
             return tokens;
         }
 
-        uint256 len = endIndex - startIndex + 1;
+        uint256 len = endIndex - startIndex;
 
         result = new uint256[](len);
-        for (uint256 i = 0; i != len; ++i) {
+        for (uint256 i = 0; i != len; i++) {
             result[i] = tokens[startIndex + i];
         }
 
