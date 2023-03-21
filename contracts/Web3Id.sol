@@ -82,29 +82,35 @@ contract Web3Id is Ownable {
         string steemAccount;
     }
 
-    mapping (uint256 => AccountInfo) public twitterMap;
-    mapping (string => AccountInfo) public steemMap;
-    mapping (address => AccountInfo) public ethMap;
+    mapping(uint256 => AccountInfo) public twitterMap;
+    mapping(string => uint256) private steemMap;
+    mapping(address => uint256) private ethMap;
 
     event AdminUpdateAccountBindInfo(uint256 indexed twitterId, address indexed etAddress, string indexed steemAccount);
 
     function adminSetAccount(uint256 twitterId, address ethAddress, string memory steem) public onlyOwner {
         AccountInfo memory info = AccountInfo(twitterId, ethAddress, steem);
         twitterMap[twitterId] = info;
-        steemMap[steem] = info;
-        ethMap[ethAddress] = info;
+        steemMap[steem] = twitterId;
+        ethMap[ethAddress] = twitterId;
 
         emit AdminUpdateAccountBindInfo(twitterId, ethAddress, steem);
     }
 
     function adminSetAccounts(uint256[] calldata twitterIds, address[] calldata ethAddresses, string[] calldata steemAccounts) external onlyOwner {
-        require(twitterIds.length > 0
-        && twitterIds.length == ethAddresses.length 
-        && twitterIds.length == steemAccounts.length, 'Param invalid');
+        require(twitterIds.length > 0 && twitterIds.length == ethAddresses.length && twitterIds.length == steemAccounts.length, "Param invalid");
 
         uint256 count = twitterIds.length;
         for (uint256 i = 0; i < count; i++) {
             adminSetAccount(twitterIds[i], ethAddresses[i], steemAccounts[i]);
         }
+    }
+
+    function getSteemMap(string calldata steem) public view returns (AccountInfo memory) {
+        return twitterMap[steemMap[steem]];
+    }
+
+    function getEthMap(address addr) public view returns (AccountInfo memory) {
+        return twitterMap[ethMap[addr]];
     }
 }
