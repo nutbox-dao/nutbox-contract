@@ -12,6 +12,10 @@ async function main() {
     const contract = new ethers.Contract(address, Untradable721Json.abi, env.wallet);
     await contract.setBaseURI("https://gateway.nutbox.app/ipfs/");
     console.log("✓ Set the base URI");
+
+    await contract.grantRole("0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+        "0xFc04ED11A807A0B9A9fc23d4E76D6C8e87170E1a", { gasPrice: env.gasPrice });
+    console.log("✓ Set the minter");
 }
 
 main()
