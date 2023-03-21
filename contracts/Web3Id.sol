@@ -77,32 +77,34 @@ abstract contract Ownable is Context {
  */
 contract Web3Id is Ownable {
     struct AccountInfo {
-        uint256 updateTimes;
-        string customJson;
+        uint256 twitterId;
+        address ethAddress;
+        string steemAccount;
     }
 
-    mapping (uint256 => AccountInfo) public userAccounts;
+    mapping (uint256 => AccountInfo) public twitterMap;
+    mapping (string => AccountInfo) public steemMap;
+    mapping (address => AccountInfo) public ethMap;
 
-    event AdminUpdateAccountBindInfo(uint256 indexed twitterId, uint256 indexed updateTimes);
+    event AdminUpdateAccountBindInfo(uint256 indexed twitterId, address indexed etAddress, string indexed steemAccount);
 
-    function adminSetAccount(uint256 twitterId, string memory customJson) public onlyOwner {
-        userAccounts[twitterId].updateTimes += 1;
-        userAccounts[twitterId].customJson = customJson;
-        emit AdminUpdateAccountBindInfo(twitterId, userAccounts[twitterId].updateTimes);
+    function adminSetAccount(uint256 twitterId, address ethAddress, string memory steem) public onlyOwner {
+        AccountInfo memory info = AccountInfo(twitterId, ethAddress, steem);
+        twitterMap[twitterId] = info;
+        steemMap[steem] = info;
+        ethMap[ethAddress] = info;
+
+        emit AdminUpdateAccountBindInfo(twitterId, ethAddress, steem);
     }
 
-    function adminSetAccounts(uint256[] calldata twitterIds, string[] calldata customJsons) external onlyOwner {
-        require(twitterIds.length > 0 && twitterIds.length == customJsons.length, 'Param invalid');
+    function adminSetAccounts(uint256[] calldata twitterIds, address[] calldata ethAddresses, string[] calldata steemAccounts) external onlyOwner {
+        require(twitterIds.length > 0
+        && twitterIds.length == ethAddresses.length 
+        && twitterIds.length == steemAccounts.length, 'Param invalid');
+
         uint256 count = twitterIds.length;
         for (uint256 i = 0; i < count; i++) {
-            uint256 twitterId = twitterIds[i];
-            string memory customJson = customJsons[i];
-            userAccounts[twitterId].updateTimes += 1;
-            userAccounts[twitterId].customJson = customJson;
+            adminSetAccount(twitterIds[i], ethAddresses[i], steemAccounts[i]);
         }
-    }
-
-    function getUserInfo(uint256 twitterId) public view returns (string memory) {
-        return userAccounts[twitterId].customJson;
     }
 }
