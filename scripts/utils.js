@@ -126,6 +126,11 @@ async function deployContractForce(env, buildJson, params = [], links = [], nosa
     await deployContract(env, buildJson, params, links, true, nosave)
 }
 
+function getContract(env, buildJson) {
+    const contract = new ethers.Contract(buildJson.networks[env.chainId].address, buildJson.abi, env.wallet);
+    return contract;
+}
+
 module.exports = {
     sleep,
     waitForTx,
@@ -134,5 +139,6 @@ module.exports = {
     advanceTime,
     getGasPrice,
     deployContract,
-    deployContractForce
+    deployContractForce,
+    getContract
 }
