@@ -89,7 +89,7 @@ async function deployContract(env, buildJson, params = [], links = [], force = f
             console.log("\n=====================================");
             console.log(`${buildJson.contractName} Contract: `, contract.address);
             console.log("TransactionHash: ", buildJson.networks[chainId].transactionHash);
-            return;
+            return contract.address;
         } catch (e) {
             if (e.message.startsWith("contract not deployed ")) {
                 needDeploy = true;
@@ -120,6 +120,7 @@ async function deployContract(env, buildJson, params = [], links = [], force = f
     console.log("\n=====================================");
     console.log(`${buildJson.contractName} Contract: `, contract.address);
     console.log("TransactionHash: ", contract.deployTransaction.hash);
+    return contract.address;
 }
 
 async function deployContractForce(env, buildJson, params = [], links = [], nosave = true) {

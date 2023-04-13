@@ -17,11 +17,7 @@ contract AutoCuration is Ownable, ReentrancyGuard {
     address public signAddress;
     uint256 public chainId = 137;
 
-    constructor(
-        uint256 _chainId,
-        address addr,
-        address _prizeToken
-    ) {
+    constructor(uint256 _chainId, address addr, address _prizeToken) {
         chainId = _chainId;
         signAddress = addr;
         prizeToken = _prizeToken;
@@ -50,13 +46,7 @@ contract AutoCuration is Ownable, ReentrancyGuard {
         return result;
     }
 
-    function claimPrize(
-        uint256 twitterId,
-        address addr,
-        uint256[] calldata curationIds,
-        uint256 amount,
-        bytes calldata sign
-    ) public nonReentrant {
+    function claimPrize(uint256 twitterId, address addr, uint256[] calldata curationIds, uint256 amount, bytes calldata sign) public nonReentrant {
         require(curationIds.length > 0, "get at least one");
         require(sign.length == 65, "invalid sign length");
         require(addr == msg.sender, "invalid addr");
@@ -69,7 +59,7 @@ contract AutoCuration is Ownable, ReentrancyGuard {
             if (alreadyClaimed[twitterId][curationIds[i]] == false) {
                 alreadyClaimed[twitterId][curationIds[i]] = true;
             } else {
-                revert("already claimed");
+                require(false, "already claimed");
             }
         }
         IERC20(prizeToken).transfer(msg.sender, amount);
