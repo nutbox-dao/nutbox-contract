@@ -39,15 +39,15 @@
     "absolutePath": "project:/contracts/interfaces/IWormholeFund.sol",
     "exportedSymbols": {
       "IWormholeFund": [
-        13723
+        14780
       ]
     },
-    "id": 13724,
+    "id": 14781,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 13712,
+        "id": 14769,
         "literals": [
           "solidity",
           "^",
@@ -55,7 +55,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "32:23:51"
+        "src": "32:23:54"
       },
       {
         "abstract": false,
@@ -64,42 +64,42 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "fullyImplemented": false,
-        "id": 13723,
+        "id": 14780,
         "linearizedBaseContracts": [
-          13723
+          14780
         ],
         "name": "IWormholeFund",
-        "nameLocation": "67:13:51",
+        "nameLocation": "67:13:54",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "documentation": {
-              "id": 13713,
+              "id": 14770,
               "nodeType": "StructuredDocumentation",
-              "src": "87:267:51",
+              "src": "87:267:54",
               "text": "@dev Add an unclaimed reward, this method can only be called by the Task contract.\nWhen calling, the corresponding Token must be transferred.\n@param twitterId user twitter id\n@param token reward token address\n@param amount reward amount"
             },
             "functionSelector": "b34d3353",
-            "id": 13722,
+            "id": 14779,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "pushAward",
-            "nameLocation": "368:9:51",
+            "nameLocation": "368:9:54",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 13720,
+              "id": 14777,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 13715,
+                  "id": 14772,
                   "mutability": "mutable",
                   "name": "twitterId",
-                  "nameLocation": "395:9:51",
+                  "nameLocation": "395:9:54",
                   "nodeType": "VariableDeclaration",
-                  "scope": 13722,
-                  "src": "387:17:51",
+                  "scope": 14779,
+                  "src": "387:17:54",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -107,10 +107,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 13714,
+                    "id": 14771,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "387:7:51",
+                    "src": "387:7:54",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -120,13 +120,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 13717,
+                  "id": 14774,
                   "mutability": "mutable",
                   "name": "token",
-                  "nameLocation": "422:5:51",
+                  "nameLocation": "422:5:54",
                   "nodeType": "VariableDeclaration",
-                  "scope": 13722,
-                  "src": "414:13:51",
+                  "scope": 14779,
+                  "src": "414:13:54",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -134,10 +134,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 13716,
+                    "id": 14773,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "414:7:51",
+                    "src": "414:7:54",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -148,13 +148,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 13719,
+                  "id": 14776,
                   "mutability": "mutable",
                   "name": "amount",
-                  "nameLocation": "445:6:51",
+                  "nameLocation": "445:6:54",
                   "nodeType": "VariableDeclaration",
-                  "scope": 13722,
-                  "src": "437:14:51",
+                  "scope": 14779,
+                  "src": "437:14:54",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -162,10 +162,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 13718,
+                    "id": 14775,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "437:7:51",
+                    "src": "437:7:54",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -174,27 +174,27 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "377:80:51"
+              "src": "377:80:54"
             },
             "returnParameters": {
-              "id": 13721,
+              "id": 14778,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "466:0:51"
+              "src": "466:0:54"
             },
-            "scope": 13723,
-            "src": "359:108:51",
+            "scope": 14780,
+            "src": "359:108:54",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 13724,
-        "src": "57:412:51",
+        "scope": 14781,
+        "src": "57:412:54",
         "usedErrors": []
       }
     ],
-    "src": "32:437:51"
+    "src": "32:437:54"
   },
   "compiler": {
     "name": "solc",
@@ -202,7 +202,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.11",
-  "updatedAt": "2023-01-18T10:02:27.552Z",
+  "updatedAt": "2023-04-13T15:38:45.753Z",
   "devdoc": {
     "kind": "dev",
     "methods": {
