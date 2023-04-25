@@ -5,43 +5,49 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./CommunityStorage.sol";
 
 contract AutoCuration is Ownable, ReentrancyGuard {
     event RewardInfo(uint256 indexed twitterId, address indexed user, uint256[] taskIds, uint256 amount);
 
-    // Flag claimed users
-    // twitterid => curation id => bool
-    mapping(uint256 => mapping(uint256 => bool)) public alreadyClaimed;
+    CommunityStorage cStorage;
+    address public creator;
 
-    address public prizeToken;
-    address public signAddress;
-    uint256 public chainId = 137;
+    bool isInit = false;
 
-    constructor(uint256 _chainId, address addr, address _prizeToken) {
-        chainId = _chainId;
-        signAddress = addr;
-        prizeToken = _prizeToken;
+    modifier onlyCreator() {
+        require(creator == msg.sender, "Ownable: caller is not the creator");
+        _;
     }
 
-    function setSignAddress(address addr) public onlyOwner {
-        signAddress = addr;
-    }
-
-    function setPrizeToken(address addr) public onlyOwner {
-        prizeToken = addr;
-    }
-
-    function withdraw() public onlyOwner {
-        uint256 balance = IERC20(prizeToken).balanceOf(address(this));
-        if (balance > 0) {
-            IERC20(prizeToken).transfer(msg.sender, balance);
+    function init(uint256 cid, address signAddr, address prize, address _creator, address storageAddr) public onlyOwner {
+        if (!isInit) {
+            if (storageAddr == address(0)) {
+                cStorage = new CommunityStorage(cid, address(this), prize, signAddr);
+            } else {
+                cStorage = CommunityStorage(storageAddr);
+            }
+            isInit = true;
+            creator = _creator;
         }
+    }
+
+    function setSignAddress(address addr) public onlyCreator {
+        cStorage.setSignAddress(addr);
+    }
+
+    function setPrizeToken(address addr) public onlyCreator {
+        cStorage.setPrizeToken(addr);
+    }
+
+    function withdraw() public onlyCreator {
+        cStorage.withdraw(msg.sender);
     }
 
     function checkClaim(uint256 twitterId, uint256[] calldata curationIds) public view returns (bool[] memory) {
         bool[] memory result = new bool[](curationIds.length);
         for (uint256 i = 0; i < curationIds.length; i++) {
-            result[i] = alreadyClaimed[twitterId][curationIds[i]];
+            result[i] = cStorage.alreadyClaimed(twitterId, curationIds[i]);
         }
         return result;
     }
@@ -50,19 +56,15 @@ contract AutoCuration is Ownable, ReentrancyGuard {
         require(curationIds.length > 0, "get at least one");
         require(sign.length == 65, "invalid sign length");
         require(addr == msg.sender, "invalid addr");
-        require(prizeToken != address(0), "prize token not set");
+        require(cStorage.prizeToken() != address(0), "prize token not set");
 
-        bytes32 data = keccak256(abi.encodePacked(twitterId, chainId, addr, curationIds, amount));
+        bytes32 data = keccak256(abi.encodePacked(twitterId, block.chainid, addr, curationIds, amount));
         require(_check(data, sign), "invalid sign");
 
         for (uint256 i = 0; i < curationIds.length; i++) {
-            if (alreadyClaimed[twitterId][curationIds[i]] == false) {
-                alreadyClaimed[twitterId][curationIds[i]] = true;
-            } else {
-                require(false, "already claimed");
-            }
+            cStorage.saveAlreadyClaimed(twitterId, curationIds[i]);
         }
-        IERC20(prizeToken).transfer(msg.sender, amount);
+        cStorage.transfer(msg.sender, amount);
         emit RewardInfo(twitterId, msg.sender, curationIds, amount);
     }
 
@@ -76,6 +78,22 @@ contract AutoCuration is Ownable, ReentrancyGuard {
         bytes memory profix = "\x19Ethereum Signed Message:\n32";
         bytes32 info = keccak256(abi.encodePacked(profix, data));
         address addr = ecrecover(info, v, r, s);
-        return addr == signAddress;
+        return addr == cStorage.signAddress();
+    }
+
+    function alreadyClaimed(uint256 twitterId, uint256 curationId) public view returns (bool) {
+        return cStorage.alreadyClaimed(twitterId, curationId);
+    }
+
+    function getBalance() public view returns (uint256) {
+        return cStorage.getBalance();
+    }
+
+    function signAddress() public view returns (address) {
+        return cStorage.signAddress();
+    }
+
+    function prizeToken() public view returns (address) {
+        return cStorage.prizeToken();
     }
 }
