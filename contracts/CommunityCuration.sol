@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./AutoCuration.sol";
 
 contract CommunityCuration is Ownable {
+    event Upgrade(address indexed oldContract, address indexed newContract);
+
+    // cid => community contract
     mapping(uint256 => address) public communities;
 
     function createCommunity(uint256 cid, address signAddr, address prizeToken) public {
@@ -27,7 +30,9 @@ contract CommunityCuration is Ownable {
         address oldAddr = communities[cid];
         require(oldAddr != address(0), "invalid cid");
         AutoCuration ac = AutoCuration(oldAddr);
-        ac.transferOwnership(newCommunity);
+        ac.upgrade(newCommunity);
+        communities[cid] = newCommunity;
+        emit Upgrade(oldAddr, newCommunity);
     }
 
     function alreadyClaimed(uint256 twitterId, uint256 curationId) public view returns (bool) {

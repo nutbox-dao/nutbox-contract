@@ -96,4 +96,9 @@ contract AutoCuration is Ownable, ReentrancyGuard {
     function prizeToken() public view returns (address) {
         return cStorage.prizeToken();
     }
+
+    function upgrade(address newCommunity) public onlyOwner {
+        require(newCommunity != address(0), "invalid newCommunity");
+        cStorage.transferOwnership(newCommunity);
+    }
 }
