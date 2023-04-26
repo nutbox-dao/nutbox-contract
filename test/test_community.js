@@ -32,7 +32,7 @@ async function test_claim(env, cCommunityCuration, info) {
     let twitterId = 3419530221;
     let curationIds = [ethers.BigNumber.from(1).shl(48).or(ethers.BigNumber.from('0x4215233f3d1f')).toHexString()];
     let amount = ethers.utils.parseEther("1172.165639227039953926");
-    let chainId = env.chainId == 1337 ? 1 : env.chainId;    //Ganache block.chainid bug
+    let chainId = env.chainId == 1337 ? 1 : env.chainId;    //Ganache block.chainid bug: https://ethereum.stackexchange.com/questions/90385/the-endpoint-returned-a-different-chain-id-0x539-ganache
     let data = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'address', 'uint256[]', 'uint256'], [twitterId, chainId, env.wallet.address, curationIds, amount]);
     data = ethers.utils.arrayify(data);
     let sign = await env.wallet.signMessage(data);
