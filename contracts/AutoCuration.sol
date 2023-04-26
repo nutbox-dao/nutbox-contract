@@ -10,7 +10,7 @@ import "./CommunityStorage.sol";
 contract AutoCuration is Ownable, ReentrancyGuard {
     event RewardInfo(uint256 indexed twitterId, address indexed user, uint256[] taskIds, uint256 amount);
 
-    CommunityStorage cStorage;
+    CommunityStorage public cStorage;
     address public creator;
 
     bool isInit = false;

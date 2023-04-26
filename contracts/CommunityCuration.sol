@@ -11,19 +11,20 @@ contract CommunityCuration is Ownable {
     mapping(uint256 => address) public communities;
 
     function createCommunity(uint256 cid, address signAddr, address prizeToken) public {
-        require(communities[cid] != address(0), "community already exists");
+        require(communities[cid] == address(0), "community already exists");
 
         AutoCuration ac = new AutoCuration();
         ac.init(cid, signAddr, prizeToken, msg.sender, address(0));
         communities[cid] = address(ac);
     }
 
-    function getCommunityInfo(uint256 cid) public view returns (address communityAddr, address prizeToken, uint256 balance, address signAddr, address creator) {
+    function getCommunityInfo(uint256 cid) public view returns (address communityAddr, address prizeToken, uint256 balance, address signAddr, address creator, address storageAddr) {
         communityAddr = communities[cid];
         balance = AutoCuration(communityAddr).getBalance();
         signAddr = AutoCuration(communityAddr).signAddress();
         prizeToken = AutoCuration(communityAddr).prizeToken();
         creator = AutoCuration(communityAddr).creator();
+        storageAddr = address(AutoCuration(communityAddr).cStorage());
     }
 
     function upgrade(uint256 cid, address newCommunity) public onlyOwner {
