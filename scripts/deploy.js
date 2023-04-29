@@ -274,7 +274,7 @@ async function main() {
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         SPStakingFactory: env.SPStakingFactory ?? 'Not Deployed',
         ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed",
-        ERC1155StakingFacory: env.ERC1155StakingFactory ?? "Not Depolyed",
+        ERC1155StakingFactory: env.ERC1155StakingFactory ?? "Not Depolyed",
         CosmosStakingFactory: env.CosmosStakingFactory ?? "Not Deployed",
         Gauge:  env.Gauge ?? 'Not deployed',
         TreasuryFactory: env.TreasuryFactory ?? "Not deployed"
