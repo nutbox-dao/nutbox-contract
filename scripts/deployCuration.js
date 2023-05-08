@@ -1,5 +1,5 @@
 require('dotenv').config();
-// const ethers = require('ethers');
+const ethers = require('ethers');
 const { getEnv, deployContract } = require('./utils');
 
 const CurationJson = require('../build/contracts/Curation.json');
@@ -12,7 +12,12 @@ async function deployCuration(env) {
     // await contract.deployed();
     // console.log("✓ Curation contract deployed", contract.address);
 
-    await deployContract(env, CurationJson, [env.chainId, "0x447f163b9c1B097dC5d5F44bE4d364672F4eE4d8"]);
+    await deployContract(env, CurationJson, [env.chainId, "0x4A584E33Dec216a124E36Aceb0B06Bc37642027B"]);
+
+    // const cc = new ethers.Contract(CurationJson.networks[env.chainId].address, CurationJson.abi, env.wallet);
+    // await cc.setSignAddress("0x4A584E33Dec216a124E36Aceb0B06Bc37642027B");
+    // let m = await cc.signAddress();
+    // console.log("m:",m);
 }
 
 async function main() {
