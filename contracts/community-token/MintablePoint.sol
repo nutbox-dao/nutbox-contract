@@ -56,7 +56,7 @@ contract MintablePoint is Context, AccessControlEnumerable, ERC20Burnable {
         uint256 amount
     ) internal virtual override(ERC20) {
         super._beforeTokenTransfer(from, to, amount);
-        if (!hasRole(MINTER_ROLE, _msgSender())) {
+        if (!hasRole(MINTER_ROLE, _msgSender()) && from != address(0)) {
             require(senders[from], "You has no right to send point");
         }
     }
