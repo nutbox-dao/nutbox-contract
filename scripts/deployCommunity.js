@@ -1,6 +1,6 @@
 require('dotenv').config();
 const ethers = require('ethers');
-const { getEnv, deployContract } = require('./utils');
+const { getEnv, deployContract, waitForTx } = require('./utils');
 const { ArgumentParser } = require('argparse');
 
 const CommunityCuration = require('../build/contracts/CommunityCuration.json');
@@ -18,7 +18,8 @@ async function main() {
     if (args.cid && args.saddr && prizeToken) {
         // create community
         let cCommunityCuration = new ethers.Contract(CommunityCuration.networks[env.chainId].address, CommunityCuration.abi, env.wallet);
-        await cCommunityCuration.createCommunity(args.cid, args.saddr, prizeToken);
+        let tx = await cCommunityCuration.createCommunity(args.cid, args.saddr, prizeToken);
+        await waitForTx(env.provider, tx.hash);
         let info = await cCommunityCuration.getCommunityInfo(args.cid);
         console.log("info:", info);
     }
