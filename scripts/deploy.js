@@ -148,27 +148,27 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    env.Committee = '0xd10e4C1e301A13A9B874bd1757c135Eda075769D';
-    env.MintableERC20Factory = '0x22dFb6a44393db46CB6D1C834aE2908b054e9AFb';
-    env.NutPower = '0x5De2a9993eCcbFab4d83a5dCc0911c0e80A08AbA'
-    env.CommunityFactory = '0x1A4EeE210Bc54a75D25989546F648474EdF1C0A3'
-    env.SPStakingFactory = '0xF1Cd3716D97ab3C9D9Ed822EBa32fadECBdD4FDB'
-    env.CosmosStakingFactory = '0xAD6a0c0017559d051264e1657d627107d6b12f0d'
-    env.ERC20StakingFactory = '0x9eB136f1e80ab6EFB5974277F25900db4E1f81Ab'
-    env.LinearCalculator = '0x3D0650e727350c47d0Bc7FDbcdb04d3b583d631c'
-    env.Gauge = '0x6F2686B34D23dCbf79a33A2EEA5e92d84b942d91'
+    // env.Committee = '0xd10e4C1e301A13A9B874bd1757c135Eda075769D';
+    // env.MintableERC20Factory = '0x22dFb6a44393db46CB6D1C834aE2908b054e9AFb';
+    // env.NutPower = '0x5De2a9993eCcbFab4d83a5dCc0911c0e80A08AbA'
+    // env.CommunityFactory = '0x1A4EeE210Bc54a75D25989546F648474EdF1C0A3'
+    // env.SPStakingFactory = '0xF1Cd3716D97ab3C9D9Ed822EBa32fadECBdD4FDB'
+    // env.CosmosStakingFactory = '0xAD6a0c0017559d051264e1657d627107d6b12f0d'
+    // env.ERC20StakingFactory = '0x9eB136f1e80ab6EFB5974277F25900db4E1f81Ab'
+    // env.LinearCalculator = '0x3D0650e727350c47d0Bc7FDbcdb04d3b583d631c'
+    // env.Gauge = '0x6F2686B34D23dCbf79a33A2EEA5e92d84b942d91'
 
-    // await deployCommitteeContract(env);
-    // await deployMintableERC20FactoryContract(env);
-    // await deployNutPowerContract(env);
-    // await deployCommunityFactoryContract(env);
-    // await deploySPStakingFactoryContract(env);
-    // await deployCosmosStakingFactoryContract(env);
-    // await deployERC20StakingFactoryContract(env);
+    await deployCommitteeContract(env);
+    await deployMintableERC20FactoryContract(env);
+    await deployNutPowerContract(env);
+    await deployCommunityFactoryContract(env);
+    await deploySPStakingFactoryContract(env);
+    await deployCosmosStakingFactoryContract(env);
+    await deployERC20StakingFactoryContract(env);
     await deployERC1155StakingFactoryContract(env);
-    // await deployLinearCalculatorContract(env);
-    // await deployGaugeContract(env);
-    // await deployTreasuryFactoryContract(env);
+    await deployLinearCalculatorContract(env);
+    await deployGaugeContract(env);
+    await deployTreasuryFactoryContract(env);
     let tx;
     // const treasuryFactory = new ethers.Contract("0x8428aD36744a9917112c2A9a40C4f48FCF80e39E", TreasuryFactoryJson.abi, env.wallet);
     // const eth = "0x3F3BFe3b0363c3e0a713C0Ce338DbFd31b987581"
@@ -191,74 +191,74 @@ async function main() {
     // await waitForTx(env.provider, tx.hash)
     // return;
 
-    // const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
+    const committeeContract = new ethers.Contract(env.Committee, CommitteeJson.abi, env.wallet)
 
-    // tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
-    // console.log('Admin set factory to committee whitelist');
+    tx = await committeeContract.adminAddWhitelistManager(env.CommunityFactory);
+    console.log('Admin set factory to committee whitelist');
 
-    // // committee set contracts whitelist
-    // tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
-    // console.log(`Admin register MintableERC20Factory`);
-    // tx = await committeeContract.adminAddContract(env.LinearCalculator);
-    // console.log(`Admin register linear calculator`);
-    // tx = await committeeContract.adminAddContract(env.SPStakingFactory);
-    // console.log(`Admin register SPStakingFactory`);
-    // tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
-    // console.log(`Admin register ERC20StakingFactory`);
-    // tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
-    // console.log(`Admin register CosmosStakingFactory`);
+    // committee set contracts whitelist
+    tx = await committeeContract.adminAddContract(env.MintableERC20Factory);
+    console.log(`Admin register MintableERC20Factory`);
+    tx = await committeeContract.adminAddContract(env.LinearCalculator);
+    console.log(`Admin register linear calculator`);
+    tx = await committeeContract.adminAddContract(env.SPStakingFactory);
+    console.log(`Admin register SPStakingFactory`);
+    tx = await committeeContract.adminAddContract(env.ERC20StakingFactory);
+    console.log(`Admin register ERC20StakingFactory`);
+    tx = await committeeContract.adminAddContract(env.CosmosStakingFactory);
+    console.log(`Admin register CosmosStakingFactory`);
 
     // set Gauge to committee
-    // tx = await committeeContract.adminSetGauge(env.Gauge);
-    // console.log(`Admin register Gauge`);
+    tx = await committeeContract.adminSetGauge(env.Gauge);
+    console.log(`Admin register Gauge`);
 
     // committee set fee free list
-    // tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
-    // console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
-    // tx = await committeeContract.adminAddFeeFreeAddress(env.CosmosStakingFactory);
-    // console.log(`Admin set address:${env.CosmosStakingFactory} to fee free list`);
+    tx = await committeeContract.adminAddFeeFreeAddress(env.SPStakingFactory);
+    console.log(`Admin set address:${env.SPStakingFactory} to fee free list`);
+    tx = await committeeContract.adminAddFeeFreeAddress(env.CosmosStakingFactory);
+    console.log(`Admin set address:${env.CosmosStakingFactory} to fee free list`);
 
     // staking factory set bridge
-    // const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
-    // tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
-    // console.log(`Admin set sp staking bridge`);
-    // const cosmosStakingFactoryContract = new ethers.Contract(env.CosmosStakingFactory, CosmosStakingFactoryJson.abi, env.wallet);
-    // tx = await cosmosStakingFactoryContract.adminAddBridge(1, env.wallet.address);  // steem
-    // tx = await cosmosStakingFactoryContract.adminAddBridge(2, env.wallet.address);  // hive
+    const sPStakingFactoryContract = new ethers.Contract(env.SPStakingFactory, SPStakingFactoryJson.abi, env.wallet);
+    tx = await sPStakingFactoryContract.adminSetBridge(env.wallet.address);
+    console.log(`Admin set sp staking bridge`);
+    const cosmosStakingFactoryContract = new ethers.Contract(env.CosmosStakingFactory, CosmosStakingFactoryJson.abi, env.wallet);
+    tx = await cosmosStakingFactoryContract.adminAddBridge(1, env.wallet.address);  // steem
+    tx = await cosmosStakingFactoryContract.adminAddBridge(2, env.wallet.address);  // hive
     // tx = await cosmosStakingFactoryContract.adminAddBridge(3, '0xAF35c6452B3DD42dCc2AF8BF9689484bF27Aa143');  // Tien's address
     // tx = await cosmosStakingFactoryContract.adminAddBridge(1, '0xD9f4985a73349dea9aCB7c424E35056714bA2B35');  // Boy's address
     // tx = await cosmosStakingFactoryContract.adminAddBridge(3, "0x8c4C0Ec6d30A7B3f81E4F70a46b3c8B44B99470D");  // atom
     // tx = await cosmosStakingFactoryContract.adminAddBridge(4, "0xFa41CfdaAf9ae7f3a72d86229FBE428bb186A305");  // osmo
     // tx = await cosmosStakingFactoryContract.adminAddBridge(5, "0x6587FD7f5Dd9D0EbC13bf5C9CEfCf675a11d351f");  // juno
-    // console.log(`Admin set cosmos staking bridge`);
+    console.log(`Admin set cosmos staking bridge`);
 
     // set gauge to np
-    // const nutPowerContract = new ethers.Contract(env.NutPower, NutPowerJson.abi, env.wallet);
-    // tx = await nutPowerContract.adminSetWhitelist(env.Gauge, true);
-    // console.log('Admin set gauge to nut power');
+    const nutPowerContract = new ethers.Contract(env.NutPower, NutPowerJson.abi, env.wallet);
+    tx = await nutPowerContract.adminSetWhitelist(env.Gauge, true);
+    console.log('Admin set gauge to nut power');
 
     // set gauge param
-    // const gauge = new ethers.Contract(env.Gauge, GaugeJson.abi, env.wallet)
-    // tx = await gauge.adminSetRewardNUTPerBlock(ethers.utils.parseUnits('2.5', 18))
-    // console.log('Admin set gauge distribution to 2.5 nut per block');
+    const gauge = new ethers.Contract(env.Gauge, GaugeJson.abi, env.wallet)
+    tx = await gauge.adminSetRewardNUTPerBlock(ethers.utils.parseUnits('0', 18))
+    console.log('Admin set gauge distribution to 0 nut per block');
 
     // transfer ownership to committee
-    // tx = await cosmosStakingFactoryContract.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
-    // console.log('Transfer cosmos staking factory ownership to committee', tx.hash);
-    // tx = await nutPowerContract.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
-    // console.log('Transfer np ownership to committee', tx.hash);
-    // tx = await gauge.transferOwnership('0x5882f4422a5b897Aa05204a66b25303A7A62021f')
-    // console.log('Transfer gauge ownership to committee', tx.hash);
+    tx = await cosmosStakingFactoryContract.transferOwnership(env.Committee)
+    console.log('Transfer cosmos staking factory ownership to committee', tx.hash);
+    tx = await nutPowerContract.transferOwnership(env.Committee)
+    console.log('Transfer np ownership to committee', tx.hash);
+    tx = await gauge.transferOwnership(env.Committee)
+    console.log('Transfer gauge ownership to committee', tx.hash);
 
     // set transaction fee
-    // tx = await committeeContract.adminSetFee(
-    //     'COMMUNITY', 
-    //     ethers.utils.parseUnits('0.1', 18));
-    // tx = await committeeContract.adminSetFee(
-    //     'USER', 
-    //     ethers.utils.parseUnits('0.01', 18));
+    tx = await committeeContract.adminSetFee(
+        'COMMUNITY', 
+        ethers.utils.parseUnits('0', 18));
+    tx = await committeeContract.adminSetFee(
+        'USER', 
+        ethers.utils.parseUnits('0', 18));
 
-    // console.log(`Admin set fees`);
+    console.log(`Admin set fees`);
 
     let deployCost = startBalance.sub((await env.provider.getBalance(env.wallet.address)))
 
