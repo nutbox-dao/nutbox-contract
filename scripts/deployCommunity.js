@@ -1,11 +1,16 @@
 require('dotenv').config();
 const ethers = require('ethers');
-const { getEnv, deployContract, waitForTx } = require('./utils');
+const { getEnv, deployContract, waitForTx, u8arryToHex } = require('./utils');
 const { ArgumentParser } = require('argparse');
 
 const CommunityCuration = require('../build/contracts/CommunityCuration.json');
 const ERC20PresetMinterPauser = require('../build/contracts/ERC20PresetMinterPauser.json');
 
+function randomCurationId() {
+    let id = ethers.utils.randomBytes(6)
+    id = u8arryToHex(id);
+    return id;
+}
 
 async function main() {
     let env = await getEnv(false);
@@ -31,7 +36,14 @@ const parser = new ArgumentParser({
 parser.add_argument('-C', '--cid', { help: 'community id' });
 parser.add_argument('-S', '--saddr', { help: 'signature address' });
 parser.add_argument('-P', '--paddr', { help: 'prize token address' });
+parser.add_argument('-I', '--curationId', { help: 'Curation Id', action: 'store_true' });
 const args = parser.parse_args();
+
+if (args.curationId) {
+    let id = randomCurationId();
+    console.log("CurationId:", id);
+    process.exit();
+}
 
 main()
     .catch(console.error)
