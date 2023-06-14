@@ -24,9 +24,10 @@ const { log } = require('console');
 const { env } = require('process');
 
 // const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
-const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
+// const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 // const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745' // bsc
+const NutAddress = '0xED4D88303973615cC3D61D5F4D06A809055a07b8'; // arbitrum
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
@@ -148,15 +149,16 @@ async function main() {
 
     let startBalance = await env.provider.getBalance(env.wallet.address);
 
-    // env.Committee = '0xd10e4C1e301A13A9B874bd1757c135Eda075769D';
-    // env.MintableERC20Factory = '0x22dFb6a44393db46CB6D1C834aE2908b054e9AFb';
-    // env.NutPower = '0x5De2a9993eCcbFab4d83a5dCc0911c0e80A08AbA'
-    // env.CommunityFactory = '0x1A4EeE210Bc54a75D25989546F648474EdF1C0A3'
-    // env.SPStakingFactory = '0xF1Cd3716D97ab3C9D9Ed822EBa32fadECBdD4FDB'
-    // env.CosmosStakingFactory = '0xAD6a0c0017559d051264e1657d627107d6b12f0d'
-    // env.ERC20StakingFactory = '0x9eB136f1e80ab6EFB5974277F25900db4E1f81Ab'
-    // env.LinearCalculator = '0x3D0650e727350c47d0Bc7FDbcdb04d3b583d631c'
-    // env.Gauge = '0x6F2686B34D23dCbf79a33A2EEA5e92d84b942d91'
+    // env.Committee = '0x4C5e687CE5a365ce7bE9E536cf617D3D08Aadde3';
+    // env.MintableERC20Factory = '0x1320A00303435250c23F06E3a2383a6c1174C9FB';
+    // env.NutPower = '0x7e109A3a696367c0527E15eDb815F549E637C39b'
+    // env.CommunityFactory = '0xDB1d3a43B19d0E95EE4fA16486350434A15e8c86'
+    // env.SPStakingFactory = '0x37921DB31E88e80AC43fD285AE60230065b9E87C'
+    // env.CosmosStakingFactory = '0x8Ea8870001216429f72CEA80fEE576dfe883E5bD'
+    // env.ERC20StakingFactory = '0x7Be1085298446c041f72db9f50cd3953638B023a'
+    // env.ERC1155StakingFactory = '0xBab99d73D20DE32D0f674dA58390b4C904654C19'
+    // env.LinearCalculator = '0xa3e53F30C9cc6d174a98b311676e026535326f42'
+    // env.Gauge = '0x57A9D7630CC5Fd5000EE93D66b1Db121B9785832'
 
     await deployCommitteeContract(env);
     await deployMintableERC20FactoryContract(env);
@@ -272,7 +274,7 @@ async function main() {
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         SPStakingFactory: env.SPStakingFactory ?? 'Not Deployed',
         ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed",
-        ERC1155StakingFacory: env.ERC1155StakingFactory ?? "Not Depolyed",
+        ERC1155StakingFactory: env.ERC1155StakingFactory ?? "Not Depolyed",
         CosmosStakingFactory: env.CosmosStakingFactory ?? "Not Deployed",
         Gauge:  env.Gauge ?? 'Not deployed',
         TreasuryFactory: env.TreasuryFactory ?? "Not deployed"

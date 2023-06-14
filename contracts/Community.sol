@@ -12,6 +12,7 @@ import "./interfaces/IPoolFactory.sol";
 import "./interfaces/ICommittee.sol";
 import "./interfaces/IGauge.sol";
 import "./ERC20Helper.sol";
+import "./interfaces/ArbSys.sol";
 
 /**
  * @dev Template contract of Nutbox staking based communnity.
@@ -167,7 +168,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         require(poolAddresses.length > 0, "MHO1"); // Must harvest at least one pool
 
         // There are new blocks created after last updating, so update pools before withdraw
-        if(block.number > lastRewardBlock) {
+        if(blockNum() > lastRewardBlock) {
             _updatePoolsWithFee("USER", msg.sender, poolAddresses[0]);
         }
 
@@ -216,7 +217,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         // game has not started
         if (lastRewardBlock == 0) return 0;
 
-        uint256 rewardsReadyToMintedToPools = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, block.number).mul(10000 - feeRatio).div(10000);
+        uint256 rewardsReadyToMintedToPools = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, blockNum()).mul(10000 - feeRatio).div(10000);
         // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
         // the right amount that delegator can award
         uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(user);
@@ -278,7 +279,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         }
 
         uint256 rewardsReadyToMinted = 0;
-        uint256 currentBlock = block.number;
+        uint256 currentBlock = blockNum();
 
         if (lastRewardBlock == 0) {
             lastRewardBlock = currentBlock;
@@ -339,5 +340,9 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         } else {
             releaseERC20(communityToken, address(recipient), amount);
         }
+    }
+
+    function blockNum() public view returns (uint256) {
+        return ArbSys(address(100)).arbBlockNumber();
     }
 }

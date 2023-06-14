@@ -11,9 +11,8 @@ async function deployNutContract(env) {
     let contract = await factory.deploy(
         'Nutbox',
         'NUT',
-        ethers.utils.parseUnits("200000000.0", 18),
-        env.wallet.address,
-        { gasPrice: env.gasPrice, gasLimit: env.gasLimit}
+        ethers.utils.parseUnits("0.0", 18),
+        env.wallet.address
     );
     await contract.deployed();
     console.log("✓ NUTToken contract deployed", contract.address);

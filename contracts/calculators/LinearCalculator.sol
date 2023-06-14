@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import 'solidity-bytes-utils/contracts/BytesLib.sol';
 import '../interfaces/ICalculator.sol';
+import '../interfaces/ArbSys.sol';
 
 /**
  * LinearCalculator is a distribution mechanism that people can set a reward on specific blocks height.
@@ -62,7 +63,7 @@ contract LinearCalculator is ICalculator {
         uint256 rewards = 0;
         Distribution[] memory eras = distributionErasMap[community];
 
-        if (eras.length == 0 || block.number <= eras[0].startHeight) {
+        if (eras.length == 0 || blockNum() <= eras[0].startHeight) {
             return rewards;
         }
         if (rewardedBlock < eras[0].startHeight){
@@ -92,7 +93,7 @@ contract LinearCalculator is ICalculator {
     function getCurrentDistributionEra(address community) public view returns (Distribution memory era) {
         Distribution[] memory eras = distributionErasMap[community];
         for(uint8 i = 0; i < distributionCountMap[community]; i++) {
-            if (block.number >= eras[i].startHeight && block.number <= eras[i].stopHeight) {
+            if (blockNum() >= eras[i].startHeight && blockNum() <= eras[i].stopHeight) {
                 era = eras[i];
                 return era;
             }
@@ -127,7 +128,7 @@ contract LinearCalculator is ICalculator {
             require(amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');
             // check 2)
             if (i == 0) {
-                require(start > block.number, 'Invalid start height of distribution');
+                require(start > blockNum(), 'Invalid start height of distribution');
             }
             // check 3)
             require(start < stop, 'Invalid stop height of distribution');
@@ -139,5 +140,9 @@ contract LinearCalculator is ICalculator {
             }));
             distributionCountMap[community] = distributionCountMap[community] + 1;
         }
+    }
+
+    function blockNum() public view returns (uint256) {
+        return ArbSys(address(100)).arbBlockNumber();
     }
 }

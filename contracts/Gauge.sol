@@ -12,6 +12,7 @@ import "./interfaces/ICommunity.sol";
 import "./ERC20Helper.sol";
 import "./NUTToken.sol";
 import "./NutPower.sol";
+import "./interfaces/ArbSys.sol";
 
 contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
 
@@ -409,14 +410,14 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     function _updateNutAcc() private {
         // start game when the first operation
         if (0 == lastRewardBlock) {
-            lastRewardBlock = block.number;
+            lastRewardBlock = blockNum();
         }
 
-        if (block.number <= lastRewardBlock) return;
+        if (blockNum() <= lastRewardBlock) return;
 
         (communityNutAcc, poolFactoryNutAcc, userNutAcc) = _cuclateNutAcc();
 
-        lastRewardBlock = block.number;
+        lastRewardBlock = blockNum();
     }
 
     function _updatePoolAcc(address pool) private {
@@ -445,10 +446,14 @@ contract Gauge is IGauge, Ownable, ERC20Helper, ReentrancyGuard {
     }
 
     function _calculateNutReadyToMint() private view returns (uint256 communityReadyToMint, uint256 poolFactoryReadyToMint, uint256 userReadyToMint) {
-        uint256 readyToMint = (block.number - lastRewardBlock).mul(rewardNUTPerBlock);
+        uint256 readyToMint = (blockNum() - lastRewardBlock).mul(rewardNUTPerBlock);
         communityReadyToMint = readyToMint.mul(distributionRatio.community).div(CONSTANT_10000);
         poolFactoryReadyToMint = readyToMint.mul(distributionRatio.poolFactory).div(CONSTANT_10000);
         userReadyToMint = readyToMint.mul(distributionRatio.user).div(CONSTANT_10000);
+    }
+
+    function blockNum() public view returns (uint256) {
+        return ArbSys(address(100)).arbBlockNumber();
     }
 }
 
