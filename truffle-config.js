@@ -27,7 +27,7 @@ require('dotenv').config();
 const ethers = require('ethers');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
-const MNEMONIC = '';
+const MNEMONIC = 'mutual elite quick chest carpet menu race delay deliver season panel address';
 
 module.exports = {
   /**
@@ -55,6 +55,13 @@ module.exports = {
     bscmain: {
       provider: () => new HDWalletProvider(MNEMONIC, 'https://bsc-dataseed.binance.org'),
       network_id: 56,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
+    arbitrum: {
+      provider: () => new HDWalletProvider(MNEMONIC, 'https://arb1.arbitrum.io/rpc'),
+      network_id: 42161,
       confirmations: 10,
       timeoutBlocks: 200,
       skipDryRun: true
@@ -112,7 +119,9 @@ module.exports = {
   ],
 
   api_keys: {
-    bscscan: process.env.BSC_KEY
+    bscscan: process.env.BSC_KEY,
+    arbitrum: process.env.ARB_KEY,
+    etherscan: process.env.ARB_KEY
   },
 
   // Truffle DB is currently disabled by default; to enable it, change enabled: false to enabled: true
