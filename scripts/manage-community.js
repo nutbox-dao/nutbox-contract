@@ -35,6 +35,8 @@ async function getRewardCalculator() {
 }
 
 async function activedPools() {
-    
+    const pools = await contract.activedPools();
+    console.log("activied pools:", pools);
+    return pools;
 }
 
