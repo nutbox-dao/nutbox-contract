@@ -1,5 +1,7 @@
 const { ethers } = require('ethers')
 const CommunityJson = require('../build/contracts/Community.json')
+require('dotenv').config();
+
 
 // functions:
 
@@ -10,7 +12,7 @@ const CommunityJson = require('../build/contracts/Community.json')
 // adminClosePool(address,address[],uint16[]);
 // adminSetPoolRatios(uint16[]);
 
-const communityContract = '';
+const communityContract = '0x2Fdfb2e13eD1B0691fce6eBE367643e98081A871';
 let contract;
 let env = {};
 
@@ -35,8 +37,21 @@ async function getRewardCalculator() {
 }
 
 async function activedPools() {
-    const pools = await contract.activedPools();
+    const pools = await contract.activedPools(2);
     console.log("activied pools:", pools);
     return pools;
 }
 
+async function owner() {
+    const owner = await contract.owner();
+    console.log('owner is:', owner)
+    return owner
+}
+
+async function main() {
+    await initProvider();
+    await initCommunityContract();
+    await owner();
+}
+
+main();
