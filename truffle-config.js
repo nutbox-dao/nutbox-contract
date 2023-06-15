@@ -115,7 +115,8 @@ module.exports = {
 
   plugins: [
     'truffle-contract-size',
-    'truffle-plugin-verify'
+    'truffle-plugin-verify',
+    'truffle-flattener'
   ],
 
   api_keys: {
