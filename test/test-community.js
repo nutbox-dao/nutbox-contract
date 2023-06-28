@@ -10,12 +10,13 @@ describe("Create community", async () => {
     beforeEach(async () => {
         [owner, communityOwner] = await ethers.getSigners();
         contracts = await deploy(owner);
-    })
+
+})
 
     describe("Create", () => {
         it("Any one can create a community", async () => {
             // config token info
-            
+
         })
     })
 })
