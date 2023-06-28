@@ -13,7 +13,7 @@ async function deployCommitteeContract(owner, nut) {
     let factory = await ethers.getContractFactory('Committee');
     let contract = await factory.deploy(owner.address, nut.address);
     await contract.deployed();
-    console.log("✓ Committee contract deployed", contract.address);
+    // console.log("✓ Committee contract deployed", contract.address);
     return contract;
 }
 
@@ -21,7 +21,7 @@ async function deployMintableERC20FactoryContract() {
     let factory = await ethers.getContractFactory('MintableERC20Factory')
     let contract = await factory.deploy()
     await contract.deployed();
-    console.log("✓ Mintable ERC20 contract deployed", contract.address);
+    // console.log("✓ Mintable ERC20 contract deployed", contract.address);
     return contract;
 }
 
@@ -29,7 +29,7 @@ async function deployNutPowerContract(nut) {
     let factory = await ethers.getContractFactory('NutPower')
     let contract = await factory.deploy(nut.address);
     await contract.deployed();
-    console.log("✓ Nut power contract deployed", contract.address);
+    // console.log("✓ Nut power contract deployed", contract.address);
     return contract;
 }
 
@@ -37,7 +37,7 @@ async function deploySPStakingFactoryContract(CommunityFactoryAddress) {
     let factory = await ethers.getContractFactory('SPStakingFactoryContract')
     let contract = await factory.deploy(CommunityFactoryAddress);
     await contract.deployed();
-    console.log("✓ SPStakingFactory contract deployed", contract.address);
+    // console.log("✓ SPStakingFactory contract deployed", contract.address);
     return contract
 }
 
@@ -45,7 +45,7 @@ async function deployERC20StakingFactoryContract(CommunityFactoryAddress) {
     let factory = await ethers.getContractFactory('ERC20StakingFactory')
     let contract = await factory.deploy(CommunityFactoryAddress);
     await contract.deployed();
-    console.log("✓ ERC20StakingFactory contract deployed", contract.address);
+    // console.log("✓ ERC20StakingFactory contract deployed", contract.address);
     return contract;
 }
 
@@ -53,7 +53,7 @@ async function deployERC1155StakingFactoryContract(CommunityFactoryAddress) {
     let factory = await ethers.getContractFactory('ERC1155StakingFactory')
     let contract = await factory.deploy(CommunityFactoryAddress);
     await contract.deployed();
-    console.log("✓ ERC1155StakingFactory contract deployed", contract.address);
+    // console.log("✓ ERC1155StakingFactory contract deployed", contract.address);
     return contract;
 }
 
@@ -61,7 +61,7 @@ async function deployCosmosStakingFactoryContract(CommunityFactoryAddress) {
     let factory = await ethers.getContractFactory('CosmosStakingFactory');
     let contract = await factory.deploy(CommunityFactoryAddress);
     await contract.deployed();
-    console.log("✓ CosmosStakingFactory contract deployed", contract.address);
+    // console.log("✓ CosmosStakingFactory contract deployed", contract.address);
     return contract;
 }
 
@@ -69,7 +69,7 @@ async function deployCommunityFactoryContract(Committee) {
     let factory = await ethers.getContractFactory("CommunityFactory");
     let contract = await factory.deploy(Committee.address);
     await contract.deployed();
-    console.log("✓ CommunityFactory contract deployed", contract.address);
+    // console.log("✓ CommunityFactory contract deployed", contract.address);
     return contract;
 }
 
@@ -81,7 +81,7 @@ async function deployGaugeContract(CommunityFactory, NutPowerAddress, NutAddress
         user: 5000
     }, NutPowerAddress, NutAddress)
     await contract.deployed();
-    console.log("✓ Gauge contract deployed", contract.address);
+    // console.log("✓ Gauge contract deployed", contract.address);
     return contract;
 }
 
@@ -89,7 +89,7 @@ async function deployLinearCalculatorContract(CommunityFactory) {
     let factory = await ethers.getContractFactory("LinearCalculator");
     let contract = await factory.deploy(CommunityFactory.address);
     await contract.deployed();
-    console.log("✓ LinearCalculator contract deployed", contract.address);
+    // console.log("✓ LinearCalculator contract deployed", contract.address);
     return contract;
 }
 
@@ -97,7 +97,7 @@ async function deployTreasuryFactoryContract(CommunityFactory) {
     let factory = await ethers.getContractFactory("TreasuryFactory")
     let contract = await factory.deploy(CommunityFactory.address);
     await contract.deployed();
-    console.log("✓ TreasuryFactory contract deployed", contract.address);
+    // console.log("✓ TreasuryFactory contract deployed", contract.address);
     return contract
 }
 
@@ -105,7 +105,7 @@ async function deployCurationGaugeContract(CommunityFactory) {
     let factory = await ethers.getContractFactory('CurationGaugeFactory');
     let contract = await factory.deploy(CommunityFactory.address);
     await contract.deployed();
-    console.log("✓ CurationGauge contract deployed", contract.address);
+    // console.log("✓ CurationGauge contract deployed", contract.address);
     return contract
 }
 
