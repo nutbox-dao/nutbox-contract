@@ -28,7 +28,6 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
     // community that pool belongs to
     address immutable community;
     address public recipient;
-    address public rewardToken;
 
     event ChangeRecipient(address indexed oldRecipent, address indexed newRecipient);
     event WithdrawRewardsToRecipient(uint256 indexed amount);
@@ -38,6 +37,7 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
         community = _community;
         name = _name;
         recipient = _recipient;
+        Community(community).updatePools("USER", address(this));
         emit ChangeRecipient(address(0), _recipient);
     }
 
@@ -49,11 +49,13 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
     }
 
     function withdrawRewardsToRecipient() public {
-        address[] memory pools;
+        address[] memory pools = new address[](1);
         pools[0] = address(this);
         Community(community).withdrawPoolsRewards(pools);
+        address rewardToken = Community(community).getCommunityToken();
         uint256 balance = ERC20(rewardToken).balanceOf(address(this));
         releaseERC20(rewardToken, recipient, balance);
+        emit WithdrawRewardsToRecipient(balance);
     }
 
     function getFactory() external view override returns (address) {

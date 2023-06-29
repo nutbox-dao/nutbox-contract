@@ -11,10 +11,12 @@ function utf8ToHex(str)
 
 async function deployCommunity() {
 
-    const [owner, communityOwner] = await ethers.getSigners();
+    const [owner, communityOwner, alice, bob] = await ethers.getSigners();
     let contracts = await deploy(owner);
     contracts.owner = owner;
     contracts.communityOwner = communityOwner;
+    contracts.alice = alice;
+    contracts.bob = bob;
 
     // create community
     const blockNumber = await ethers.provider.getBlockNumber();
