@@ -20,8 +20,8 @@ describe("Create community", async () => {
         bob = contracts.bob;
     })
 
-    async function createCurationGauge() {
-        const tx = await contracts.Community.connect(communityOwner).adminAddPool("Wormhole3 curation", [10000], contracts.CurationGaugeFactory.address, bob.address);
+    async function createCurationGauge(receiption)  {
+        const tx = await contracts.Community.connect(communityOwner).adminAddPool("Wormhole3 curation", [10000], contracts.CurationGaugeFactory.address, receiption);
         const receipt = await tx.wait();
         const event = receipt.events.find(e => e.event === 'AdminSetPoolRatio')
         const poolAddress = event.args.pools[0]
@@ -64,30 +64,70 @@ describe("Create community", async () => {
         })
 
         it("Community owner can create curation pool", async () => {
-            const poolAddress = await loadFixture(createCurationGauge)
+            const poolAddress = await createCurationGauge(bob.address)
+            // rearch over the start block
             await mine(100);
 
-            let balance = await contracts.CToken.balanceOf(bob.address);
-            console.log('bob balance:', balance);
+            expect(await contracts.CToken.balanceOf(bob.address)).to.equal(0)
 
             const poolContract = await ethers.getContractAt("CurationGauge", poolAddress);
             // start curation
             await poolContract.startPool();
-            let currentBlock = await ethers.provider.getBlockNumber();
-            currentBlock = await ethers.provider.getBlockNumber();
-            await poolContract.withdrawRewardsToRecipient();
-            balance = await contracts.CToken.balanceOf(bob.address);
-            console.log('bob balance:', balance);
-            await poolContract.withdrawRewardsToRecipient();
-            balance = await contracts.CToken.balanceOf(bob.address);
-            console.log('bob balance:', balance);
+            // in the first start block, anyone can claim a block reward
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "100000000000000000000");
+            // another reward of a block
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "100000000000000000000");
+            
             await mine(1);
-            const pendingReward = await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress);
-            console.log('pending reward', pendingReward);
+            // 2 block reward
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "200000000000000000000");
+            await mine(1);
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress)).equal("100000000000000000000");
+        })
+        
+        it("Not started curation gauge has no reward", async () => {
+            const poolAddress = await createCurationGauge(bob.address);
+            const poolContract = await ethers.getContractAt("CurationGauge", poolAddress);
+            // reach over the start block
+            await mine(100);
+            // there's no reward because the pool not started
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "0");
+            await mine(1000);
+            // no rewards
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "0");
+            await mine(1000) ;
+            // no rewards
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress)).to.equal("0");
         })
 
-        it("Not started curation gauge has no reward", async () => {
-            
+        it("Cant start curation pool more than once", async () => {
+            const poolAddress = await createCurationGauge(bob.address);
+            const poolContract = await ethers.getContractAt("CurationGauge", poolAddress);
+            await poolContract.startPool();
+            // cant start again
+            await expect(poolContract.startPool).to.be.revertedWith("Pool has started");
+        })
+
+        it("Cant withdraw reward after admin close the pool", async () => {
+            const poolAddress = await createCurationGauge(bob.address);
+            const poolContract = await ethers.getContractAt("CurationGauge", poolAddress);
+            // reach over the start block
+            await mine(100)
+            await poolContract.startPool();
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "100000000000000000000");
+            await mine(49);
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress)).to.equal("4900000000000000000000");
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "5000000000000000000000");
+            await mine(1);
+            // now there's one block reward
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress)).to.equal("100000000000000000000");
+            // admin close the pool, block num step 1
+            await contracts.Community.connect(communityOwner).adminClosePool(poolAddress, [], []);
+            // can claim 2 block reward
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "200000000000000000000");
+            await mine(100);
+            // no reward for ever
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "0");
         })
     })
 })

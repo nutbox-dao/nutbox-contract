@@ -14,10 +14,6 @@ with ```node```/```truffle```/```ganache``` installed.
 
 `truffle compile`
 
-### Run Tests
-
-`truffle test`
-
 ### Deploy contract
 
 Run script ```scripts/deploy.js```:
@@ -73,3 +69,12 @@ You should see the output like below:
 - 4: osmosis
 - 5: juno
 - 6: steem(sp witness proxy)
+
+#### Test
+
+with ```hardhat``` installed.
+
+```bash
+yarn
+npx hardhat test
+```
