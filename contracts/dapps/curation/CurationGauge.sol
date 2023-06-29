@@ -24,21 +24,30 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
     address immutable factory;
 
     string public name;
+    bool public poolStarted;
 
     // community that pool belongs to
-    address immutable community;
+    address public community;
     address public recipient;
+    uint256 deposit;
 
     event ChangeRecipient(address indexed oldRecipent, address indexed newRecipient);
     event WithdrawRewardsToRecipient(uint256 indexed amount);
+    event PoolStarted();
 
     constructor(address _community, string memory _name, address _recipient) {
         factory = msg.sender;
         community = _community;
         name = _name;
         recipient = _recipient;
-        Community(community).updatePools("USER", address(this));
         emit ChangeRecipient(address(0), _recipient);
+    }
+
+    function startPool() public {
+        require(deposit == 0, "Pool has started");
+        Community(community).updatePools("USER", address(this));
+        deposit = 1;
+        emit PoolStarted();
     }
 
     function adminSetRecipient(address _recipient) public {
@@ -72,9 +81,9 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
         override returns (uint256)
     {
         if (user == address(this)) {
-            return 0;
+            return deposit;
         }else {
-            return 1;
+            return 0;
         }
     }
 
@@ -83,6 +92,6 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
         view
         override returns (uint256)
     {
-        return 1;
+        return deposit;
     }
 }

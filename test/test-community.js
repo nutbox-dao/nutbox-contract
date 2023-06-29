@@ -20,6 +20,14 @@ describe("Create community", async () => {
         bob = contracts.bob;
     })
 
+    async function createCurationGauge() {
+        const tx = await contracts.Community.connect(communityOwner).adminAddPool("Wormhole3 curation", [10000], contracts.CurationGaugeFactory.address, bob.address);
+        const receipt = await tx.wait();
+        const event = receipt.events.find(e => e.event === 'AdminSetPoolRatio')
+        const poolAddress = event.args.pools[0]
+        return poolAddress;
+    }
+
     describe("Create", () => {
         it("Any one can create a community", async () => {
             expect(await contracts.Community.owner()).to.equal(communityOwner.address)
@@ -56,16 +64,30 @@ describe("Create community", async () => {
         })
 
         it("Community owner can create curation pool", async () => {
-            const tx = await contracts.Community.connect(communityOwner).adminAddPool("Wormhole3 curation", [10000], contracts.CurationGaugeFactory.address, bob.address);
-            const receipt = await tx.wait();
-            const event = receipt.events.find(e => e.event === 'AdminSetPoolRatio')
-            const poolAddress = event.args.pools[0]
-            await mine(2000);
+            const poolAddress = await loadFixture(createCurationGauge)
+            await mine(100);
+
+            let balance = await contracts.CToken.balanceOf(bob.address);
+            console.log('bob balance:', balance);
 
             const poolContract = await ethers.getContractAt("CurationGauge", poolAddress);
+            // start curation
+            await poolContract.startPool();
+            let currentBlock = await ethers.provider.getBlockNumber();
+            currentBlock = await ethers.provider.getBlockNumber();
             await poolContract.withdrawRewardsToRecipient();
-            const balance = await contracts.CToken.balanceOf(bob.address);
-            console.log(53, balance);
+            balance = await contracts.CToken.balanceOf(bob.address);
+            console.log('bob balance:', balance);
+            await poolContract.withdrawRewardsToRecipient();
+            balance = await contracts.CToken.balanceOf(bob.address);
+            console.log('bob balance:', balance);
+            await mine(1);
+            const pendingReward = await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress);
+            console.log('pending reward', pendingReward);
+        })
+
+        it("Not started curation gauge has no reward", async () => {
+            
         })
     })
 })
