@@ -13,6 +13,12 @@ const waitForTx = async (provider, hash) => {
     }
 }
 
+const u8arryToHex = (buffer) => {
+    return [...new Uint8Array(buffer)]
+        .map(x => x.toString(16).padStart(2, '0'))
+        .join('')
+}
+
 function utf8ToHex(str) {
     return Array.from(str).map(c =>
         c.charCodeAt(0) < 128 ? c.charCodeAt(0).toString(16) :
@@ -141,5 +147,6 @@ module.exports = {
     getGasPrice,
     deployContract,
     deployContractForce,
-    getContract
+    getContract,
+    u8arryToHex
 }

@@ -75,6 +75,10 @@ module.exports = {
       provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://rpc.api.moonbeam.network'),
       network_id: 1284
     },
+    arb: {
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://arb1.arbitrum.io/rpc'),
+      network_id: 42161
+    },
     bsctest: {
       provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), "https://data-seed-prebsc-2-s3.binance.org:8545"),
       network_id: 97
