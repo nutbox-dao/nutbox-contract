@@ -23,17 +23,9 @@ module.exports = {
       url: "http://localhost:8545",
     }
   },
-  allowUnlimitedContractSize: true,
-  contractSizer: {
-    alphaSort: true,
-    runOnCompile: true,
-    disambiguatePaths: false
-  },
-  settings: {
-    optimizer: {
-      enabled: true,
-      runs: 1
-    },
-    viaIR: true
-  }
+  // contractSizer: {
+  //   alphaSort: true,
+  //   runOnCompile: true,
+  //   disambiguatePaths: false
+  // }
 };
