@@ -92,7 +92,7 @@ async function main() {
 }
 
 const parser = new ArgumentParser({
-    description: 'Deploy the community version curation contract',
+    description: 'Deploy the community version curation contract. Need to add environment variables in .env: MAIN_KEY, MAIN_RPC',
     add_help: true
 });
 
