@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { ethers, helpers } = require('hardhat');
 const deploy = require('./deploy');
 const hre = require("hardhat");
-const { mine, loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
+const { mine, loadFixture, mineUpTo } = require("@nomicfoundation/hardhat-network-helpers");
 const deployCommunity = require('./create-community')
 
 describe("Create community", async () => {
@@ -144,6 +144,47 @@ describe("Create community", async () => {
             await poolContract.connect(communityOwner).adminSetRecipient(alice.address);
             expect(await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress)).to.equal("200000000000000000000");
             await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, alice, "300000000000000000000");
+        })
+
+        it('Multi gauge can get reward by pool ratio', async () => {
+            // create pool1
+            const poolAddress1 = await createCurationGauge(bob.address);
+            const poolContract1 = await ethers.getContractAt("CurationGauge", poolAddress1);
+
+            // create pool2
+            const tx = await contracts.Community.connect(communityOwner).adminAddPool("Wormhole3 curation2", [3000, 7000], contracts.CurationGaugeFactory.address, alice.address);
+            const receipt = await tx.wait();
+            const event = receipt.events.find(e => e.event === 'AdminSetPoolRatio')
+            const poolAddress2 = event.args.pools[1];
+            const poolContract2 = await ethers.getContractAt("CurationGauge", poolAddress2);
+
+            // start pools
+            await poolContract1.connect(communityOwner).startPool();
+            await poolContract2.connect(communityOwner).startPool();
+
+            // start distribute
+            await mineUpTo(117);
+            await mine(1);
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress1, poolAddress1)).to.equal('60000000000000000000');
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress2, poolAddress2)).to.equal('140000000000000000000');
+            await mine(1);
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress1, poolAddress1)).to.equal('90000000000000000000');
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress2, poolAddress2)).to.equal('210000000000000000000');
+            await mine(898);
+            // the last block of first step
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress1, poolAddress1)).to.equal('27030000000000000000000');
+            await mine(1);
+            // the second step start
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress1, poolAddress1)).to.equal('27045000000000000000000');
+
+            // harvest pool1
+            await expect(poolContract1.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, '27060000000000000000000');
+            await expect(poolContract2.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, alice, '63175000000000000000000');
+
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress1, poolAddress1)).to.equal('15000000000000000000');
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress2, poolAddress2)).to.equal('0');
+
+
         })
     })
 })

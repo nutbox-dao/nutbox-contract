@@ -20,6 +20,7 @@ async function deployCommunity() {
 
     // create community
     const blockNumber = await ethers.provider.getBlockNumber();
+    console.log('Community will start at', blockNumber + 100);
     const distribution = [
         {
             startHeight: blockNumber + 100,
