@@ -129,5 +129,21 @@ describe("Create community", async () => {
             // no reward for ever
             await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "0");
         })
+
+        it("Only community owner can change the curation gauge reciption", async () => {
+            const poolAddress = await createCurationGauge(bob.address);
+            const poolContract = await ethers.getContractAt("CurationGauge", poolAddress);
+            await mine(100);
+            // any one can start the pool
+            await poolContract.startPool();
+            await mine(1);
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress)).to.equal("100000000000000000000");
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, bob, "200000000000000000000");
+            await expect(poolContract.connect(bob).adminSetRecipient(alice.address)).to.be.revertedWith("Only the community owner can change recipient");
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress)).to.equal("100000000000000000000");
+            await poolContract.connect(communityOwner).adminSetRecipient(alice.address);
+            expect(await contracts.Community.getPoolPendingRewards(poolAddress, poolAddress)).to.equal("200000000000000000000");
+            await expect(poolContract.withdrawRewardsToRecipient()).changeTokenBalance(contracts.CToken, alice, "300000000000000000000");
+        })
     })
 })
