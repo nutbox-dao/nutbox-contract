@@ -120,7 +120,7 @@ const parser_community = subparsers.add_parser('create', { help: 'Manage Communi
 parser_community.set_defaults({ command: "create" });
 parser_community.add_argument('-C', '--cid', { help: 'community id' });
 parser_community.add_argument('-S', '--saddr', { help: 'signature address', default: "0x4A584E33Dec216a124E36Aceb0B06Bc37642027B" });
-parser_community.add_argument('-P', '--paddr', { help: 'prize token address' });
+parser_community.add_argument('-P', '--paddr', { help: 'prize token address', default: "0x0000000000000000000000000000000000000000" });
 parser_community.add_argument('-D', '--deploy', { help: 'deploy new community factory', action: 'store_true' });
 
 const parser_community_set = subparsers.add_parser('set', { help: 'Set community reward token address' });
