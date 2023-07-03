@@ -82,7 +82,7 @@ async function main() {
         if (args.command === "create") {
             if (args.saddr && prizeToken) {
                 // create community
-                let tx = await cCommunityCuration.createCommunity(args.cid, args.saddr, prizeToken);
+                let tx = await cCommunityCuration.createCommunity(args.cid, args.saddr, prizeToken);//, { gasPrice:"100000000"}
                 await waitForTx(env.provider, tx.hash);
             }
         }
