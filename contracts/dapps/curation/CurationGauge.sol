@@ -57,6 +57,9 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
         emit ChangeRecipient(oldRecipient, _recipient);
     }
 
+    // diffrient with other pools in community, this community reward can't be called from community contract
+    // because the depositor is this pool itself, so user call this function and this pool call the community withdraw method
+    // then transfer the received reward to recipient
     function withdrawRewardsToRecipient() public {
         address[] memory pools = new address[](1);
         pools[0] = address(this);

@@ -69,6 +69,7 @@ You should see the output like below:
 - 4: osmosis
 - 5: juno
 - 6: steem(sp witness proxy)
+- 7: curation gauge
 
 #### Test
 
