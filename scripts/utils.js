@@ -31,10 +31,12 @@ async function getEnv(expand = true) {
     env.url = process.env.LOCAL_RPC || process.env.TEST_RPC || process.env.MAIN_RPC;
     env.privateKey = process.env.LOCAL_KEY || process.env.TEST_KEY || process.env.MAIN_KEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
+    // env.provider = new ethers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
 
     // env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = await env.provider.getGasPrice();
+    // env.gasPrice = (await env.provider.getFeeData()).gasPrice;
     if (expand)
         env.gasPrice = (env.gasPrice * 1.2).toFixed(0);
     // console.log(`url: ${env.url}, gasLimit: ${process.env.GASLIMIT}, gasPrice: ${env.gasPrice}`);

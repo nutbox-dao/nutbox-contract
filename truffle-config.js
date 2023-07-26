@@ -79,6 +79,10 @@ module.exports = {
       provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://arb1.arbitrum.io/rpc'),
       network_id: 42161
     },
+    linea: {
+      provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), 'https://linea-mainnet.infura.io/v3'),
+      network_id: 59144
+    },
     bsctest: {
       provider: () => new HDWalletProvider(JSON.parse(MNEMONIC), "https://data-seed-prebsc-2-s3.binance.org:8545"),
       network_id: 97
