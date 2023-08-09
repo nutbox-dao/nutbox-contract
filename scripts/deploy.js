@@ -133,17 +133,17 @@ async function main() {
 
     const signer = env.wallet;
 
-    // env.Committee = '0x24B2c677575286993Be95147B4896d83cE02Dc4e';
-    // env.MintableERC20Factory = '0x183434ba0726b244521cB1C46AE5C90538146db8';
-    // env.NutPower = '0xFe992EF5f73Ac289052F1742B918278a62686fD1'
-    // env.CommunityFactory = '0x420E3b63F2587702B0BCdc50aF948cF387515593'
-    // env.SPStakingFactory = '0x20ABc409b7dc7a6DC8cC1309A5A7DBb5B1c0D014'
-    // env.CosmosStakingFactory = '0x5A95D35579C3aaF7F1df86540286A9DD90506F00'
-    // env.ERC20StakingFactory = '0x8d7F753D3b3862169d9eee500de3F7220103eAAd'
-    // env.ERC1155StakingFacory = '0xf6DDd65295Ca7A672C34043aa62f32C01FBfb29D'
-    // env.LinearCalculator = '0xF21649D901A082772Bd7B5d5eD5039C7a43A5789'
-    // env.Gauge = '0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74'
-    // env.TreasuryFactory = '0xb05C38625f7F8CCab519421E5263f164D8F431f2'
+    env.Committee = '0x24B2c677575286993Be95147B4896d83cE02Dc4e';
+    env.MintableERC20Factory = '0x183434ba0726b244521cB1C46AE5C90538146db8';
+    env.NutPower = '0xFe992EF5f73Ac289052F1742B918278a62686fD1'
+    env.CommunityFactory = '0x420E3b63F2587702B0BCdc50aF948cF387515593'
+    env.SPStakingFactory = '0x20ABc409b7dc7a6DC8cC1309A5A7DBb5B1c0D014'
+    env.CosmosStakingFactory = '0x5A95D35579C3aaF7F1df86540286A9DD90506F00'
+    env.ERC20StakingFactory = '0x8d7F753D3b3862169d9eee500de3F7220103eAAd'
+    env.ERC1155StakingFacory = '0xf6DDd65295Ca7A672C34043aa62f32C01FBfb29D'
+    env.LinearCalculator = '0xF21649D901A082772Bd7B5d5eD5039C7a43A5789'
+    env.Gauge = '0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74'
+    env.TreasuryFactory = '0xb05C38625f7F8CCab519421E5263f164D8F431f2'
 
     // const Committee = await deployCommitteeContract(env);
     // const MintableERC20Factory = await deployMintableERC20FactoryContract(env);
@@ -159,8 +159,10 @@ async function main() {
     // const ERC20StakingFactory = await deployERC20StakingFactoryContract(env);
     // const ERC1155StakingFacory = await deployERC1155StakingFactoryContract(env);
     // const LinearCalculator = await deployLinearCalculatorContract(env);
-    const Gauge = await deployGaugeContract(env);
-    const TreasuryFactory = await deployTreasuryFactoryContract(env);
+    // const Gauge = await deployGaugeContract(env);
+    // const TreasuryFactory = await deployTreasuryFactoryContract(env);
+    const Gauge = await ethers.getContractAt('Gauge', env.Gauge, signer);
+
 
     let tx;
 
