@@ -4,7 +4,7 @@
 
 ### Prerequirements
 
-with ```node```/```truffle```/```ganache``` installed.
+with ```node```/```ganache```/```hardhat``` installed.
 
 ### Install Dependencies
 
@@ -12,15 +12,12 @@ with ```node```/```truffle```/```ganache``` installed.
 
 ### Compile Contracts
 
-`truffle compile`
+`npx hardhat compile`
 
 ### Deploy contract
 
-Run script ```scripts/deploy.js```:
+```npx hardhat run --network linea scripts/deploy.js```:
 
-```sh
-ENDPOINT=http://localhost:8545 KEY=<private key> GASLIMIT=10000000 GASPRICE=50000000000 node deploy.js
-```
 
 You should see the output like below:
 

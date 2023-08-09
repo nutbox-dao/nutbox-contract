@@ -29,10 +29,15 @@ module.exports = {
       url: 'https://arb1.arbitrum.io/rpc',
       chainId: 42161,
       accounts: [process.env.MAIN_KEY]
+    },
+    linea: {
+      url: 'https://rpc.linea.build',
+      chainId: 59144,
+      accounts: [process.env.MAIN_KEY]
     }
   },
   etherscan: {
-    apiKey: process.env.ARB_KEY
+    apiKey: process.env.LINEA_KEY
   }
   // contractSizer: {
   //   alphaSort: true,

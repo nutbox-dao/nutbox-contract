@@ -7,26 +7,13 @@
 require('dotenv').config();
 const ethers = require('ethers');
 const fs = require("fs");
-const { waitForTx } = require('./utils')
 
-const CommitteeJson = require('../build/contracts/Committee.json')
-const CommunityFactoryJson = require('../build/contracts/CommunityFactory.json')
-const SPStakingFactoryJson = require('../build/contracts/SPStakingFactory.json')
-const ERC20StakingFactoryJson = require('../build/contracts/ERC20StakingFactory.json')
-const ERC1155StakingFactoryJson = require('../build/contracts/ERC1155StakingFactory.json')
-const CosmosStakingFactoryJson = require('../build/contracts/CosmosStakingFactory.json')
-const LinearCalculatorJson = require('../build/contracts/LinearCalculator.json')
-const MintableERC20FactoryJson = require('../build/contracts/MintableERC20Factory.json')
-const NutPowerJson = require('../build/contracts/NutPower.json')
-const GaugeJson = require('../build/contracts/Gauge.json');
-const TreasuryFactoryJson = require('../build/contracts/TreasuryFactory.json')
-const { log } = require('console');
-const { env } = require('process');
 
 // const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
-const NutAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468'  // goerli
+const NutAddress = '0x39ab47b7F6D2B6874157750440b4948786066283'  // Linea
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 // const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745' // bsc
+const depolyer = '0x2DaE3A44D3C6e9Ab402f6e616ce1d02c1836A6Ac'
 
 async function deployCommitteeContract(env) {
     let factory = new ethers.ContractFactory(CommitteeJson.abi, CommitteeJson.bytecode, env.wallet);
