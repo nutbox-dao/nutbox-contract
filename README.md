@@ -45,7 +45,7 @@ You should see the output like below:
         ERC1155StakingFactory:  0x76303Be21ef601e68639B541B035ca33d247b5FE
         ===============================================================
 ```
-### Deployed Contract On BSC
+### Deployed Contract On Linea
 ```
   "Committee": "0xd10e4C1e301A13A9B874bd1757c135Eda075769D",
   "MintableERC20Factory": "0xa183D96a7e84BF77Fb7825026fA8b9BF6894cfa8",
