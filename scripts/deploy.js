@@ -133,38 +133,32 @@ async function main() {
 
     const signer = env.wallet;
 
-    env.Committee = '0x24B2c677575286993Be95147B4896d83cE02Dc4e';
-    env.MintableERC20Factory = '0x183434ba0726b244521cB1C46AE5C90538146db8';
-    env.NutPower = '0xFe992EF5f73Ac289052F1742B918278a62686fD1'
-    env.CommunityFactory = '0x420E3b63F2587702B0BCdc50aF948cF387515593'
-    env.SPStakingFactory = '0x20ABc409b7dc7a6DC8cC1309A5A7DBb5B1c0D014'
-    env.CosmosStakingFactory = '0x5A95D35579C3aaF7F1df86540286A9DD90506F00'
-    env.ERC20StakingFactory = '0x8d7F753D3b3862169d9eee500de3F7220103eAAd'
-    env.ERC1155StakingFacory = '0xf6DDd65295Ca7A672C34043aa62f32C01FBfb29D'
-    env.LinearCalculator = '0xF21649D901A082772Bd7B5d5eD5039C7a43A5789'
-    env.Gauge = '0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74'
-    env.TreasuryFactory = '0xb05C38625f7F8CCab519421E5263f164D8F431f2'
+    // env.Committee = '0x24B2c677575286993Be95147B4896d83cE02Dc4e';
+    // env.MintableERC20Factory = '0x183434ba0726b244521cB1C46AE5C90538146db8';
+    // env.NutPower = '0xFe992EF5f73Ac289052F1742B918278a62686fD1'
+    // env.CommunityFactory = '0x420E3b63F2587702B0BCdc50aF948cF387515593'
+    // env.SPStakingFactory = '0x20ABc409b7dc7a6DC8cC1309A5A7DBb5B1c0D014'
+    // env.CosmosStakingFactory = '0x5A95D35579C3aaF7F1df86540286A9DD90506F00'
+    // env.ERC20StakingFactory = '0x8d7F753D3b3862169d9eee500de3F7220103eAAd'
+    // env.ERC1155StakingFactory = '0xf6DDd65295Ca7A672C34043aa62f32C01FBfb29D'
+    // env.LinearCalculator = '0xF21649D901A082772Bd7B5d5eD5039C7a43A5789'
+    // env.Gauge = '0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74'
+    // env.TreasuryFactory = '0xb05C38625f7F8CCab519421E5263f164D8F431f2'
 
-    // const Committee = await deployCommitteeContract(env);
-    // const MintableERC20Factory = await deployMintableERC20FactoryContract(env);
-    // const NutPower = await deployNutPowerContract(env);
-
-    const Committee = await ethers.getContractAt("Committee", env.Committee, signer);
-    const NutPower = await ethers.getContractAt('NutPower', env.NutPower, signer);
-
-    // const CommunityFactory = await deployCommunityFactoryContract(env);
-    // const SPStakingFactory = await deploySPStakingFactoryContract(env);
-    const SPStakingFactory = await ethers.getContractAt('SPStakingFactory', env.SPStakingFactory, signer);
-    // const CosmosStakingFactory =  await deployCosmosStakingFactoryContract(env);
-    // const ERC20StakingFactory = await deployERC20StakingFactoryContract(env);
-    // const ERC1155StakingFacory = await deployERC1155StakingFactoryContract(env);
-    // const LinearCalculator = await deployLinearCalculatorContract(env);
-    // const Gauge = await deployGaugeContract(env);
-    // const TreasuryFactory = await deployTreasuryFactoryContract(env);
-    const Gauge = await ethers.getContractAt('Gauge', env.Gauge, signer);
+    const Committee = await deployCommitteeContract(env);
+    const MintableERC20Factory = await deployMintableERC20FactoryContract(env);
+    const NutPower = await deployNutPowerContract(env);
+    const CommunityFactory = await deployCommunityFactoryContract(env);
+    const SPStakingFactory = await deploySPStakingFactoryContract(env);
+    const CosmosStakingFactory =  await deployCosmosStakingFactoryContract(env);
+    const ERC20StakingFactory = await deployERC20StakingFactoryContract(env);
+    const ERC1155StakingFactory = await deployERC1155StakingFactoryContract(env);
+    const LinearCalculator = await deployLinearCalculatorContract(env);
+    const Gauge = await deployGaugeContract(env);
+    const TreasuryFactory = await deployTreasuryFactoryContract(env);
 
 
-    let tx;
+    // let tx;
 
     tx = await Committee.adminAddWhitelistManager(env.CommunityFactory);
     await waitForTx(env.provider, tx.hash)
@@ -244,7 +238,7 @@ async function main() {
     await waitForTx(env.provider, tx.hash)
     console.log('admin set user fee', tx.hash)
 
-    // console.log(`Admin set fees`);
+    console.log(`Admin set fees`);
 
     let deployCost = startBalance.sub((await env.provider.getBalance(deployer)))
 
@@ -258,7 +252,7 @@ async function main() {
         LinearCalculator: env.LinearCalculator ?? "Not Deployed",
         SPStakingFactory: env.SPStakingFactory ?? 'Not Deployed',
         ERC20StakingFactory: env.ERC20StakingFactory ?? "Not Deployed",
-        ERC1155StakingFacory: env.ERC1155StakingFactory ?? "Not Depolyed",
+        ERC1155StakingFactory: env.ERC1155StakingFactory ?? "Not Depolyed",
         CosmosStakingFactory: env.CosmosStakingFactory ?? "Not Deployed",
         Gauge:  env.Gauge ?? 'Not deployed',
         TreasuryFactory: env.TreasuryFactory ?? "Not deployed"

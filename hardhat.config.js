@@ -36,12 +36,26 @@ module.exports = {
       accounts: [process.env.MAIN_KEY]
     }
   },
+  // verify contract: npx hardhat --network linea <contract address> <params>
   etherscan: {
-    apiKey: process.env.LINEA_KEY
+    apiKey:{
+      linea:  process.env.LINEA_KEY
+    },
+    customChains: [
+      {
+        network: "linea",
+        chainId: 59144,
+        urls: {
+          apiURL: "https://api.lineascan.build/api",
+          browserURL: "https://lineascan.build/"
+        }
+      }
+    ]
   }
   // contractSizer: {
   //   alphaSort: true,
   //   runOnCompile: true,
   //   disambiguatePaths: false
   // }
+
 };

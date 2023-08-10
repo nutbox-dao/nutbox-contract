@@ -22,41 +22,50 @@ with ```node```/```ganache```/```hardhat``` installed.
 You should see the output like below:
 
 ```sh
- ===============================================================
-        Url:            https://bsc-dataseed.binance.org
-        Deployer:       0x281c93162FB45F06e9d8C1688075640E86bf01ec
-        Depoly Cost:    0.069551005
-        Depoly block number: 15414978
+        ===============================================================
+        Url:            https://arb1.arbitrum.io/rpc
+        Deployer:       0x2DaE3A44D3C6e9Ab402f6e616ce1d02c1836A6Ac
+        Depoly Cost:    0.0
+        Depoly block number: 119874541
 
         Contract Addresses:
         ===============================================================
-        Committee:              0xd10e4C1e301A13A9B874bd1757c135Eda075769D
+        Committee:              0x24B2c677575286993Be95147B4896d83cE02Dc4e
         ---------------------------------------------------------------
-        MintableERC20Factory: 0xa183D96a7e84BF77Fb7825026fA8b9BF6894cfa8
+        MintableERC20Factory:   0x183434ba0726b244521cB1C46AE5C90538146db8
         ---------------------------------------------------------------
-        CommunityFactory:       0x1A4EeE210Bc54a75D25989546F648474EdF1C0A3
+        NutPower:               0xFe992EF5f73Ac289052F1742B918278a62686fD1
         ---------------------------------------------------------------
-        LinearCalculator:       0x6ab448C1C6e1870602d3FB867F167029bbFb3181
+        CommunityFactory:       0x420E3b63F2587702B0BCdc50aF948cF387515593
         ---------------------------------------------------------------
-        SPStakingFactory:       0xF7Fa41BF814eDC767691DDB1864a334D83f4acf7
+        LinearCalculator:       0xF21649D901A082772Bd7B5d5eD5039C7a43A5789
         ---------------------------------------------------------------
-        ERC20StakingFactory:     0xf870724476912057C807056b29c1161f5Fe0199a
+        SPStakingFactory:       0x20ABc409b7dc7a6DC8cC1309A5A7DBb5B1c0D014
         ---------------------------------------------------------------
-        ERC1155StakingFactory:  0x76303Be21ef601e68639B541B035ca33d247b5FE
+        ERC20StakingFactory:    0x8d7F753D3b3862169d9eee500de3F7220103eAAd
+        ---------------------------------------------------------------
+        ERC1155StakingFactory:  0xf6DDd65295Ca7A672C34043aa62f32C01FBfb29D
+        ---------------------------------------------------------------
+        CosmosStakingFactory:   0x5A95D35579C3aaF7F1df86540286A9DD90506F00
+        ---------------------------------------------------------------
+        Gauge:                  0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74
+        ---------------------------------------------------------------
+        TreasuryFactory:        0xb05C38625f7F8CCab519421E5263f164D8F431f2
         ===============================================================
 ```
 ### Deployed Contract On Linea
 ```
-  "Committee": "0xd10e4C1e301A13A9B874bd1757c135Eda075769D",
-  "MintableERC20Factory": "0xa183D96a7e84BF77Fb7825026fA8b9BF6894cfa8",
-  "NutPower": "0x5De2a9993eCcbFab4d83a5dCc0911c0e80A08AbA",
-  "CommunityFactory": "0x1A4EeE210Bc54a75D25989546F648474EdF1C0A3",
-  "LinearCalculator": "0x6ab448C1C6e1870602d3FB867F167029bbFb3181",
-  "SPStakingFactory": "0xF7Fa41BF814eDC767691DDB1864a334D83f4acf7",
-  "ERC20StakingFactory": "0xf870724476912057C807056b29c1161f5Fe0199a",
-  "CosmosStakingFactory": "0xAD6a0c0017559d051264e1657d627107d6b12f0d",
-  "Gauge": "0x6F2686B34D23dCbf79a33A2EEA5e92d84b942d91",
-  "ERC1155StakingFactory":  "0x76303Be21ef601e68639B541B035ca33d247b5FE"
+  "Committee": "0x24B2c677575286993Be95147B4896d83cE02Dc4e",
+  "MintableERC20Factory": "0x183434ba0726b244521cB1C46AE5C90538146db8",
+  "NutPower": "0xFe992EF5f73Ac289052F1742B918278a62686fD1",
+  "CommunityFactory": "0x420E3b63F2587702B0BCdc50aF948cF387515593",
+  "LinearCalculator": "0xF21649D901A082772Bd7B5d5eD5039C7a43A5789",
+  "SPStakingFactory": "0x20ABc409b7dc7a6DC8cC1309A5A7DBb5B1c0D014",
+  "ERC20StakingFactory": "0x8d7F753D3b3862169d9eee500de3F7220103eAAd",
+  "ERC1155StakingFactory": "0xf6DDd65295Ca7A672C34043aa62f32C01FBfb29D",
+  "CosmosStakingFactory": "0x5A95D35579C3aaF7F1df86540286A9DD90506F00",
+  "Gauge": "0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74",
+  "TreasuryFactory": "0xb05C38625f7F8CCab519421E5263f164D8F431f2"
 ```
 ### Register chains
 

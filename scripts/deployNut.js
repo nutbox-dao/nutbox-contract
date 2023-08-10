@@ -4,7 +4,7 @@ const { ethers, helpers } = require('hardhat');
 
 // const NUTAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4' // localhost
 // const NUTAddress = '0xc821eC39fd35E6c8414A6C7B32674D51aD0c2468' // goerli
-// const NUTAddress = '0x39ab47b7F6D2B6874157750440b4948786066283'  // Linea test
+// const NUTAddress = '0x39ab47b7F6D2B6874157750440b4948786066283'  // Linea
 
 async function deployNutContract() {
     const NUTToken = await ethers.getContractFactory('NUTToken');
