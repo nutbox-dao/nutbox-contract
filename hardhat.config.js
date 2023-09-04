@@ -34,12 +34,18 @@ module.exports = {
       url: 'https://rpc.linea.build',
       chainId: 59144,
       accounts: [process.env.MAIN_KEY]
+    },
+    base: {
+      url: 'https://mainnet.base.org/',
+      chainId: 8453,
+      accounts: [process.env.MAIN_KEY]
     }
   },
   // verify contract: npx hardhat --network linea <contract address> <params>
   etherscan: {
     apiKey:{
-      linea:  process.env.LINEA_KEY
+      linea:  process.env.LINEA_KEY,
+      base: process.env.BASE_KEY,
     },
     customChains: [
       {

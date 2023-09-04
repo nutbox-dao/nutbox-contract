@@ -7,10 +7,11 @@
 require('dotenv').config();
 const fs = require("fs");
 const { ethers, helpers } = require('hardhat');
-const { waitForTx } = require('./utils')
+const { waitForTx } = require('./utils');
+const { sign } = require('crypto');
 
 // const NutAddress = '0x3a51Ac476B2505F386546450822F1bF9d881bEa4'  // local host
-const NutAddress = '0x39ab47b7F6D2B6874157750440b4948786066283'  // Linea
+const NutAddress = '0xA643e598364A9dFB3328aD2E70AF6f9E3C477A42'  // Base
 // const NutAddress = '0x871AD5aAA75C297EB22A6349871ce4588E3c0306' // bsc test  mbase
 // const NutAddress = '0x4429FcdD4eC4EA4756B493e9c0525cBe747c2745' // bsc
 const deployer = '0x2DaE3A44D3C6e9Ab402f6e616ce1d02c1836A6Ac'
@@ -133,17 +134,23 @@ async function main() {
 
     const signer = env.wallet;
 
-    // env.Committee = '0x24B2c677575286993Be95147B4896d83cE02Dc4e';
-    // env.MintableERC20Factory = '0x183434ba0726b244521cB1C46AE5C90538146db8';
-    // env.NutPower = '0xFe992EF5f73Ac289052F1742B918278a62686fD1'
-    // env.CommunityFactory = '0x420E3b63F2587702B0BCdc50aF948cF387515593'
-    // env.SPStakingFactory = '0x20ABc409b7dc7a6DC8cC1309A5A7DBb5B1c0D014'
+    // env.Committee = '0xa965a23fF72805576002a0971a38A22a0c715A86';
+    // env.MintableERC20Factory = '0x24B2c677575286993Be95147B4896d83cE02Dc4e';
+    // env.NutPower = '0x183434ba0726b244521cB1C46AE5C90538146db8';
+    // env.CommunityFactory = '0xFe992EF5f73Ac289052F1742B918278a62686fD1';
+    // env.SPStakingFactory = '0x420E3b63F2587702B0BCdc50aF948cF387515593';
     // env.CosmosStakingFactory = '0x5A95D35579C3aaF7F1df86540286A9DD90506F00'
     // env.ERC20StakingFactory = '0x8d7F753D3b3862169d9eee500de3F7220103eAAd'
     // env.ERC1155StakingFactory = '0xf6DDd65295Ca7A672C34043aa62f32C01FBfb29D'
     // env.LinearCalculator = '0xF21649D901A082772Bd7B5d5eD5039C7a43A5789'
     // env.Gauge = '0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74'
     // env.TreasuryFactory = '0xb05C38625f7F8CCab519421E5263f164D8F431f2'
+
+    // const Committee = await ethers.getContractAt("Committee", env.Committee, signer);
+    // const MintableERC20Factory = await ethers.getContractAt('MintableERC20Factory', env.MintableERC20Factory, signer);
+    // const NutPower = await ethers.getContractAt('NutPower', env.NutPower, signer);
+    // const CommunityFactory = await ethers.getContractAt('CommunityFactory', env.CommunityFactory, signer);
+    // const SPStakingFactory = await ethers.getContractAt('SPStakingFactory', env.SPStakingFactory, signer);
 
     const Committee = await deployCommitteeContract(env);
     const MintableERC20Factory = await deployMintableERC20FactoryContract(env);
