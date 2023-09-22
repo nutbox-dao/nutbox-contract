@@ -14,10 +14,6 @@ with ```node```/```truffle```/```ganache``` installed.
 
 `truffle compile`
 
-### Run Tests
-
-`truffle test`
-
 ### Deploy contract
 
 Run script ```scripts/deploy.js```:
@@ -68,4 +64,19 @@ You should see the output like below:
   "NutAddress": "0xED4D88303973615cC3D61D5F4D06A809055a07b8"
 ```
 
-[Audit Report](https://skynet.certik.com/zh-CN/projects/walnut)
+- 1: steem(sp delegation)
+- 2: hive
+- 3: atom
+- 4: osmosis
+- 5: juno
+- 6: steem(sp witness proxy)
+- 7: curation gauge
+
+#### Test
+
+with ```hardhat``` installed.
+
+```bash
+yarn
+npx hardhat test
+```
