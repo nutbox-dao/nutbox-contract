@@ -343,6 +343,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
 
     function blockNum() public view returns (uint256) {
-        return ArbSys(address(100)).arbBlockNumber();
+        return block.number;
+        // return ArbSys(address(100)).arbBlockNumber();
     }
 }

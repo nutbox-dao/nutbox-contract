@@ -68,18 +68,18 @@ async function deployCommunity() {
             )
             .substring(2);
     }
+    const time = parseInt(new Date().getTime() / 1000);
+    console.log(22, time)
     const meta = '0x' + ethers.utils.hexZeroPad(ethers.utils.hexlify("meme FERC".length), 1).substring(2)
                 + utf8ToHex("meme FERC")
                 + ethers.utils.hexZeroPad(ethers.utils.hexlify("MFERC".length), 1).substring(2)
                 + utf8ToHex("MFERC")
-                + ethers.utils.hexZeroPad(ethers.utils.parseUnits("1695372391", 1), 32).substring(2)
-                + ethers.utils.hexZeroPad(ethers.utils.parseUnits("10000", 18), 32).substring(2)
+                + ethers.utils.hexZeroPad(ethers.utils.parseUnits(time + 300 + '', 0), 32).substring(2)
+                + ethers.utils.hexZeroPad(ethers.utils.parseUnits("1000000", 18), 32).substring(2)
                 + communityOwner.address.substring(2)
-
                 
     const tx = await contracts.CommunityFactory.connect(communityOwner).createCommunity(true, ethers.constants.AddressZero, contracts.PointFactory.address, 
         meta, contracts.LinearCalculator.address, distributionStr);
-    
     const receipt = await tx.wait();
     const event = receipt.events.find(e => e.event === 'CommunityCreated')
     contracts.Community = await ethers.getContractAt('Community', event.args.community);
