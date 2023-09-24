@@ -58,7 +58,6 @@ describe("Point", async () => {
         it("Can transfer point when it started", async () => {
             let balance = await contracts.CToken.balanceOf(communityOwner.address);
             await time.increase(400);
-            console.log(await contracts.CToken.startTradableTime());
             await expect(contracts.CToken.connect(communityOwner).transfer(alice.address, 1000000000)).changeTokenBalance(contracts.CToken,
                 alice, 1000000000);
 
@@ -75,6 +74,12 @@ describe("Point", async () => {
             await expect(contracts.CToken.connect(alice).transfer(bob.address, 1000)).changeTokenBalance(
                 contracts.CToken, bob, 1000
             );
+        });
+
+        it("ERC165", async () => {
+            it("Point must support ERC165", async () => {
+                expect(await contracts.CToken.supportsInterface('0x0ade5221')).to.be.true();
+            })
         })
     })
 
