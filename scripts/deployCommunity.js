@@ -43,7 +43,7 @@ async function transfer(env) {
 }
 
 async function main() {
-    let env = await getEnv(false);
+    let env = await getEnv(args.expand);
     if (args.command == "point") {
         let address = args.address;
         if (args.name && args.symbol) {
@@ -75,7 +75,11 @@ async function main() {
                 return;
             }
             let cCommunityCuration = new ethers.Contract(CommunityCuration.networks[env.chainId].address, CommunityCuration.abi, env.wallet);
-            let tx = await cCommunityCuration.transferOwnership(args.owner);
+            let op = {};
+            if (args.expand) {
+                op = { gasPrice: env.gasPrice };
+            }
+            let tx = await cCommunityCuration.transferOwnership(args.owner, op);
             await waitForTx(env.provider, tx.hash);
             return;
         }
@@ -90,7 +94,8 @@ async function main() {
         }
     }
     if (args.cid) {
-        let cCommunityCuration = new ethers.Contract(CommunityCuration.networks[env.chainId].address, CommunityCuration.abi, env.wallet);
+        let cad = CommunityCuration.networks[env.chainId].address;
+        let cCommunityCuration = new ethers.Contract(cad, CommunityCuration.abi, env.wallet);
         if (args.command === "create") {
             if (args.saddr && prizeToken) {
                 // create community
@@ -100,7 +105,7 @@ async function main() {
         }
         let info = await cCommunityCuration.getCommunityInfo(args.cid);
         let owner = await cCommunityCuration.owner();
-        console.log("CommunityCuration Owner:", owner, "\ninfo:", info);
+        console.log("CommunityCuration address:", cad, "\nCommunityCuration Owner:", owner, "\ninfo:", info);
     }
 }
 
@@ -110,6 +115,7 @@ const parser = new ArgumentParser({
 });
 
 parser.add_argument('-I', '--curationId', { help: 'generate curation Id', action: 'store_true' });
+parser.add_argument('--expand', { help: 'Expand gasPrice', action: 'store_true' });
 
 const subparsers = parser.add_subparsers({ help: 'sub-command help' })
 const parser_point = subparsers.add_parser('point', { help: 'deploy Point contract' });
