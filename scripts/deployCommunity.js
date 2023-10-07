@@ -64,9 +64,21 @@ async function main() {
         await transfer(env);
         return;
     }
-    if (args.command === "set" && args.paddr && args.cid) {
-        await setPrize(env, args.cid, args.paddr);
-        return;
+    if (args.command === "set") {
+        if (args.paddr && args.cid) {
+            await setPrize(env, args.cid, args.paddr);
+            return;
+        }
+        if (args.owner) {
+            if (ethers.utils.isAddress(args.owner) == false) {
+                console.log("Invalid address:", args.owner);
+                return;
+            }
+            let cCommunityCuration = new ethers.Contract(CommunityCuration.networks[env.chainId].address, CommunityCuration.abi, env.wallet);
+            let tx = await cCommunityCuration.transferOwnership(args.owner);
+            await waitForTx(env.provider, tx.hash);
+            return;
+        }
     }
     if (args.deploy)
         await deployContract(env, CommunityCuration);
@@ -87,7 +99,8 @@ async function main() {
             }
         }
         let info = await cCommunityCuration.getCommunityInfo(args.cid);
-        console.log("info:", info);
+        let owner = await cCommunityCuration.owner();
+        console.log("CommunityCuration Owner:", owner, "\ninfo:", info);
     }
 }
 
@@ -123,10 +136,11 @@ parser_community.add_argument('-S', '--saddr', { help: 'signature address', defa
 parser_community.add_argument('-P', '--paddr', { help: 'prize token address', default: "0x0000000000000000000000000000000000000000" });
 parser_community.add_argument('-D', '--deploy', { help: 'deploy new community factory', action: 'store_true' });
 
-const parser_community_set = subparsers.add_parser('set', { help: 'Set community reward token address' });
+const parser_community_set = subparsers.add_parser('set', { help: 'Set community params' });
 parser_community_set.set_defaults({ command: "set" });
 parser_community_set.add_argument('-C', '--cid', { help: 'community id' });
-parser_community_set.add_argument('-P', '--paddr', { help: 'prize token address' });
+parser_community_set.add_argument('-P', '--paddr', { help: 'set prize token address' });
+parser_community_set.add_argument('-O', '--owner', { help: 'set community owner address' });
 
 const parser_community_transfer = subparsers.add_parser('transfer', { help: 'Transfer to store address' });
 parser_community_transfer.set_defaults({ command: "transfer" });
