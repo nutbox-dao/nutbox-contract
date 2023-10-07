@@ -5,7 +5,6 @@ const hre = require("hardhat");
 const { mine, loadFixture, mineUpTo, time } = require("@nomicfoundation/hardhat-network-helpers");
 const deployCommunity = require('./create-community')
 
-
 describe("Point", async () => {
     let contracts;
     let owner;

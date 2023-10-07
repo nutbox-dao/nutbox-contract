@@ -2,6 +2,7 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
 require('hardhat-contract-sizer');
 require("@nomicfoundation/hardhat-verify");
+// require("@nomicfoundation/hardhat-chai-matchers")
 require('dotenv').config();
 
 /**
