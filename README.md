@@ -51,6 +51,8 @@ You should see the output like below:
         Gauge:                  0xF21649D901A082772Bd7B5d5eD5039C7a43A5789
         ---------------------------------------------------------------
         TreasuryFactory:        0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74
+        ---------------------------------------------------------------
+        TaxedERC20StakingFactory:0x9C2804015b55D02F0cBeDa1ee8a9c24Ee7aF00d7
         ===============================================================
 ```
 ### Deployed Contract On Linea
@@ -65,7 +67,8 @@ You should see the output like below:
   "ERC1155StakingFactory": "0x8d7F753D3b3862169d9eee500de3F7220103eAAd",
   "CosmosStakingFactory": "0x20ABc409b7dc7a6DC8cC1309A5A7DBb5B1c0D014",
   "Gauge": "0xF21649D901A082772Bd7B5d5eD5039C7a43A5789",
-  "TreasuryFactory": "0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74"
+  "TreasuryFactory": "0x97e9ca88Eb99bAA07d15B8aB846c53886FDB2f74",
+  "TaxedERC20StakingFactory": "0x9C2804015b55D02F0cBeDa1ee8a9c24Ee7aF00d7"
 ```
 ### Register chains
 

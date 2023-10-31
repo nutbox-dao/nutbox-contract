@@ -49,6 +49,14 @@ async function deployERC20StakingFactoryContract(CommunityFactoryAddress) {
     return contract;
 }
 
+async function deployTaxedERC20StakingFactoryContract(CommunityFactoryAddress) {
+    let factory = await ethers.getContractFactory('TaxedERC20StakingFactory')
+    let contract = await factory.deploy(CommunityFactoryAddress);
+    await contract.deployed();
+    // console.log("✓ ERC20StakingFactory contract deployed", contract.address);
+    return contract;
+}
+
 async function deployERC1155StakingFactoryContract(CommunityFactoryAddress) {
     let factory = await ethers.getContractFactory('ERC1155StakingFactory')
     let contract = await factory.deploy(CommunityFactoryAddress);
@@ -118,6 +126,7 @@ async function deploy(owner) {
     result.NutPower = await deployNutPowerContract(result.nut);
     result.CommunityFactory = await deployCommunityFactoryContract(result.Committee);
     result.ERC20StakingFactory = await deployERC20StakingFactoryContract(result.CommunityFactory.address);
+    result.TaxedERC20StakingFactory = await deployTaxedERC20StakingFactoryContract(result.CommunityFactory.address);
     result.CurationGaugeFactory = await deployCurationGaugeContract(result.CommunityFactory);
     result.LinearCalculator = await deployLinearCalculatorContract(result.CommunityFactory);
     result.Gauge = await deployGaugeContract(result.CommunityFactory, result.NutPower.address, result.nut.address)
@@ -130,6 +139,7 @@ async function deploy(owner) {
     await result.Committee.adminAddContract(result.LinearCalculator.address);
     await result.Committee.adminAddContract(result.ERC20StakingFactory.address);
     await result.Committee.adminAddContract(result.CurationGaugeFactory.address);
+    await result.Committee.adminAddContract(result.TaxedERC20StakingFactory.address);
 
     await result.Committee.adminSetGauge(result.Gauge.address);
 
