@@ -24,10 +24,6 @@ async function main() {
     let env = await getEnv(false);
 
     await deployCuration(env)
-
-    if (env.chainId == 1337) {
-        await deployContract(env, ERC20, ["Test usdt", "USDT"]);
-    }
 }
 
 main()

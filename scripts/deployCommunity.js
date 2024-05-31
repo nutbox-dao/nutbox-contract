@@ -156,7 +156,6 @@ parser_community_transfer.add_argument('-A', '--amount', { help: 'transfer amoun
 
 const args = parser.parse_args();
 
-
 if (args.curationId) {
     let id = randomCurationId();
     console.log("CurationId:", id);
