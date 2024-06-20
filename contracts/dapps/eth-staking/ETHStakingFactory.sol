@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Factory contract of Nutbox ERC20 staking pool.
  *x
  */
-contract ERC20StakingFactory is IPoolFactory, Ownable {
+contract ETHStakingFactory is IPoolFactory, Ownable {
     using BytesLib for bytes;
     address public immutable communityFactory;
     uint256 private transFee = 0.00001 ether;

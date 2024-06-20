@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/IPool.sol";
 import "../../ERC20Helper.sol";
+import "../../interfaces/IPoolFactory.sol";
 
 /**
  * @dev Template contract of Nutbox staking pool.
@@ -62,11 +63,25 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         stakeToken = _stakeToken;
     }
 
+    receive() external payable {}
+
     function deposit(
         uint256 amount
-    ) external nonReentrant {
+    ) external nonReentrant payable {
         require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
         if (amount == 0) return;
+
+        (address receiver, uint256 feeAmount) = IPoolFactory(factory).getFeeInfo();
+
+        if (feeAmount > 0) {
+            require(msg.value >= feeAmount, "Insufficient fee");
+            if (msg.value > feeAmount) {
+                (bool success, ) = msg.sender.call{value: msg.value - feeAmount}("");
+                require(success, "Refund fail");
+            }
+            (bool success1, ) = receiver.call{value: feeAmount}("");
+            require(success1, "Cost fee fail");
+        }
 
         // Add to staking list if account hasn't deposited before
         if (!stakingInfo[msg.sender].hasDeposited) {
@@ -108,9 +123,20 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
 
     function withdraw(
         uint256 amount
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         if (amount == 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
+
+        (address receiver, uint256 feeAmount) = IPoolFactory(factory).getFeeInfo();
+        if (feeAmount > 0) {
+            require(msg.value >= feeAmount, "Insufficient fee");
+            if (msg.value > feeAmount) {
+                (bool success, ) = msg.sender.call{value: msg.value - feeAmount}("");
+                require(success, "Refund fail");
+            }
+            (bool success1, ) = receiver.call{value: feeAmount}("");
+            require(success1, "Cost fee fail");
+        }
 
         // trigger community update all pool staking info
         ICommunity(community).updatePools("USER", msg.sender);

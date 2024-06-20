@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/IPool.sol";
 import "../../interfaces/IPoolFactory.sol";
-import "../../ERC20Helper.sol";
 
 /**
  * @dev Template contract of Nutbox staking pool.
@@ -17,7 +16,7 @@ import "../../ERC20Helper.sol";
  * The only place that user can deposit and withdraw their staked asset.
  * Also only user themself than withdraw their staked asset
  */
-contract ETHStaking is IPool, ERC20Helper, ReentrancyGuard {
+contract ETHStaking is IPool, ReentrancyGuard {
     using SafeMath for uint256;
 
     struct StakingInfo {
