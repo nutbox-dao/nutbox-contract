@@ -116,13 +116,18 @@ contract ETHStaking is IPool, ReentrancyGuard {
         if (amount == 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
 
+        uint256 withdrawAmount;
+        if (amount >= stakingInfo[msg.sender].amount)
+            withdrawAmount = stakingInfo[msg.sender].amount;
+        else withdrawAmount = amount;
+
         // check fee
         (address receiver, uint256 feeAmount) = IPoolFactory(factory).getFeeInfo();
         if (feeAmount > 0) {
-            require(amount > feeAmount, "Insufficient fee");
+            require(withdrawAmount > feeAmount, "Insufficient fee");
             (bool success1, ) = receiver.call{value: feeAmount}("");
             require(success1, "Cost Fee fail");
-            amount = amount.sub(feeAmount);
+            withdrawAmount = withdrawAmount.sub(feeAmount);
         }
 
         // trigger community update all pool staking info
@@ -136,11 +141,6 @@ contract ETHStaking is IPool, ReentrancyGuard {
         if (pending > 0) {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
-
-        uint256 withdrawAmount;
-        if (amount >= stakingInfo[msg.sender].amount)
-            withdrawAmount = stakingInfo[msg.sender].amount;
-        else withdrawAmount = amount;
 
         // releaseERC20(stakeToken, address(msg.sender), withdrawAmount);
         (bool success, ) = msg.sender.call{value: withdrawAmount}('');

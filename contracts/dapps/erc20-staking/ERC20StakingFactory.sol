@@ -34,6 +34,10 @@ contract ERC20StakingFactory is IPoolFactory, Ownable {
         return (owner(), transFee);
     }
 
+    function updateFee(uint256 _transFee) public onlyOwner() {
+        transFee = _transFee;
+    }
+
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
         require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");

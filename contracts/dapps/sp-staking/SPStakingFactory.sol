@@ -17,6 +17,7 @@ contract SPStakingFactory is IPoolFactory, Ownable {
     using BytesLib for bytes;
     address public bridge;
     address public immutable communityFactory;
+    uint256 private transFee = 0.00001 ether;
 
     constructor(address _communityFactory) {
         require(_communityFactory != address(0), "Invalid address");
@@ -32,6 +33,14 @@ contract SPStakingFactory is IPoolFactory, Ownable {
     );
 
     event BridgeChange(address indexed oldBridge, address indexed newBridge);
+
+    function getFeeInfo() public override view returns (address, uint256) {
+        return (owner(), transFee);
+    }
+
+    function updateFee(uint256 _transFee) public onlyOwner() {
+        transFee = _transFee;
+    }
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');

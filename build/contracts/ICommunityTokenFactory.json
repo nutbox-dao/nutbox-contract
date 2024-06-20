@@ -21,7 +21,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"meta\",\"type\":\"bytes\"}],\"name\":\"createCommunityToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the community token factory.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/ICommunityTokenFactory.sol\":\"ICommunityTokenFactory\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/ICommunityTokenFactory.sol\":{\"keccak256\":\"0x9a69a2d0752d3002d55ec2734724891fdab03de0a88e15ff297d85a3878924b2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c54fcdeb38c2292e11b14d0ff2b2d772ab8e14ce56d080685fede2f38749ff1d\",\"dweb:/ipfs/QmZdUicfe2kiGG5WaYpYN9yzNoXN7X3AmCMaosF4Vj6kzz\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"meta\",\"type\":\"bytes\"}],\"name\":\"createCommunityToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the community token factory.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interfaces/ICommunityTokenFactory.sol\":\"ICommunityTokenFactory\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interfaces/ICommunityTokenFactory.sol\":{\"keccak256\":\"0x9a69a2d0752d3002d55ec2734724891fdab03de0a88e15ff297d85a3878924b2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c54fcdeb38c2292e11b14d0ff2b2d772ab8e14ce56d080685fede2f38749ff1d\",\"dweb:/ipfs/QmZdUicfe2kiGG5WaYpYN9yzNoXN7X3AmCMaosF4Vj6kzz\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -32,34 +32,34 @@
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.8.0;\npragma experimental ABIEncoderV2;\n\n/**\n * @dev Interface of the community token factory.\n */\ninterface ICommunityTokenFactory {\n\n    function createCommunityToken(bytes calldata meta)\n        external\n        returns (address);\n}",
   "sourcePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/ICommunityTokenFactory.sol",
   "ast": {
-    "absolutePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/ICommunityTokenFactory.sol",
+    "absolutePath": "project:/contracts/interfaces/ICommunityTokenFactory.sol",
     "exportedSymbols": {
       "ICommunityTokenFactory": [
-        11540
+        17850
       ]
     },
-    "id": 11541,
+    "id": 17851,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11530,
+        "id": 17840,
         "literals": [
           "solidity",
           "0.8",
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:22:33"
+        "src": "33:22:62"
       },
       {
-        "id": 11531,
+        "id": 17841,
         "literals": [
           "experimental",
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "56:33:33"
+        "src": "56:33:62"
       },
       {
         "abstract": false,
@@ -67,39 +67,39 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "documentation": {
-          "id": 11532,
+          "id": 17842,
           "nodeType": "StructuredDocumentation",
-          "src": "91:57:33",
+          "src": "91:57:62",
           "text": " @dev Interface of the community token factory."
         },
         "fullyImplemented": false,
-        "id": 11540,
+        "id": 17850,
         "linearizedBaseContracts": [
-          11540
+          17850
         ],
         "name": "ICommunityTokenFactory",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "3120db1b",
-            "id": 11539,
+            "id": 17849,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "createCommunityToken",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11535,
+              "id": 17845,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11534,
+                  "id": 17844,
                   "mutability": "mutable",
                   "name": "meta",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11539,
-                  "src": "219:19:33",
+                  "scope": 17849,
+                  "src": "219:19:62",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -107,10 +107,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 11533,
+                    "id": 17843,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "219:5:33",
+                    "src": "219:5:62",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -119,20 +119,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "218:21:33"
+              "src": "218:21:62"
             },
             "returnParameters": {
-              "id": 11538,
+              "id": 17848,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11537,
+                  "id": 17847,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11539,
-                  "src": "274:7:33",
+                  "scope": 17849,
+                  "src": "274:7:62",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -140,10 +140,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 11536,
+                    "id": 17846,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "274:7:33",
+                    "src": "274:7:62",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -153,165 +153,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "273:9:33"
+              "src": "273:9:62"
             },
-            "scope": 11540,
-            "src": "189:94:33",
+            "scope": 17850,
+            "src": "189:94:62",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11541,
-        "src": "149:136:33"
+        "scope": 17851,
+        "src": "149:136:62"
       }
     ],
-    "src": "33:252:33"
-  },
-  "legacyAST": {
-    "absolutePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/ICommunityTokenFactory.sol",
-    "exportedSymbols": {
-      "ICommunityTokenFactory": [
-        11540
-      ]
-    },
-    "id": 11541,
-    "license": "MIT",
-    "nodeType": "SourceUnit",
-    "nodes": [
-      {
-        "id": 11530,
-        "literals": [
-          "solidity",
-          "0.8",
-          ".0"
-        ],
-        "nodeType": "PragmaDirective",
-        "src": "33:22:33"
-      },
-      {
-        "id": 11531,
-        "literals": [
-          "experimental",
-          "ABIEncoderV2"
-        ],
-        "nodeType": "PragmaDirective",
-        "src": "56:33:33"
-      },
-      {
-        "abstract": false,
-        "baseContracts": [],
-        "contractDependencies": [],
-        "contractKind": "interface",
-        "documentation": {
-          "id": 11532,
-          "nodeType": "StructuredDocumentation",
-          "src": "91:57:33",
-          "text": " @dev Interface of the community token factory."
-        },
-        "fullyImplemented": false,
-        "id": 11540,
-        "linearizedBaseContracts": [
-          11540
-        ],
-        "name": "ICommunityTokenFactory",
-        "nodeType": "ContractDefinition",
-        "nodes": [
-          {
-            "functionSelector": "3120db1b",
-            "id": 11539,
-            "implemented": false,
-            "kind": "function",
-            "modifiers": [],
-            "name": "createCommunityToken",
-            "nodeType": "FunctionDefinition",
-            "parameters": {
-              "id": 11535,
-              "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 11534,
-                  "mutability": "mutable",
-                  "name": "meta",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11539,
-                  "src": "219:19:33",
-                  "stateVariable": false,
-                  "storageLocation": "calldata",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_bytes_calldata_ptr",
-                    "typeString": "bytes"
-                  },
-                  "typeName": {
-                    "id": 11533,
-                    "name": "bytes",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "219:5:33",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_bytes_storage_ptr",
-                      "typeString": "bytes"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "218:21:33"
-            },
-            "returnParameters": {
-              "id": 11538,
-              "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 11537,
-                  "mutability": "mutable",
-                  "name": "",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11539,
-                  "src": "274:7:33",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
-                  },
-                  "typeName": {
-                    "id": 11536,
-                    "name": "address",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "274:7:33",
-                    "stateMutability": "nonpayable",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_address",
-                      "typeString": "address"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "273:9:33"
-            },
-            "scope": 11540,
-            "src": "189:94:33",
-            "stateMutability": "nonpayable",
-            "virtual": false,
-            "visibility": "external"
-          }
-        ],
-        "scope": 11541,
-        "src": "149:136:33"
-      }
-    ],
-    "src": "33:252:33"
+    "src": "33:252:62"
   },
   "compiler": {
     "name": "solc",
     "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.3.4",
-  "updatedAt": "2024-06-20T10:15:12.579Z",
+  "schemaVersion": "3.4.14",
+  "updatedAt": "2024-06-20T15:00:49.747Z",
   "devdoc": {
     "details": "Interface of the community token factory.",
     "kind": "dev",

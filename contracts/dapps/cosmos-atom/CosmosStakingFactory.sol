@@ -20,6 +20,7 @@ contract CosmosStakingFactory is IPoolFactory, Ownable {
     // every chain has it's own bridge accounts
     mapping (uint8 => mapping(address => bool)) public isBridge;
     address public immutable communityFactory;
+    uint256 private transFee = 0.00001 ether;
 
     constructor(address _communityFactory) {
         require(_communityFactory != address(0), "Invalid address");
@@ -36,6 +37,10 @@ contract CosmosStakingFactory is IPoolFactory, Ownable {
 
     event AdminAddBridge(uint8 indexed chainId, address indexed bridge);
     event AdminRemoveBridge(uint8 indexed chainId, address indexed bridge);
+
+    function getFeeInfo() public override view returns (address, uint256) {
+        return (owner(), transFee);
+    }
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');

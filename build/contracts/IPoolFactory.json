@@ -29,9 +29,27 @@
       ],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getFeeInfo",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"community\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"meta\",\"type\":\"bytes\"}],\"name\":\"createPool\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the pool factory.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPoolFactory.sol\":\"IPoolFactory\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPoolFactory.sol\":{\"keccak256\":\"0x690fa318a561b45e70ceee542a68746d8b72a98c4ff83abb177c3e3710190fd0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://91b6a4e9de1e1f01065c329d197dfd1f4d9a0996397f9f79b846804d75b1d2bd\",\"dweb:/ipfs/Qmc1eCVjE1xnQx2uMPkhAz5i3ohDDjEoVmJ5SZ8mdytScP\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"community\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"meta\",\"type\":\"bytes\"}],\"name\":\"createPool\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getFeeInfo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the pool factory.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interfaces/IPoolFactory.sol\":\"IPoolFactory\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interfaces/IPoolFactory.sol\":{\"keccak256\":\"0xe70966dfe9d2336a6b310658bf543fdc45600d773283d3e73c1d5b65962e339e\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1e0b6147e311f14564c54905e9129930251f5a15b79712a708626de6b8ef92bf\",\"dweb:/ipfs/QmQqfsNinTUcLpY4MHe7UAvMJEqt6gQETPbTv6Qtba691B\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -39,37 +57,37 @@
   "deployedGeneratedSources": [],
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.8.0;\npragma experimental ABIEncoderV2;\n\n/**\n * @dev Interface of the pool factory.\n */\ninterface IPoolFactory {\n    function createPool(address community, string memory name, bytes calldata meta)\n        external\n        returns (address);\n}\n",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.8.0;\npragma experimental ABIEncoderV2;\n\n/**\n * @dev Interface of the pool factory.\n */\ninterface IPoolFactory {\n    function createPool(address community, string memory name, bytes calldata meta)\n        external\n        returns (address);\n    function getFeeInfo() external view returns (address, uint256);\n}\n",
   "sourcePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPoolFactory.sol",
   "ast": {
-    "absolutePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPoolFactory.sol",
+    "absolutePath": "project:/contracts/interfaces/IPoolFactory.sol",
     "exportedSymbols": {
       "IPoolFactory": [
-        11607
+        17924
       ]
     },
-    "id": 11608,
+    "id": 17925,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11593,
+        "id": 17903,
         "literals": [
           "solidity",
           "0.8",
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:22:36"
+        "src": "33:22:65"
       },
       {
-        "id": 11594,
+        "id": 17904,
         "literals": [
           "experimental",
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "56:33:36"
+        "src": "56:33:65"
       },
       {
         "abstract": false,
@@ -77,39 +95,39 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "documentation": {
-          "id": 11595,
+          "id": 17905,
           "nodeType": "StructuredDocumentation",
-          "src": "91:46:36",
+          "src": "91:46:65",
           "text": " @dev Interface of the pool factory."
         },
         "fullyImplemented": false,
-        "id": 11607,
+        "id": 17924,
         "linearizedBaseContracts": [
-          11607
+          17924
         ],
         "name": "IPoolFactory",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "b883cc2a",
-            "id": 11606,
+            "id": 17916,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "createPool",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11602,
+              "id": 17912,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11597,
+                  "id": 17907,
                   "mutability": "mutable",
                   "name": "community",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11606,
-                  "src": "187:17:36",
+                  "scope": 17916,
+                  "src": "187:17:65",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -117,10 +135,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 11596,
+                    "id": 17906,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "187:7:36",
+                    "src": "187:7:65",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -131,12 +149,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 11599,
+                  "id": 17909,
                   "mutability": "mutable",
                   "name": "name",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11606,
-                  "src": "206:18:36",
+                  "scope": 17916,
+                  "src": "206:18:65",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -144,10 +162,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 11598,
+                    "id": 17908,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "206:6:36",
+                    "src": "206:6:65",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -157,12 +175,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 11601,
+                  "id": 17911,
                   "mutability": "mutable",
                   "name": "meta",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11606,
-                  "src": "226:19:36",
+                  "scope": 17916,
+                  "src": "226:19:65",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -170,10 +188,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 11600,
+                    "id": 17910,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "226:5:36",
+                    "src": "226:5:65",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -182,20 +200,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "186:60:36"
+              "src": "186:60:65"
             },
             "returnParameters": {
-              "id": 11605,
+              "id": 17915,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11604,
+                  "id": 17914,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11606,
-                  "src": "281:7:36",
+                  "scope": 17916,
+                  "src": "281:7:65",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -203,10 +221,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 11603,
+                    "id": 17913,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "281:7:36",
+                    "src": "281:7:65",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -216,176 +234,40 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "280:9:36"
+              "src": "280:9:65"
             },
-            "scope": 11607,
-            "src": "167:123:36",
+            "scope": 17924,
+            "src": "167:123:65",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
-          }
-        ],
-        "scope": 11608,
-        "src": "138:154:36"
-      }
-    ],
-    "src": "33:260:36"
-  },
-  "legacyAST": {
-    "absolutePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPoolFactory.sol",
-    "exportedSymbols": {
-      "IPoolFactory": [
-        11607
-      ]
-    },
-    "id": 11608,
-    "license": "MIT",
-    "nodeType": "SourceUnit",
-    "nodes": [
-      {
-        "id": 11593,
-        "literals": [
-          "solidity",
-          "0.8",
-          ".0"
-        ],
-        "nodeType": "PragmaDirective",
-        "src": "33:22:36"
-      },
-      {
-        "id": 11594,
-        "literals": [
-          "experimental",
-          "ABIEncoderV2"
-        ],
-        "nodeType": "PragmaDirective",
-        "src": "56:33:36"
-      },
-      {
-        "abstract": false,
-        "baseContracts": [],
-        "contractDependencies": [],
-        "contractKind": "interface",
-        "documentation": {
-          "id": 11595,
-          "nodeType": "StructuredDocumentation",
-          "src": "91:46:36",
-          "text": " @dev Interface of the pool factory."
-        },
-        "fullyImplemented": false,
-        "id": 11607,
-        "linearizedBaseContracts": [
-          11607
-        ],
-        "name": "IPoolFactory",
-        "nodeType": "ContractDefinition",
-        "nodes": [
+          },
           {
-            "functionSelector": "b883cc2a",
-            "id": 11606,
+            "functionSelector": "0002eab7",
+            "id": 17923,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
-            "name": "createPool",
+            "name": "getFeeInfo",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11602,
+              "id": 17917,
               "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 11597,
-                  "mutability": "mutable",
-                  "name": "community",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11606,
-                  "src": "187:17:36",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
-                  },
-                  "typeName": {
-                    "id": 11596,
-                    "name": "address",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "187:7:36",
-                    "stateMutability": "nonpayable",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_address",
-                      "typeString": "address"
-                    }
-                  },
-                  "visibility": "internal"
-                },
-                {
-                  "constant": false,
-                  "id": 11599,
-                  "mutability": "mutable",
-                  "name": "name",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11606,
-                  "src": "206:18:36",
-                  "stateVariable": false,
-                  "storageLocation": "memory",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_string_memory_ptr",
-                    "typeString": "string"
-                  },
-                  "typeName": {
-                    "id": 11598,
-                    "name": "string",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "206:6:36",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_string_storage_ptr",
-                      "typeString": "string"
-                    }
-                  },
-                  "visibility": "internal"
-                },
-                {
-                  "constant": false,
-                  "id": 11601,
-                  "mutability": "mutable",
-                  "name": "meta",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11606,
-                  "src": "226:19:36",
-                  "stateVariable": false,
-                  "storageLocation": "calldata",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_bytes_calldata_ptr",
-                    "typeString": "bytes"
-                  },
-                  "typeName": {
-                    "id": 11600,
-                    "name": "bytes",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "226:5:36",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_bytes_storage_ptr",
-                      "typeString": "bytes"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "186:60:36"
+              "parameters": [],
+              "src": "314:2:65"
             },
             "returnParameters": {
-              "id": 11605,
+              "id": 17922,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11604,
+                  "id": 17919,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11606,
-                  "src": "281:7:36",
+                  "scope": 17923,
+                  "src": "340:7:65",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -393,10 +275,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 11603,
+                    "id": 17918,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "281:7:36",
+                    "src": "340:7:65",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -404,30 +286,56 @@
                     }
                   },
                   "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 17921,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 17923,
+                  "src": "349:7:65",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 17920,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "349:7:65",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
                 }
               ],
-              "src": "280:9:36"
+              "src": "339:18:65"
             },
-            "scope": 11607,
-            "src": "167:123:36",
-            "stateMutability": "nonpayable",
+            "scope": 17924,
+            "src": "295:63:65",
+            "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11608,
-        "src": "138:154:36"
+        "scope": 17925,
+        "src": "138:222:65"
       }
     ],
-    "src": "33:260:36"
+    "src": "33:328:65"
   },
   "compiler": {
     "name": "solc",
     "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.3.4",
-  "updatedAt": "2024-06-20T10:15:12.585Z",
+  "schemaVersion": "3.4.14",
+  "updatedAt": "2024-06-20T15:00:49.749Z",
   "devdoc": {
     "details": "Interface of the pool factory.",
     "kind": "dev",

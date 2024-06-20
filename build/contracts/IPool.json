@@ -60,7 +60,7 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"getCommunity\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getFactory\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalStakedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"getUserStakedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the staking pool.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPool.sol\":\"IPool\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPool.sol\":{\"keccak256\":\"0xedea7672bb9703bcf57a6bbf386e4b528f55a698a08bc7c4481400738671ac83\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f20c0e753aa731e11ebe3e2918c863a4e72400983bb466660d3580ce4d9fbcf4\",\"dweb:/ipfs/QmUi3uZ9HVmZDAgyTTvWTPMtov2SudhFdSJ7jGLf8w3eis\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"getCommunity\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getFactory\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalStakedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"getUserStakedAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the staking pool.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/interfaces/IPool.sol\":\"IPool\"},\"evmVersion\":\"constantinople\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/interfaces/IPool.sol\":{\"keccak256\":\"0xedea7672bb9703bcf57a6bbf386e4b528f55a698a08bc7c4481400738671ac83\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f20c0e753aa731e11ebe3e2918c863a4e72400983bb466660d3580ce4d9fbcf4\",\"dweb:/ipfs/QmUi3uZ9HVmZDAgyTTvWTPMtov2SudhFdSJ7jGLf8w3eis\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
@@ -71,34 +71,34 @@
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.8.0;\npragma experimental ABIEncoderV2;\n\n/**\n * @dev Interface of the staking pool.\n */\ninterface IPool {\n    function getFactory() external view returns (address);\n\n    function getCommunity() external view returns (address);\n\n    function getUserStakedAmount(address user) external view returns (uint256);\n\n    function getTotalStakedAmount() external view returns (uint256);\n}\n",
   "sourcePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPool.sol",
   "ast": {
-    "absolutePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPool.sol",
+    "absolutePath": "project:/contracts/interfaces/IPool.sol",
     "exportedSymbols": {
       "IPool": [
-        11591
+        17901
       ]
     },
-    "id": 11592,
+    "id": 17902,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 11566,
+        "id": 17876,
         "literals": [
           "solidity",
           "0.8",
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:22:35"
+        "src": "33:22:64"
       },
       {
-        "id": 11567,
+        "id": 17877,
         "literals": [
           "experimental",
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "56:33:35"
+        "src": "56:33:64"
       },
       {
         "abstract": false,
@@ -106,45 +106,45 @@
         "contractDependencies": [],
         "contractKind": "interface",
         "documentation": {
-          "id": 11568,
+          "id": 17878,
           "nodeType": "StructuredDocumentation",
-          "src": "91:46:35",
+          "src": "91:46:64",
           "text": " @dev Interface of the staking pool."
         },
         "fullyImplemented": false,
-        "id": 11591,
+        "id": 17901,
         "linearizedBaseContracts": [
-          11591
+          17901
         ],
         "name": "IPool",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "functionSelector": "88cc58e4",
-            "id": 11573,
+            "id": 17883,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getFactory",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11569,
+              "id": 17879,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "179:2:35"
+              "src": "179:2:64"
             },
             "returnParameters": {
-              "id": 11572,
+              "id": 17882,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11571,
+                  "id": 17881,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11573,
-                  "src": "205:7:35",
+                  "scope": 17883,
+                  "src": "205:7:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -152,10 +152,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 11570,
+                    "id": 17880,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "205:7:35",
+                    "src": "205:7:64",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -165,40 +165,40 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "204:9:35"
+              "src": "204:9:64"
             },
-            "scope": 11591,
-            "src": "160:54:35",
+            "scope": 17901,
+            "src": "160:54:64",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           },
           {
             "functionSelector": "c51db6b2",
-            "id": 11578,
+            "id": 17888,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getCommunity",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11574,
+              "id": 17884,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "241:2:35"
+              "src": "241:2:64"
             },
             "returnParameters": {
-              "id": 11577,
+              "id": 17887,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11576,
+                  "id": 17886,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11578,
-                  "src": "267:7:35",
+                  "scope": 17888,
+                  "src": "267:7:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -206,10 +206,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 11575,
+                    "id": 17885,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "267:7:35",
+                    "src": "267:7:64",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -219,34 +219,34 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "266:9:35"
+              "src": "266:9:64"
             },
-            "scope": 11591,
-            "src": "220:56:35",
+            "scope": 17901,
+            "src": "220:56:64",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           },
           {
             "functionSelector": "94465b21",
-            "id": 11585,
+            "id": 17895,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getUserStakedAmount",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11581,
+              "id": 17891,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11580,
+                  "id": 17890,
                   "mutability": "mutable",
                   "name": "user",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11585,
-                  "src": "311:12:35",
+                  "scope": 17895,
+                  "src": "311:12:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -254,10 +254,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 11579,
+                    "id": 17889,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "311:7:35",
+                    "src": "311:7:64",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -267,20 +267,20 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "310:14:35"
+              "src": "310:14:64"
             },
             "returnParameters": {
-              "id": 11584,
+              "id": 17894,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11583,
+                  "id": 17893,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11585,
-                  "src": "348:7:35",
+                  "scope": 17895,
+                  "src": "348:7:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -288,10 +288,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 11582,
+                    "id": 17892,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "348:7:35",
+                    "src": "348:7:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -300,40 +300,40 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "347:9:35"
+              "src": "347:9:64"
             },
-            "scope": 11591,
-            "src": "282:75:35",
+            "scope": 17901,
+            "src": "282:75:64",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           },
           {
             "functionSelector": "38adb6f0",
-            "id": 11590,
+            "id": 17900,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getTotalStakedAmount",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 11586,
+              "id": 17896,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "392:2:35"
+              "src": "392:2:64"
             },
             "returnParameters": {
-              "id": 11589,
+              "id": 17899,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 11588,
+                  "id": 17898,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 11590,
-                  "src": "418:7:35",
+                  "scope": 17900,
+                  "src": "418:7:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -341,10 +341,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 11587,
+                    "id": 17897,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "418:7:35",
+                    "src": "418:7:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -353,326 +353,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "417:9:35"
+              "src": "417:9:64"
             },
-            "scope": 11591,
-            "src": "363:64:35",
+            "scope": 17901,
+            "src": "363:64:64",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 11592,
-        "src": "138:291:35"
+        "scope": 17902,
+        "src": "138:291:64"
       }
     ],
-    "src": "33:397:35"
-  },
-  "legacyAST": {
-    "absolutePath": "/Users/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/IPool.sol",
-    "exportedSymbols": {
-      "IPool": [
-        11591
-      ]
-    },
-    "id": 11592,
-    "license": "MIT",
-    "nodeType": "SourceUnit",
-    "nodes": [
-      {
-        "id": 11566,
-        "literals": [
-          "solidity",
-          "0.8",
-          ".0"
-        ],
-        "nodeType": "PragmaDirective",
-        "src": "33:22:35"
-      },
-      {
-        "id": 11567,
-        "literals": [
-          "experimental",
-          "ABIEncoderV2"
-        ],
-        "nodeType": "PragmaDirective",
-        "src": "56:33:35"
-      },
-      {
-        "abstract": false,
-        "baseContracts": [],
-        "contractDependencies": [],
-        "contractKind": "interface",
-        "documentation": {
-          "id": 11568,
-          "nodeType": "StructuredDocumentation",
-          "src": "91:46:35",
-          "text": " @dev Interface of the staking pool."
-        },
-        "fullyImplemented": false,
-        "id": 11591,
-        "linearizedBaseContracts": [
-          11591
-        ],
-        "name": "IPool",
-        "nodeType": "ContractDefinition",
-        "nodes": [
-          {
-            "functionSelector": "88cc58e4",
-            "id": 11573,
-            "implemented": false,
-            "kind": "function",
-            "modifiers": [],
-            "name": "getFactory",
-            "nodeType": "FunctionDefinition",
-            "parameters": {
-              "id": 11569,
-              "nodeType": "ParameterList",
-              "parameters": [],
-              "src": "179:2:35"
-            },
-            "returnParameters": {
-              "id": 11572,
-              "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 11571,
-                  "mutability": "mutable",
-                  "name": "",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11573,
-                  "src": "205:7:35",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
-                  },
-                  "typeName": {
-                    "id": 11570,
-                    "name": "address",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "205:7:35",
-                    "stateMutability": "nonpayable",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_address",
-                      "typeString": "address"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "204:9:35"
-            },
-            "scope": 11591,
-            "src": "160:54:35",
-            "stateMutability": "view",
-            "virtual": false,
-            "visibility": "external"
-          },
-          {
-            "functionSelector": "c51db6b2",
-            "id": 11578,
-            "implemented": false,
-            "kind": "function",
-            "modifiers": [],
-            "name": "getCommunity",
-            "nodeType": "FunctionDefinition",
-            "parameters": {
-              "id": 11574,
-              "nodeType": "ParameterList",
-              "parameters": [],
-              "src": "241:2:35"
-            },
-            "returnParameters": {
-              "id": 11577,
-              "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 11576,
-                  "mutability": "mutable",
-                  "name": "",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11578,
-                  "src": "267:7:35",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
-                  },
-                  "typeName": {
-                    "id": 11575,
-                    "name": "address",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "267:7:35",
-                    "stateMutability": "nonpayable",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_address",
-                      "typeString": "address"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "266:9:35"
-            },
-            "scope": 11591,
-            "src": "220:56:35",
-            "stateMutability": "view",
-            "virtual": false,
-            "visibility": "external"
-          },
-          {
-            "functionSelector": "94465b21",
-            "id": 11585,
-            "implemented": false,
-            "kind": "function",
-            "modifiers": [],
-            "name": "getUserStakedAmount",
-            "nodeType": "FunctionDefinition",
-            "parameters": {
-              "id": 11581,
-              "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 11580,
-                  "mutability": "mutable",
-                  "name": "user",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11585,
-                  "src": "311:12:35",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
-                  },
-                  "typeName": {
-                    "id": 11579,
-                    "name": "address",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "311:7:35",
-                    "stateMutability": "nonpayable",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_address",
-                      "typeString": "address"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "310:14:35"
-            },
-            "returnParameters": {
-              "id": 11584,
-              "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 11583,
-                  "mutability": "mutable",
-                  "name": "",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11585,
-                  "src": "348:7:35",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  },
-                  "typeName": {
-                    "id": 11582,
-                    "name": "uint256",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "348:7:35",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_uint256",
-                      "typeString": "uint256"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "347:9:35"
-            },
-            "scope": 11591,
-            "src": "282:75:35",
-            "stateMutability": "view",
-            "virtual": false,
-            "visibility": "external"
-          },
-          {
-            "functionSelector": "38adb6f0",
-            "id": 11590,
-            "implemented": false,
-            "kind": "function",
-            "modifiers": [],
-            "name": "getTotalStakedAmount",
-            "nodeType": "FunctionDefinition",
-            "parameters": {
-              "id": 11586,
-              "nodeType": "ParameterList",
-              "parameters": [],
-              "src": "392:2:35"
-            },
-            "returnParameters": {
-              "id": 11589,
-              "nodeType": "ParameterList",
-              "parameters": [
-                {
-                  "constant": false,
-                  "id": 11588,
-                  "mutability": "mutable",
-                  "name": "",
-                  "nodeType": "VariableDeclaration",
-                  "scope": 11590,
-                  "src": "418:7:35",
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  },
-                  "typeName": {
-                    "id": 11587,
-                    "name": "uint256",
-                    "nodeType": "ElementaryTypeName",
-                    "src": "418:7:35",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_uint256",
-                      "typeString": "uint256"
-                    }
-                  },
-                  "visibility": "internal"
-                }
-              ],
-              "src": "417:9:35"
-            },
-            "scope": 11591,
-            "src": "363:64:35",
-            "stateMutability": "view",
-            "virtual": false,
-            "visibility": "external"
-          }
-        ],
-        "scope": 11592,
-        "src": "138:291:35"
-      }
-    ],
-    "src": "33:397:35"
+    "src": "33:397:64"
   },
   "compiler": {
     "name": "solc",
     "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.3.4",
-  "updatedAt": "2024-06-20T10:15:12.582Z",
+  "schemaVersion": "3.4.14",
+  "updatedAt": "2024-06-20T15:00:49.749Z",
   "devdoc": {
     "details": "Interface of the staking pool.",
     "kind": "dev",
