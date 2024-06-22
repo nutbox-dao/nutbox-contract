@@ -12,6 +12,11 @@ contract AutoCuration is Ownable, ReentrancyGuard {
 
     CommunityStorage public cStorage;
     address public creator;
+    address public wh3 = 0x06Deb72b2e156Ddd383651aC3d2dAb5892d9c048;
+
+    // claim fees
+    // btc: 0.000005, eth: 0.00008, bnb: 0.0005, matic: 0.5, nuls: 1
+    uint256 private claimFee = 1 ether;
 
     bool isInit = false;
 
@@ -19,6 +24,13 @@ contract AutoCuration is Ownable, ReentrancyGuard {
         require(creator == msg.sender, "Ownable: caller is not the creator");
         _;
     }
+
+    modifier onlyWh3() {
+        require(wh3 == msg.sender, "Ownable: caller is not wh3");
+        _;
+    }
+
+    receive() external payable {}
 
     function init(uint256 cid, address signAddr, address prize, address _creator, address storageAddr) public onlyOwner {
         if (!isInit) {
@@ -40,6 +52,14 @@ contract AutoCuration is Ownable, ReentrancyGuard {
         cStorage.setPrizeToken(addr);
     }
 
+    function setClaimFee(uint256 _claimFee) public onlyWh3 {
+        claimFee = _claimFee;
+    }
+
+    function setWh3(address _wh3) public onlyWh3 {
+        wh3 = _wh3;
+    }
+
     function withdraw() public onlyCreator {
         cStorage.withdraw(msg.sender);
     }
@@ -52,11 +72,20 @@ contract AutoCuration is Ownable, ReentrancyGuard {
         return result;
     }
 
-    function claimPrize(uint256 twitterId, address addr, uint256[] calldata curationIds, uint256 amount, bytes calldata sign) public nonReentrant {
+    function claimPrize(uint256 twitterId, address addr, uint256[] calldata curationIds, uint256 amount, bytes calldata sign) public payable nonReentrant {
         require(curationIds.length > 0, "get at least one");
         require(sign.length == 65, "invalid sign length");
         require(addr == msg.sender, "invalid addr");
         require(cStorage.prizeToken() != address(0), "prize token not set");
+        require(msg.value >= claimFee, "Insufficient fee");
+
+        if (msg.value > claimFee) {
+            (bool success, ) = msg.sender.call{value: msg.value - claimFee}("");
+            require(success, "refund fail");
+        }else {
+            (bool success, ) = wh3.call{value: claimFee}("");
+            require(success, "cost fee fail");
+        }
 
         bytes32 data = keccak256(abi.encodePacked(twitterId, block.chainid, addr, curationIds, amount));
         require(_check(data, sign), "invalid sign");

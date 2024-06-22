@@ -20,17 +20,17 @@ contract CommunityCuration is Ownable {
 
     function getCommunityInfo(uint256 cid) public view returns (address communityAddr, address prizeToken, uint256 balance, address signAddr, address creator, address storageAddr) {
         communityAddr = communities[cid];
-        balance = AutoCuration(communityAddr).getBalance();
-        signAddr = AutoCuration(communityAddr).signAddress();
-        prizeToken = AutoCuration(communityAddr).prizeToken();
-        creator = AutoCuration(communityAddr).creator();
-        storageAddr = address(AutoCuration(communityAddr).cStorage());
+        balance = AutoCuration(payable(communityAddr)).getBalance();
+        signAddr = AutoCuration(payable(communityAddr)).signAddress();
+        prizeToken = AutoCuration(payable(communityAddr)).prizeToken();
+        creator = AutoCuration(payable(communityAddr)).creator();
+        storageAddr = address(AutoCuration(payable(communityAddr)).cStorage());
     }
 
     function upgrade(uint256 cid, address newCommunity) public onlyOwner {
         address oldAddr = communities[cid];
         require(oldAddr != address(0), "invalid cid");
-        AutoCuration ac = AutoCuration(oldAddr);
+        AutoCuration ac = AutoCuration(payable(oldAddr));
         ac.upgrade(newCommunity);
         communities[cid] = newCommunity;
         emit Upgrade(oldAddr, newCommunity);
@@ -39,6 +39,6 @@ contract CommunityCuration is Ownable {
     function alreadyClaimed(uint256 twitterId, uint256 curationId) public view returns (bool) {
         uint256 cid = curationId >> 48;
         address communityAddr = communities[cid];
-        return AutoCuration(communityAddr).alreadyClaimed(twitterId, curationId);
+        return AutoCuration(payable(communityAddr)).alreadyClaimed(twitterId, curationId);
     }
 }
