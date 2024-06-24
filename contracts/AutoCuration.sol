@@ -16,7 +16,7 @@ contract AutoCuration is Ownable, ReentrancyGuard {
 
     // claim fees
     // btc: 0.000005, eth: 0.00008, bnb: 0.0005, matic: 0.5, nuls: 1
-    uint256 private claimFee = 1 ether;
+    uint256 private claimFee = 0.0005 ether;
 
     bool isInit = false;
 

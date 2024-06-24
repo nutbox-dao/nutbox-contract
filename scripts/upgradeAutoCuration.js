@@ -69,19 +69,19 @@ async function upgradeAutoCuration() {
     let factory = new ethers.ContractFactory(AutoCuration.abi, AutoCuration.bytecode, env.wallet);
     let contract = await factory.deploy();
     console.log('deployed', contract.address)
-    const cid = '0x5cc561e91d25'
+    const cid = '0xfab4a1932ab4'
     const newContract = contract.address;
     // uint256 cid, address signAddr, address prize, address _creator, address storageAddr
     await contract.init(cid, 
         '0x4A584E33Dec216a124E36Aceb0B06Bc37642027B', 
-        '0x72743a08215dd9b8bE0E9D0933c4F55176ace254', 
+        '0x321ec7BeA5d359B539830C0C19CC995C1Db1Dce7', 
         '0x2DaE3A44D3C6e9Ab402f6e616ce1d02c1836A6Ac',
-        '0x790302aFBf3B3304ae5d4091f6DE8364387d50dD'
+        '0x595F1B05ef8b160B4955F960e151ba123296fAEe'
     )
     console.log('inited')
-    await contract.transferOwnership('0x1Ac88fa4ec4923835b25b21cE2061b25e0A4b05d')
-    console.log('transfer to community curation')
-    let community = new ethers.Contract('0x1Ac88fa4ec4923835b25b21cE2061b25e0A4b05d', CommunityCuration.abi, env.wallet)
+    await contract.transferOwnership('0x6534b7A5a4dbF65b6DE92fF60dfB25f4Fdb7636B')
+    console.log('transfer owner to community curation')
+    let community = new ethers.Contract('0x6534b7A5a4dbF65b6DE92fF60dfB25f4Fdb7636B', CommunityCuration.abi, env.wallet)
     await community.upgrade(cid, newContract)
     console.log('updaded', newContract)
 }
