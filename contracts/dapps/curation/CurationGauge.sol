@@ -45,7 +45,7 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
 
     function startPool() public {
         require(deposit == 0, "Pool has started");
-        Community(community).updatePools("USER", address(this));
+        Community(payable(community)).updatePools("USER", address(this));
         deposit = 1;
         emit PoolStarted();
     }
@@ -63,8 +63,8 @@ contract CurationGauge is IPool, ERC20Helper, ReentrancyGuard {
     function withdrawRewardsToRecipient() public {
         address[] memory pools = new address[](1);
         pools[0] = address(this);
-        Community(community).withdrawPoolsRewards(pools);
-        address rewardToken = Community(community).getCommunityToken();
+        Community(payable(community)).withdrawPoolsRewards(pools);
+        address rewardToken = Community(payable(community)).getCommunityToken();
         uint256 balance = ERC20(rewardToken).balanceOf(address(this));
         releaseERC20(rewardToken, recipient, balance);
         emit WithdrawRewardsToRecipient(balance);

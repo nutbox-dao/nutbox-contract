@@ -10,5 +10,4 @@ interface IPoolFactory {
     function createPool(address community, string memory name, bytes calldata meta)
         external
         returns (address);
-    function getFeeInfo() external view returns (address, uint256);
 }

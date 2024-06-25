@@ -10,14 +10,29 @@ require('dotenv').config();
  */
 module.exports = {
   solidity: {
-    version: "0.8.0",
-    settings: {
-      optimizer: {
-        enabled:true,
-        runs: 1
+    compilers: [
+      {
+          version: "0.8.0",
+          settings: {
+            optimizer: {
+              enabled:true,
+              runs: 1
+            },
+            evmVersion: "constantinople"
+        }
       },
-      evmVersion: "constantinople"
-    }
+      {
+        version: "0.8.1",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000
+          }
+        }
+      }
+    ]
+   
+    
   },
   networks: {
     hardhat: {

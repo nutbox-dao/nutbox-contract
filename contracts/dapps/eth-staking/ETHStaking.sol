@@ -5,9 +5,9 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../../interfaces/ICommunity.sol";
+import "../../Community.sol";
 import "../../interfaces/IPool.sol";
-import "../../interfaces/IPoolFactory.sol";
+import "../../Committee.sol";
 
 /**
  * @dev Template contract of Nutbox staking pool.
@@ -60,19 +60,10 @@ contract ETHStaking is IPool, ReentrancyGuard {
 
     receive() external payable {}
 
-    function deposit() external nonReentrant payable {
-        uint256 amount = msg.value;
+    function deposit(uint256 amount) external nonReentrant payable {
         require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
         if (amount == 0) return;
-
-        // check fee
-        (address receiver, uint256 feeAmount) = IPoolFactory(factory).getFeeInfo();
-        if (feeAmount > 0) {
-            require(amount >= feeAmount, "Insufficient fee");
-            (bool success, ) = receiver.call{value: feeAmount}("");
-            require(success, "cost fee fail");
-            amount = amount.sub(feeAmount);
-        }
+        require(msg.value >= amount, 'insufficient value');
 
         // Add to staking list if account hasn't deposited before
         if (!stakingInfo[msg.sender].hasDeposited) {
@@ -81,7 +72,7 @@ contract ETHStaking is IPool, ReentrancyGuard {
         }
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools("USER", msg.sender);
+        ICommunity(community).updatePools{value: msg.value - amount}("USER", msg.sender);
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
@@ -122,17 +113,12 @@ contract ETHStaking is IPool, ReentrancyGuard {
         else withdrawAmount = amount;
 
         // check fee
-        (address receiver, uint256 feeAmount) = IPoolFactory(factory).getFeeInfo();
-        if (feeAmount > 0) {
-            require(withdrawAmount > feeAmount, "Insufficient fee");
-            (bool success1, ) = receiver.call{value: feeAmount}("");
-            require(success1, "Cost Fee fail");
-            withdrawAmount = withdrawAmount.sub(feeAmount);
-        }
+        address committee = Community(payable(community)).committee();
+        uint256 fee = Committee(payable(committee)).getFee('USER');
+        require(withdrawAmount >= fee, 'Insufficient fee');
+        Community(payable(community)).updatePools{value: fee}("USER", msg.sender);
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools("USER", msg.sender);
-
         uint256 pending = stakingInfo[msg.sender]
             .amount
             .mul(ICommunity(community).getShareAcc(address(this)))
@@ -143,7 +129,7 @@ contract ETHStaking is IPool, ReentrancyGuard {
         }
 
         // releaseERC20(stakeToken, address(msg.sender), withdrawAmount);
-        (bool success, ) = msg.sender.call{value: withdrawAmount}('');
+        (bool success, ) = msg.sender.call{value: withdrawAmount - fee}('');
         require(success, "Withdraw fail");
 
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender]

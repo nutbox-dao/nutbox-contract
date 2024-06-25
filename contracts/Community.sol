@@ -27,7 +27,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
     uint16 constant CONSTANTS_10000 = 10000;
 
-    address immutable committee;
+    address public committee;
     // DAO fund ratio
     uint16 public feeRatio;
     // DAO fund address
@@ -71,7 +71,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         _;
     }
 
-    constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
+    constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) payable {
         transferOwnership(_admin);
         devFund = _admin;
         committee = _committee;
@@ -80,6 +80,8 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         isMintableCommunityToken = _isMintableCommunityToken;
         emit DevChanged(address(0), _admin);
     }
+
+    receive() external payable {}
     
     function adminSetDev(address _dev) external onlyOwner {
         require(_dev != address(0), "IA"); // Invalid address
@@ -162,7 +164,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
      * @dev This function would withdraw all rewards that exist in all pools which available for user
      * This function will not only travel actived pools, but also closed pools
      */
-    function withdrawPoolsRewards(address[] memory poolAddresses) external {
+    function withdrawPoolsRewards(address[] memory poolAddresses) external payable {
         // game has not started
         if (lastRewardBlock == 0) return;
         require(poolAddresses.length > 0, "MHO1"); // Must harvest at least one pool
@@ -266,15 +268,18 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     }
 
     // Pool callable only
-    function updatePools(string memory feeType, address feePayer) external override onlyPool {
+    function updatePools(string memory feeType, address feePayer) public override payable onlyPool {
         _updatePoolsWithFee(feeType, feePayer, msg.sender);
     }
 
     function _updatePoolsWithFee(string memory feeType, address feePayer, address pool) private {
 
         // need pay staking fee whenever update pools
-        if (!ICommittee(committee).getFeeFree(feePayer) && ICommittee(committee).getFee(feeType) > 0){
-            lockERC20(ICommittee(committee).getNut(), feePayer, ICommittee(committee).getTreasury(), ICommittee(committee).getFee(feeType));
+        uint256 fee = ICommittee(committee).getFee(feeType);
+        if (!ICommittee(committee).getFeeFree(feePayer) && fee > 0){
+            require(msg.value >= fee, 'cost fee fail');
+            (bool success, ) = ICommittee(committee).getTreasury().call{value: msg.value}("");
+            require(success, "cost fee fail");
             ICommittee(committee).updateLedger(feeType, address(this), pool, feePayer);
         }
 

@@ -71,17 +71,17 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
         if (amount == 0) return;
 
-        (address receiver, uint256 feeAmount) = IPoolFactory(factory).getFeeInfo();
+        // (address receiver, uint256 feeAmount) = IPoolFactory(factory).getFeeInfo();
 
-        if (feeAmount > 0) {
-            require(msg.value >= feeAmount, "Insufficient fee");
-            if (msg.value > feeAmount) {
-                (bool success, ) = msg.sender.call{value: msg.value - feeAmount}("");
-                require(success, "Refund fail");
-            }
-            (bool success1, ) = receiver.call{value: feeAmount}("");
-            require(success1, "Cost fee fail");
-        }
+        // if (feeAmount > 0) {
+        //     require(msg.value >= feeAmount, "Insufficient fee");
+        //     if (msg.value > feeAmount) {
+        //         (bool success, ) = msg.sender.call{value: msg.value - feeAmount}("");
+        //         require(success, "Refund fail");
+        //     }
+        //     (bool success1, ) = receiver.call{value: feeAmount}("");
+        //     require(success1, "Cost fee fail");
+        // }
 
         // Add to staking list if account hasn't deposited before
         if (!stakingInfo[msg.sender].hasDeposited) {
@@ -90,7 +90,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         }
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools("USER", msg.sender);
+        ICommunity(community).updatePools{value: msg.value}("USER", msg.sender);
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
@@ -127,19 +127,8 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         if (amount == 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
 
-        (address receiver, uint256 feeAmount) = IPoolFactory(factory).getFeeInfo();
-        if (feeAmount > 0) {
-            require(msg.value >= feeAmount, "Insufficient fee");
-            if (msg.value > feeAmount) {
-                (bool success, ) = msg.sender.call{value: msg.value - feeAmount}("");
-                require(success, "Refund fail");
-            }
-            (bool success1, ) = receiver.call{value: feeAmount}("");
-            require(success1, "Cost fee fail");
-        }
-
         // trigger community update all pool staking info
-        ICommunity(community).updatePools("USER", msg.sender);
+        ICommunity(community).updatePools{value: msg.value}("USER", msg.sender);
 
         uint256 pending = stakingInfo[msg.sender]
             .amount

@@ -31,10 +31,6 @@ contract ERC1155StakingFactory is IPoolFactory, Ownable {
         uint256 id
     );
 
-    function getFeeInfo() public override view returns (address, uint256) {
-        return (owner(), transFee);
-    }
-
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
         require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
