@@ -9,7 +9,8 @@ contract Untradable721 is Tradable721 {
 
     constructor(string memory name, string memory symbol) Tradable721(name, symbol) {}
 
-    function _beforeTokenTransfer(address from, address to, uint256) internal virtual override {
+    function _beforeTokenTransfer(address from, address to, uint256 firstTokenId,
+        uint256 batchSize) internal virtual override {
         if (from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, msg.sender), "Must have tranfer role to transfer");
         }
