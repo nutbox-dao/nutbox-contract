@@ -1,31 +1,26 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/IPool.sol";
 
-/**
- * @dev Template contract of Nutbox staking pool.
- *
- * Every pool saves a user staking ledger of a specific staking asset.
- * The only place that user can deposit and withdraw their staked asset.
- * Also only user themself than withdraw their staked asset
- * One pool surport only one token id of an ERC1155 token
- */
-contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
+contract ERC721Staking is IPool, ReentrancyGuard, IERC721Receiver, IERC165 {
     using SafeMath for uint256;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     struct StakingInfo {
         // First time when user staking, we need set options like userDebt to zero
         bool hasDeposited;
         // User staked amount
         uint256 amount;
+        EnumerableSet.UintSet ids;
     }
     address immutable factory;
 
@@ -38,10 +33,8 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
     string public name;
 
     // stakeToken actually is a asset contract entity, it represents the asset user stake of this pool.
-    // Bascially, it should be a normal ERC1155
+    // Bascially, it should be a normal ERC721
     address immutable public stakeToken;
-    // one pool for a single token id of ERC1155 token
-    uint256 immutable public tokenId;
     // community that pool belongs to
     address immutable community;
 
@@ -59,19 +52,19 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
         uint256 amount
     );
 
-    constructor(address _community, string memory _name, address _stakeToken, uint256 _tokenId) {
+    constructor(address _community, string memory _name, address _stakeToken) {
         factory = msg.sender;
         community = _community;
         name = _name;
         stakeToken = _stakeToken;
-        tokenId = _tokenId;
     }
 
     function deposit(
-        uint256 amount
+        uint256[] memory ids
     ) external nonReentrant {
         require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
-        if (amount == 0) return;
+        if (ids.length == 0) return;
+        uint256 amount = ids.length;
 
         // Add to staking list if account hasn't deposited before
         if (!stakingInfo[msg.sender].hasDeposited) {
@@ -93,8 +86,11 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
             }
         }
 
-        IERC1155(stakeToken).safeTransferFrom(msg.sender, address(this), tokenId, amount, "0x");
-
+        for (uint256 i = 0; i < amount; i ++) {
+            uint256 id = ids[i];
+            IERC721(stakeToken).transferFrom(msg.sender, address(this), id);
+            stakingInfo[msg.sender].ids.add(id);
+        }
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender]
             .amount
             .add(amount);
@@ -112,10 +108,11 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
     }
 
     function withdraw(
-        uint256 amount
+        uint256[] memory ids
     ) external nonReentrant {
+        uint256 amount = ids.length;
         if (amount == 0) return;
-        if (stakingInfo[msg.sender].amount == 0) return;
+        if (stakingInfo[msg.sender].amount < amount) return;
 
         // trigger community update all pool staking info
         ICommunity(community).updatePools("USER", msg.sender);
@@ -129,18 +126,18 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
 
-        uint256 withdrawAmount;
-        if (amount >= stakingInfo[msg.sender].amount)
-            withdrawAmount = stakingInfo[msg.sender].amount;
-        else withdrawAmount = amount;
-
-        IERC1155(stakeToken).safeTransferFrom(address(this), address(msg.sender), tokenId, withdrawAmount, "0x00");
+        for (uint256 i = 0; i < amount; i++) {
+            uint256 id = ids[i];
+            require(stakingInfo[msg.sender].ids.contains(id), "User not staked id");
+            IERC721(stakeToken).transferFrom(address(this), msg.sender, id);
+            stakingInfo[msg.sender].ids.remove(id);
+        }
 
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender]
             .amount
-            .sub(withdrawAmount);
+            .sub(amount);
         totalStakedAmount = totalStakedAmount
-            .sub(withdrawAmount);
+            .sub(amount);
 
         ICommunity(community).setUserDebt(
             msg.sender,
@@ -149,7 +146,7 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
             .mul(ICommunity(community).getShareAcc(address(this)))
             .div(1e12));
 
-        emit Withdrawn(community, msg.sender, withdrawAmount);
+        emit Withdrawn(community, msg.sender, amount);
     }
 
     function getFactory() external view override returns (address) {
@@ -179,29 +176,18 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
     function getUserDepositInfo(address user)
         external
         view
-        returns (StakingInfo memory)
+        returns (uint256 amount, uint256[] memory ids)
     {
-        return stakingInfo[user];
+        return (stakingInfo[user].amount, stakingInfo[user].ids.values());
     }
 
-     function onERC1155Received(
+     function onERC721Received(
         address operator,
         address from,
-        uint256 id,
-        uint256 value,
+        uint256 tokenId,
         bytes calldata data
     ) external override returns (bytes4) {
-        return 0xf23a6e61;
-    }
-
-    function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external override pure returns (bytes4) {
-        return 0xbc197c81;
+        return this.onERC721Received.selector;
     }
 
     function supportsInterface(bytes4 interfaceId) external override pure returns (bool) {
