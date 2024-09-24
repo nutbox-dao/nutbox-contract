@@ -15,7 +15,7 @@ const BURN_ROLE = '0xe97b137254058bd94f28d2f3eb79e2d34074ffb488d042e3bc958e0a57d
 async function main () {
     let env = {};
     env.url = process.env.ARBITRUM || 'http://localhost:8545';
-    env.privateKey = process.env.MAIN_KEY;
+    env.privateKey = process.env.CLAIM_KEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     console.log(`private: ${env.privateKey}, url: ${env.url}`);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
@@ -25,16 +25,26 @@ async function main () {
 
     const contract = '0xCa1893F7E9a5f78A6Ed7C0Aff29584432B453A94';
     const autoCuration = new ethers.Contract(contract, curationJson.abi, env.wallet)
-    const tx1 = await autoCuration.withdraw();
-    console.log(53, tx1.hash);
-    return;
+    console.log(await autoCuration.signAddress());
+    let twitterId = '3217862392435'
+    let ids = ["0x33ecef1f6b0823662714be1a"]
+    let amounts = [ethers.utils.parseEther('50')]
+    try {
+        const tx = await autoCuration.claimPrize(twitterId, env.wallet.address, ids, amounts[0], await signMessage(twitterId, 42161, env.wallet.address, ids, amounts))
+        await tx.wait();
+        console.log(tx.hash)
+    } catch (error) {
+        console.error(33, error)
+    }
+}
 
-    const pool = new ethers.Contract(web3id, Web3IdJson.abi, env.wallet)
-    const tx = await pool.transferOwnership('0x4978f4B200Eed8C47A8174F95444Ae653C48c05F', {
-        gasPrice: 50000000000
-    })
-    await waitForTx(env.provider, tx.hash)
-    console.log('asdress', tx.hash);
+async function signMessage(twitterId, chainId, receiver, cids, amounts) {
+    let provider = new ethers.providers.JsonRpcProvider(process.env.ARBITRUM);
+    let wallet = new ethers.Wallet(process.env.MAIN_KEY, provider);
+    let data = ethers.utils.solidityKeccak256(["uint256", "uint256", "address", "uint256[]", "uint256[]"], [twitterId, chainId, receiver, cids, amounts])
+    data = ethers.utils.arrayify(data);
+    let sig = await wallet.signMessage(data);
+    return sig;
 }
 
 main()
