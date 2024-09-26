@@ -12,11 +12,12 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
     using SafeMath for uint256;
 
     // treasury account that reserve all revenues
-    address public treasury;
+    address private treasury;
     // NUT address
     address public nut;
     // gauge setted by committee
     address private gauge;
+    uint256 private cliamFee = 0.0002 ether;
     // feeType => amount
     mapping(bytes32 => uint256) private fees;
     // feeType => amount
@@ -115,6 +116,10 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit FeeSet(feeType, amount);
     }
 
+    function adminSetClaimFee(uint256 _claimFee) external onlyOwner {
+        cliamFee = _claimFee;
+    }
+
     function setFeePayer(address payer) override external {
         require(whitelistManager[msg.sender], 'Permission denied: caller is not in whitelist');
         whitelist[payer] = true;
@@ -163,5 +168,9 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
 
     function getPoolFees(address pool) external view override returns (uint256) {
         return feeFromPool[pool];
+    }
+
+    function getClaimFee() external view override returns (uint256) {
+        return cliamFee;
     }
 }

@@ -12,6 +12,7 @@ import "./interfaces/IPoolFactory.sol";
 import "./interfaces/ICommittee.sol";
 import "./interfaces/IGauge.sol";
 import "./ERC20Helper.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
  * @dev Template contract of Nutbox staking based communnity.
@@ -19,7 +20,7 @@ import "./ERC20Helper.sol";
  * Community Contract always returns an entity of this contract.
  * Support add serial staking pool into it.
  */
-contract Community is ICommunity, ERC20Helper, Ownable {
+contract Community is ICommunity, ERC20Helper, Ownable, ReentrancyGuard {
 
     using SafeMath for uint256;
     using SafeMath for uint16;
@@ -161,10 +162,17 @@ contract Community is ICommunity, ERC20Helper, Ownable {
      * @dev This function would withdraw all rewards that exist in all pools which available for user
      * This function will not only travel actived pools, but also closed pools
      */
-    function withdrawPoolsRewards(address[] memory poolAddresses) external {
+    function withdrawPoolsRewards(address[] memory poolAddresses) payable nonReentrant external {
         // game has not started
         if (lastRewardBlock == 0) return;
         require(poolAddresses.length > 0, "MHO1"); // Must harvest at least one pool
+
+        uint256 claimFee = ICommittee(committee).getClaimFee();
+        if (claimFee > 0) {
+            require(msg.value >= poolAddresses.length * claimFee, "IF"); // Insufficient fee
+            (bool success,) = ICommittee(committee).getTreasury().call{value: msg.value}("");
+            require(success, "FF"); // pay claim fee fail
+        }
 
         // There are new blocks created after last updating, so update pools before withdraw
         if(block.number > lastRewardBlock) {

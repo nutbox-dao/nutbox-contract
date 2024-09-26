@@ -17,6 +17,8 @@ interface ICommittee {
 
     function getGauge() external view returns (address);
 
+    function getClaimFee() external view returns (uint256);
+
     function updateLedger(
         string memory feeType,
         address community,
