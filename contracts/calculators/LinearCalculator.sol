@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.0;
-pragma experimental ABIEncoderV2;
 
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import 'solidity-bytes-utils/contracts/BytesLib.sol';
 import '../interfaces/ICalculator.sol';
 
 /**
@@ -32,7 +30,6 @@ contract LinearCalculator is ICalculator {
     }
 
     using SafeMath for uint256;
-    using BytesLib for bytes;
 
     address immutable communityFactory;
     mapping (address => Distribution[]) public distributionErasMap;
@@ -105,23 +102,30 @@ contract LinearCalculator is ICalculator {
 
     /**
      * @dev Check and set distribution policy
-     * All distribution should meet following condidtion: 
-     * 1) amount should greater than 0
-     * 2) first distrubtion startHeight should greater than current block height
-     * 3) startHeight shold less than stopHeight
+     * policy layout: [uint8 erasLength][uint256 start, uint256 stop, uint256 amount]...
+     * Total: 1 + erasLength * 96 bytes
      */
     function _applyDistributionEras(address community, bytes calldata policy) private {
-        uint8 erasLength = policy.toUint8(0);
+        require(policy.length >= 1, "Empty policy");
+        
+        uint8 erasLength;
+        assembly ("memory-safe") {
+            erasLength := shr(248, calldataload(policy.offset))
+        }
         require(erasLength >= 1, 'At least one distribution era is needed');
+        require(policy.length >= 1 + uint256(erasLength) * 96, 'Policy too short');
 
-        uint64 index = 1;
+        uint256 offset = 1;
         for(uint8 i = 0; i < erasLength; i++) {
-            uint256 start = policy.toUint256(index);
-            index = index + 32;
-            uint256 stop = policy.toUint256(index);
-            index = index + 32;
-            uint256 amount = policy.toUint256(index);
-            index = index + 32;
+            uint256 start;
+            uint256 stop;
+            uint256 amount;
+            assembly ("memory-safe") {
+                start := calldataload(add(policy.offset, offset))
+                stop := calldataload(add(policy.offset, add(offset, 32)))
+                amount := calldataload(add(policy.offset, add(offset, 64)))
+            }
+            offset += 96;
 
             // check 1)
             require(amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');

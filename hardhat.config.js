@@ -1,42 +1,26 @@
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
-require('hardhat-contract-sizer');
+require("hardhat-contract-sizer");
 require("@nomicfoundation/hardhat-verify");
-require('dotenv').config();
+require("dotenv").config();
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
+/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
-    version: "0.8.0",
+    version: "0.8.20",
     settings: {
-      optimizer: {
-        enabled:true,
-        runs: 1
-      },
-      evmVersion: "constantinople"
-    }
+      optimizer: { enabled: true, runs: 1 },
+      evmVersion: "paris",
+    },
   },
   networks: {
-    hardhat: {
-      chainId: 1337,
-    },
-    localhost: {
-      url: "http://localhost:8545",
-    },
+    hardhat: { chainId: 1337 },
+    localhost: { url: "http://localhost:8545" },
     arbitrum: {
-      url: 'https://arb1.arbitrum.io/rpc',
+      url: "https://arb1.arbitrum.io/rpc",
       chainId: 42161,
-      accounts: [process.env.MAIN_KEY]
-    }
+      accounts: process.env.MAIN_KEY ? [process.env.MAIN_KEY] : [],
+    },
   },
-  etherscan: {
-    apiKey: process.env.ARB_KEY
-  }
-  // contractSizer: {
-  //   alphaSort: true,
-  //   runOnCompile: true,
-  //   disambiguatePaths: false
-  // }
+  etherscan: { apiKey: process.env.ARB_KEY },
 };

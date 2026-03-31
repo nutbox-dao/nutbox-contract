@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.0;
-pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../../interfaces/ICommunity.sol";
+import "../../interfaces/ICommittee.sol";
 import "../../interfaces/IPool.sol";
 import "../../ERC20Helper.sol";
 
 /**
- * @dev Template contract of Nutbox staking pool.
+ * @dev Template contract of Nutbox ERC20 staking pool.
  *
  * Every pool saves a user staking ledger of a specific staking asset.
  * The only place that user can deposit and withdraw their staked asset.
- * Also only user themself than withdraw their staked asset
+ * Also only user themself can withdraw their staked asset
  */
 contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
     using SafeMath for uint256;
@@ -36,7 +36,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
     string public name;
 
     // stakeToken actually is a asset contract entity, it represents the asset user stake of this pool.
-    // Bascially, it should be a normal ERC20 token or a lptoken of a specific token exchange pair
+    // Basically, it should be a normal ERC20 token or a lptoken of a specific token exchange pair
     address immutable public stakeToken;
     // community that pool belongs to
     address immutable community;
@@ -62,11 +62,29 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         stakeToken = _stakeToken;
     }
 
+    function _chargeTier3Fee() private {
+        address committeeAddr = ICommunity(community).getCommittee();
+        uint256 fee = ICommittee(committeeAddr).getPoolOperationFee();
+        if (fee == 0) return;
+        // Check fee-free list (e.g. bridge addresses)
+        if (ICommittee(committeeAddr).getFeeFree(msg.sender)) return;
+        require(msg.value >= fee, "Insufficient fee");
+        address payable recipient = ICommittee(committeeAddr).getFeeRecipient();
+        (bool ok, ) = recipient.call{value: fee}("");
+        require(ok, "Fee transfer failed");
+        if (msg.value > fee) {
+            (bool ok2, ) = msg.sender.call{value: msg.value - fee}("");
+            require(ok2, "Refund failed");
+        }
+    }
+
     function deposit(
         uint256 amount
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
         if (amount == 0) return;
+
+        _chargeTier3Fee();
 
         // Add to staking list if account hasn't deposited before
         if (!stakingInfo[msg.sender].hasDeposited) {
@@ -75,7 +93,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         }
 
         // trigger community update all pool staking info
-        ICommunity(community).updatePools("USER", msg.sender);
+        ICommunity(community).updatePools();
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
@@ -108,12 +126,14 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
 
     function withdraw(
         uint256 amount
-    ) external nonReentrant {
+    ) external payable nonReentrant {
         if (amount == 0) return;
         if (stakingInfo[msg.sender].amount == 0) return;
 
+        _chargeTier3Fee();
+
         // trigger community update all pool staking info
-        ICommunity(community).updatePools("USER", msg.sender);
+        ICommunity(community).updatePools();
 
         uint256 pending = stakingInfo[msg.sender]
             .amount
@@ -178,4 +198,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
     {
         return stakingInfo[user];
     }
+
+    // Allow contract to receive native BNB (for fee refunds)
+    receive() external payable {}
 }

@@ -1,70 +1,66 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.0;
-pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./interfaces/ICommittee.sol";
-import "./ERC20Helper.sol";
 
-contract Committee is ICommittee, ERC20Helper, Ownable {
-    using SafeMath for uint256;
+contract Committee is ICommittee, Ownable {
 
-    // treasury account that reserve all revenues
-    address public treasury;
-    // NUT address
-    address public nut;
-    // gauge setted by committee
-    address private gauge;
-    // feeType => amount
-    mapping(bytes32 => uint256) private fees;
-    // feeType => amount
-    mapping(bytes32 => uint256) private revenues;
-    // pool address => amount
-    mapping(address => uint256) private feeFromPool; 
-    // caller => canCall, whitlist of all caller
-    mapping(address => bool) private whitelist;
-    // caller => canCall, can add or remove address from whitelist
-    mapping(address => bool) private whitelistManager;
-    // contract => isWhilistContract
+    // Address that receives all protocol fees (native BNB)
+    address payable public feeRecipient;
+
+    // Three-tier fee structure (in wei)
+    uint256 public createCommunityFee;   // Tier 1: creating a community
+    uint256 public communitySettingsFee; // Tier 2: community owner operations (addPool, closePool, setRatios, setFeeRatio)
+    uint256 public poolOperationFee;     // Tier 3: pool user operations (deposit, withdraw, withdrawRewards)
+
+    // contract => isWhitelistContract (factory whitelist)
     mapping(address => bool) private whitelistContracts;
 
-    // some address no need to pay fee. eg: steem brigde
+    // address => feeFree (e.g. bridge addresses exempt from Tier 3)
     mapping(address => bool) private feeFreeList;
 
-    event FeeSet(string indexed feeType, uint256 amount);
-    event NewRevenue(string feeType, address indexed community, address indexed pool, address indexed who, uint256 amount);
-    event NewAppropriation(address recipient, uint256 amount);
+    event AdminSetFeeRecipient(address indexed feeRecipient);
+    event AdminSetCreateCommunityFee(uint256 fee);
+    event AdminSetCommunitySettingsFee(uint256 fee);
+    event AdminSetPoolOperationFee(uint256 fee);
 
-    event AdminAddWhitelistManager(address indexed wm);
-    event AdminRemoveWhitelistManager(address indexed wm);
     event AdminAddContract(address indexed c);
     event AdminRemoveContract(address indexed c);
     event AdminAddFeeFreeAddress(address indexed feeFree);
     event AdminRemoveFeeFreeAddress(address indexed feeFree);
-    event AdminSetTreasury(address indexed treasury);
-    event AdminSetNut(address indexed nut);
-    event AdminSetGauge(address indexed gauge);
 
-    constructor(address _treasury, address _nut) {
-        require(_treasury != address(0), "Invalid treasury");
-        require(_nut != address(0), "Invalid nut");
-        treasury = _treasury;
-        nut = _nut;
-        emit AdminSetTreasury(_treasury);
-        emit AdminSetNut(_nut);
+    constructor(address payable _feeRecipient) {
+        require(_feeRecipient != address(0), "Invalid feeRecipient");
+        feeRecipient = _feeRecipient;
+        emit AdminSetFeeRecipient(_feeRecipient);
     }
 
-    function adminAddWhitelistManager(address _m) external onlyOwner {
-        whitelistManager[_m] = true;
-        emit AdminAddWhitelistManager(_m);
+    // ──────── Admin: Fee Configuration ────────
+
+    function adminSetFeeRecipient(address payable _feeRecipient) external onlyOwner {
+        require(_feeRecipient != address(0), "Invalid feeRecipient");
+        feeRecipient = _feeRecipient;
+        emit AdminSetFeeRecipient(_feeRecipient);
     }
 
-    function adminRemoveWhitelistManager(address _m) external onlyOwner {
-        whitelistManager[_m] = false;
-        emit AdminRemoveWhitelistManager(_m);
+    function adminSetCreateCommunityFee(uint256 _fee) external onlyOwner {
+        createCommunityFee = _fee;
+        emit AdminSetCreateCommunityFee(_fee);
     }
+
+    function adminSetCommunitySettingsFee(uint256 _fee) external onlyOwner {
+        communitySettingsFee = _fee;
+        emit AdminSetCommunitySettingsFee(_fee);
+    }
+
+    function adminSetPoolOperationFee(uint256 _fee) external onlyOwner {
+        poolOperationFee = _fee;
+        emit AdminSetPoolOperationFee(_fee);
+    }
+
+    // ──────── Admin: Contract Whitelist ────────
 
     function adminAddContract(address _c) external onlyOwner {
         whitelistContracts[_c] = true;
@@ -76,6 +72,8 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit AdminRemoveContract(_c);
     }
 
+    // ──────── Admin: Fee-Free List ────────
+
     function adminAddFeeFreeAddress(address _f) external onlyOwner {
         feeFreeList[_f] = true;
         emit AdminAddFeeFreeAddress(_f);
@@ -86,71 +84,30 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         emit AdminRemoveFeeFreeAddress(_f);
     }
 
-    function adminSetTreasury(address _treasury) external onlyOwner {
-        require(_treasury != address(0), "Invalid treasury");
-        treasury = _treasury;
-        emit AdminSetTreasury(_treasury);
+    // ──────── Admin: Withdraw stuck native ────────
+
+    function adminWithdrawNative(address payable recipient, uint256 amount) external onlyOwner {
+        require(recipient != address(0), "Invalid recipient");
+        (bool ok, ) = recipient.call{value: amount}("");
+        require(ok, "Transfer failed");
     }
 
-    function adminSetNut(address _nut) external onlyOwner {
-        require(_nut != address(0), "Invalide address");
-        nut = _nut;
-        emit AdminSetNut(_nut);
+    // ──────── View Functions ────────
+
+    function getFeeRecipient() external view override returns (address payable) {
+        return feeRecipient;
     }
 
-    function adminSetGauge(address _gauge) external onlyOwner {
-        // gauge can be set to address(0), that means shut down this function
-        gauge = _gauge;
-        emit AdminSetGauge(gauge);
+    function getCreateCommunityFee() external view override returns (uint256) {
+        return createCommunityFee;
     }
 
-    function adminAppropriate(address recipient, uint256 amount) external onlyOwner {
-        releaseERC20(nut, recipient, amount);
-        emit NewAppropriation(recipient, amount);
+    function getCommunitySettingsFee() external view override returns (uint256) {
+        return communitySettingsFee;
     }
 
-    // fee type: COMMUNITY USER
-    function adminSetFee(string memory feeType, uint256 amount) external onlyOwner {
-        fees[keccak256(abi.encodePacked(feeType))] = amount;
-        emit FeeSet(feeType, amount);
-    }
-
-    function setFeePayer(address payer) override external {
-        require(whitelistManager[msg.sender], 'Permission denied: caller is not in whitelist');
-        whitelist[payer] = true;
-    }
-
-    function getNut() external view override returns (address) {
-        return nut;
-    }
-
-    function getTreasury() external view override returns (address) {
-        return treasury;
-    }
-
-    function getGauge() external view override returns (address) {
-        return gauge;
-    }
-
-    function getFee(string memory feeType) external view override returns (uint256) {
-        return fees[keccak256(abi.encodePacked(feeType))];
-    }
-
-    function updateLedger(string memory feeType, address community, address pool, address who) external override {
-        if(feeFreeList[who]) return;
-        require(whitelistManager[msg.sender] || whitelist[msg.sender], 'Permission denied: caller is not in whitelist');
-        bytes32 ft = keccak256(abi.encodePacked(feeType));
-        uint256 amount = fees[ft];
-        if (amount == 0) return;
-        revenues[ft] = revenues[ft].add(amount);
-        if (pool != address(0)) {
-            feeFromPool[pool] = feeFromPool[pool].add(amount);
-        }
-        emit NewRevenue(feeType, community, pool, who, amount);
-    }
-
-    function getRevenue(string memory feeType) external view override returns (uint256) {
-        return revenues[keccak256(abi.encodePacked(feeType))];
+    function getPoolOperationFee() external view override returns (uint256) {
+        return poolOperationFee;
     }
 
     function verifyContract(address c) external view override returns (bool) {
@@ -161,7 +118,6 @@ contract Committee is ICommittee, ERC20Helper, Ownable {
         return feeFreeList[freeAddress];
     }
 
-    function getPoolFees(address pool) external view override returns (uint256) {
-        return feeFromPool[pool];
-    }
+    // Allow contract to receive native BNB
+    receive() external payable {}
 }

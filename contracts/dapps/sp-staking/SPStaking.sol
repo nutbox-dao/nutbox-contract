@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.0;
-pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../../interfaces/ICommunity.sol";
+import "../../interfaces/ICommittee.sol";
 import "../../interfaces/IPool.sol";
 import "./SPStakingFactory.sol";
 
@@ -17,34 +17,22 @@ contract SPStaking is IPool {
     using SafeMath for uint256;
 
     struct StakingInfo {
-        // First time when user staking, we need set options like userDebt to zero
         bool hasDeposited;
-        // User staked amount
         uint256 amount;
-        // User's foreign account identity
         bytes32 bindAccount;
     }
 
     // fetch address use bound account
     mapping(bytes32 => address) public accountBindMap;
 
-    // stakingInfo used to save every user's staking information,
-    // including how many they deposited and its external chain account
-    // ( we support crosschain asset staking). With every staking event
-    // happened including deposit and withdraw asset this field should be updated.
     mapping(address => StakingInfo) stakingInfo;
 
     address immutable factory;
     string public name;
-
-    // community that pool belongs to
     address immutable community;
-    // delegatee account
     bytes32 public delegatee;
-    // chain id: steem : 1  hive: 2
     uint8 immutable chainId;
 
-    // Total staked amount
     uint256 public totalStakedAmount;
 
     event UpdateStaking(
@@ -77,11 +65,9 @@ contract SPStaking is IPool {
         uint256 prevAmount = stakingInfo[depositor].amount;
         if (prevAmount == amount) return;
         if (prevAmount < amount) {
-            // deposit
             require(ICommunity(community).poolActived(address(this)), 'Can not deposit to a closed pool.');
         }
 
-        // Add to staking list if account hasn't deposited before
         if (!stakingInfo[depositor].hasDeposited) {
             stakingInfo[depositor].hasDeposited = true;
             stakingInfo[depositor].amount = 0;
@@ -89,17 +75,13 @@ contract SPStaking is IPool {
             accountBindMap[_bindAccount] = depositor;
         } else {
             require(
-                keccak256(
-                    abi.encodePacked(
-                        stakingInfo[depositor].bindAccount
-                    )
-                ) == keccak256(abi.encodePacked(_bindAccount)),
+                keccak256(abi.encodePacked(stakingInfo[depositor].bindAccount)) == keccak256(abi.encodePacked(_bindAccount)),
                 "Bound steem account dismatch"
             );
         }
 
-        // trigger community update all pool staking info, send factory as fee payer to ignore fee payment.
-        ICommunity(community).updatePools("USER", factory);
+        // trigger community update — bridge is fee-free (Tier 3 exempt)
+        ICommunity(community).updatePools();
 
         if (stakingInfo[depositor].amount > 0) {
             uint256 pending = stakingInfo[depositor]
@@ -125,35 +107,9 @@ contract SPStaking is IPool {
         emit UpdateStaking(community, depositor, prevAmount, amount);
     }
 
-    function getFactory() external view override returns (address) {
-        return factory;
-    }
-
-    function getCommunity() external view override returns (address) {
-        return community;
-    }
-
-    function getUserStakedAmount(address user)
-        external
-        view
-        override returns (uint256)
-    {
-        return stakingInfo[user].amount;
-    }
-
-    function getTotalStakedAmount()
-        external
-        view
-        override returns (uint256)
-    {
-        return totalStakedAmount;
-    }
-
-    function getUserDepositInfo(address user)
-        external
-        view
-        returns (StakingInfo memory)
-    {
-        return stakingInfo[user];
-    }
+    function getFactory() external view override returns (address) { return factory; }
+    function getCommunity() external view override returns (address) { return community; }
+    function getUserStakedAmount(address user) external view override returns (uint256) { return stakingInfo[user].amount; }
+    function getTotalStakedAmount() external view override returns (uint256) { return totalStakedAmount; }
+    function getUserDepositInfo(address user) external view returns (StakingInfo memory) { return stakingInfo[user]; }
 }

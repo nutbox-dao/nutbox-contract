@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.0;
-pragma experimental ABIEncoderV2;
 
-import "solidity-bytes-utils/contracts/BytesLib.sol";
 import "../../interfaces/IPoolFactory.sol";
-import "./CurationGauge.sol";
+import "./ERC20Locking.sol";
 import "../../CommunityFactory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @dev Factory contract of curation pool factory.
+ * @dev Factory contract of Nutbox ERC20 locking pool.
+ *
+ * meta layout: [address stakeToken (20 bytes)][uint256 lockDuration (32 bytes)]
+ * Total meta length: 52 bytes
  */
-contract CurationGaugeFactory is IPoolFactory, Ownable {
-    using BytesLib for bytes;
+contract ERC20LockingFactory is IPoolFactory, Ownable {
     address public immutable communityFactory;
 
     constructor(address _communityFactory) {
@@ -21,23 +21,30 @@ contract CurationGaugeFactory is IPoolFactory, Ownable {
         communityFactory = _communityFactory;
     }
 
-    event CurationGaugeCreated(
+    event ERC20LockingCreated(
         address indexed pool,
         address indexed community,
         string name,
-        address indexed recipient
+        address erc20Token,
+        uint256 lockDuration
     );
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
         require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
-        bytes memory recipientBytes = meta.slice(0, 20);
-        bytes20 recipient;
-        assembly {
-            recipient := mload(add(recipientBytes, 0x20))
+        require(meta.length >= 52, "Invalid meta length");
+
+        address stakeToken;
+        uint256 lockDuration;
+        assembly ("memory-safe") {
+            stakeToken := shr(96, calldataload(meta.offset))
+            lockDuration := calldataload(add(meta.offset, 20))
         }
-        CurationGauge pool = new CurationGauge(community, name, address(recipient));
-        emit CurationGaugeCreated(address(pool), community, name, address(recipient));
+
+        require(lockDuration > 0, "Lock duration must be > 0");
+
+        ERC20Locking pool = new ERC20Locking(community, name, stakeToken, lockDuration);
+        emit ERC20LockingCreated(address(pool), community, name, stakeToken, lockDuration);
         return address(pool);
     }
 }

@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.0;
-pragma experimental ABIEncoderV2;
 
 import "../../interfaces/IPoolFactory.sol";
 import "./SPStaking.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "solidity-bytes-utils/contracts/BytesLib.sol";
 import "../../CommunityFactory.sol";
 
 /**
- * @dev Factory contract of Nutbox ERC20 staking pool.
- *x
+ * @dev Factory contract of Nutbox SP/HP staking pool.
+ *
+ * meta layout: [uint8 chainId (1 byte)][bytes32 delegatee (32 bytes)]
+ * Total meta length: 33 bytes
  */
 contract SPStakingFactory is IPoolFactory, Ownable {
-    using BytesLib for bytes;
     address public bridge;
     address public immutable communityFactory;
 
@@ -36,8 +35,17 @@ contract SPStakingFactory is IPoolFactory, Ownable {
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
         require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
-        uint8 chainId = meta.toUint8(0);
-        bytes32 delegatee = meta.toBytes32(1);
+        require(meta.length >= 33, "Invalid meta length");
+
+        uint8 chainId;
+        bytes32 delegatee;
+        assembly ("memory-safe") {
+            // first byte is chainId
+            chainId := shr(248, calldataload(meta.offset))
+            // next 32 bytes is delegatee
+            delegatee := calldataload(add(meta.offset, 1))
+        }
+
         SPStaking pool = new SPStaking(community, name, chainId, delegatee);
         emit SPStakingCreated(address(pool), community, name, chainId, delegatee);
         return address(pool);
