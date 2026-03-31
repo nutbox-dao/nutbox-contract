@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "../../interfaces/IPoolFactory.sol";
 import "./ERC20Locking.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../CommunityFactory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -15,10 +16,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract ERC20LockingFactory is IPoolFactory, Ownable {
     address public immutable communityFactory;
+    address public immutable poolTemplate;
 
-    constructor(address _communityFactory) {
+    constructor(address _communityFactory, address _poolTemplate) {
         require(_communityFactory != address(0), "Invalid address");
+        require(_poolTemplate != address(0), "Invalid template");
         communityFactory = _communityFactory;
+        poolTemplate = _poolTemplate;
     }
 
     event ERC20LockingCreated(
@@ -31,7 +35,7 @@ contract ERC20LockingFactory is IPoolFactory, Ownable {
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
-        require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
+        require(CommunityFactory(payable(communityFactory)).createdCommunity(community), "Invalid community");
         require(meta.length >= 52, "Invalid meta length");
 
         address stakeToken;
@@ -43,7 +47,9 @@ contract ERC20LockingFactory is IPoolFactory, Ownable {
 
         require(lockDuration > 0, "Lock duration must be > 0");
 
-        ERC20Locking pool = new ERC20Locking(community, name, stakeToken, lockDuration);
+        address clone = Clones.clone(poolTemplate);
+        ERC20Locking pool = ERC20Locking(payable(clone));
+        pool.initialize(community, name, stakeToken, lockDuration);
         emit ERC20LockingCreated(address(pool), community, name, stakeToken, lockDuration);
         return address(pool);
     }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/ICommittee.sol";
 import "../../interfaces/IPool.sol";
@@ -13,8 +13,8 @@ import "./SPStakingFactory.sol";
  * Delegation only can be updated through update().
  *
  */
-contract SPStaking is IPool {
-    using SafeMath for uint256;
+contract SPStaking is IPool, Initializable {
+
 
     struct StakingInfo {
         bool hasDeposited;
@@ -27,11 +27,11 @@ contract SPStaking is IPool {
 
     mapping(address => StakingInfo) stakingInfo;
 
-    address immutable factory;
+    address public factory;
     string public name;
-    address immutable community;
+    address public community;
     bytes32 public delegatee;
-    uint8 immutable chainId;
+    uint8 public chainId;
 
     uint256 public totalStakedAmount;
 
@@ -42,7 +42,7 @@ contract SPStaking is IPool {
         uint256 newAmount
     );
 
-    constructor(address _community, string memory _name, uint8 _chainId, bytes32 _delegatee) {
+    function initialize(address _community, string memory _name, uint8 _chainId, bytes32 _delegatee) external initializer {
         factory = msg.sender;
         community = _community;
         name = _name;
@@ -85,24 +85,20 @@ contract SPStaking is IPool {
 
         if (stakingInfo[depositor].amount > 0) {
             uint256 pending = stakingInfo[depositor]
-                .amount
-                .mul(ICommunity(community).getShareAcc(address(this)))
-                .div(1e12)
-                .sub(ICommunity(community).getUserDebt(address(this), depositor));
+                .amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+                - ICommunity(community).getUserDebt(address(this), depositor);
             if (pending > 0) {
                 ICommunity(community).appendUserReward(depositor, pending);
             }
         }
 
-        totalStakedAmount = totalStakedAmount.add(amount).sub(prevAmount);
+        totalStakedAmount = totalStakedAmount + amount - prevAmount;
         stakingInfo[depositor].amount = amount;
 
         ICommunity(community).setUserDebt(
             depositor,
-            stakingInfo[depositor]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12));
+            stakingInfo[depositor].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+        );
         
         emit UpdateStaking(community, depositor, prevAmount, amount);
     }

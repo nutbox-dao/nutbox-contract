@@ -4,14 +4,21 @@
   "sourceName": "contracts/interfaces/ICommittee.sol",
   "abi": [
     {
-      "inputs": [
+      "inputs": [],
+      "name": "getCommunitySettingsFee",
+      "outputs": [
         {
-          "internalType": "string",
-          "name": "feeType",
-          "type": "string"
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
-      "name": "getFee",
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCreateCommunityFee",
       "outputs": [
         {
           "internalType": "uint256",
@@ -43,10 +50,10 @@
     },
     {
       "inputs": [],
-      "name": "getGauge",
+      "name": "getFeeRecipient",
       "outputs": [
         {
-          "internalType": "address",
+          "internalType": "address payable",
           "name": "",
           "type": "address"
         }
@@ -56,26 +63,7 @@
     },
     {
       "inputs": [],
-      "name": "getNut",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "pool",
-          "type": "address"
-        }
-      ],
-      "name": "getPoolFees",
+      "name": "getPoolOperationFee",
       "outputs": [
         {
           "internalType": "uint256",
@@ -84,79 +72,6 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "feeType",
-          "type": "string"
-        }
-      ],
-      "name": "getRevenue",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getTreasury",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "payer",
-          "type": "address"
-        }
-      ],
-      "name": "setFeePayer",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "feeType",
-          "type": "string"
-        },
-        {
-          "internalType": "address",
-          "name": "community",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "pool",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "who",
-          "type": "address"
-        }
-      ],
-      "name": "updateLedger",
-      "outputs": [],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

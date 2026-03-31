@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "../../interfaces/IPoolFactory.sol";
 import "./ERC20Staking.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../CommunityFactory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -12,10 +13,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract ERC20StakingFactory is IPoolFactory, Ownable {
     address public immutable communityFactory;
+    address public immutable poolTemplate;
 
-    constructor(address _communityFactory) {
+    constructor(address _communityFactory, address _poolTemplate) {
         require(_communityFactory != address(0), "Invalid address");
+        require(_poolTemplate != address(0), "Invalid template");
         communityFactory = _communityFactory;
+        poolTemplate = _poolTemplate;
     }
 
     event ERC20StakingCreated(
@@ -27,7 +31,7 @@ contract ERC20StakingFactory is IPoolFactory, Ownable {
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
-        require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
+        require(CommunityFactory(payable(communityFactory)).createdCommunity(community), "Invalid community");
         require(meta.length >= 20, "Invalid meta length");
 
         address stakeToken;
@@ -35,7 +39,9 @@ contract ERC20StakingFactory is IPoolFactory, Ownable {
             stakeToken := shr(96, calldataload(meta.offset))
         }
 
-        ERC20Staking pool = new ERC20Staking(community, name, stakeToken);
+        address clone = Clones.clone(poolTemplate);
+        ERC20Staking pool = ERC20Staking(payable(clone));
+        pool.initialize(community, name, stakeToken);
         emit ERC20StakingCreated(address(pool), community, name, stakeToken);
         return address(pool);
     }

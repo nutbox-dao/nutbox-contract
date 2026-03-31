@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '../interfaces/ICalculator.sol';
 
 /**
@@ -29,7 +28,7 @@ contract LinearCalculator is ICalculator {
         uint256 stopHeight;
     }
 
-    using SafeMath for uint256;
+
 
     address immutable communityFactory;
     mapping (address => Distribution[]) public distributionErasMap;
@@ -72,10 +71,10 @@ contract LinearCalculator is ICalculator {
             }
 
             if (to <= eras[i].stopHeight) {
-                rewards = rewards.add(to.sub(rewardedBlock).mul(eras[i].amount));
+                rewards = rewards + (to - rewardedBlock) * eras[i].amount;
                 return rewards;
             } else {
-                rewards = rewards.add(eras[i].stopHeight.sub(rewardedBlock).mul(eras[i].amount));
+                rewards = rewards + (eras[i].stopHeight - rewardedBlock) * eras[i].amount;
                 rewardedBlock = eras[i].stopHeight;
             }
         }
@@ -118,11 +117,11 @@ contract LinearCalculator is ICalculator {
         uint256 offset = 1;
         for(uint8 i = 0; i < erasLength; i++) {
             uint256 start;
-            uint256 stop;
+            uint256 stopHeight;
             uint256 amount;
             assembly ("memory-safe") {
                 start := calldataload(add(policy.offset, offset))
-                stop := calldataload(add(policy.offset, add(offset, 32)))
+                stopHeight := calldataload(add(policy.offset, add(offset, 32)))
                 amount := calldataload(add(policy.offset, add(offset, 64)))
             }
             offset += 96;
@@ -134,11 +133,11 @@ contract LinearCalculator is ICalculator {
                 require(start > block.number, 'Invalid start height of distribution');
             }
             // check 3)
-            require(start < stop, 'Invalid stop height of distribution');
+            require(start < stopHeight, 'Invalid stop height of distribution');
             // set distribution policy
             distributionErasMap[community].push(Distribution ({
                 startHeight: start,
-                stopHeight: stop,
+                stopHeight: stopHeight,
                 amount: amount
             }));
             distributionCountMap[community] = distributionCountMap[community] + 1;

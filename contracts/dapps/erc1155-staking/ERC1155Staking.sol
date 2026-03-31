@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
@@ -14,28 +14,28 @@ import "../../interfaces/IPool.sol";
  * @dev Template contract of Nutbox ERC1155 staking pool.
  * One pool supports only one token id of an ERC1155 token
  */
-contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
-    using SafeMath for uint256;
+contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializable {
+
 
     struct StakingInfo {
         bool hasDeposited;
         uint256 amount;
     }
-    address immutable factory;
+    address public factory;
 
     mapping(address => StakingInfo) stakingInfo;
 
     string public name;
-    address immutable public stakeToken;
-    uint256 immutable public tokenId;
-    address immutable community;
+    address public stakeToken;
+    uint256 public tokenId;
+    address public community;
 
     uint256 public totalStakedAmount;
 
     event Deposited(address indexed community, address indexed who, uint256 amount);
     event Withdrawn(address indexed community, address indexed who, uint256 amount);
 
-    constructor(address _community, string memory _name, address _stakeToken, uint256 _tokenId) {
+    function initialize(address _community, string memory _name, address _stakeToken, uint256 _tokenId) external initializer {
         factory = msg.sender;
         community = _community;
         name = _name;
@@ -73,10 +73,8 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
-                .amount
-                .mul(ICommunity(community).getShareAcc(address(this)))
-                .div(1e12)
-                .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
+                .amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+                - ICommunity(community).getUserDebt(address(this), msg.sender);
             if (pending > 0) {
                 ICommunity(community).appendUserReward(msg.sender, pending);
             }
@@ -84,14 +82,13 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
 
         IERC1155(stakeToken).safeTransferFrom(msg.sender, address(this), tokenId, amount, "0x");
 
-        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount.add(amount);
-        totalStakedAmount = totalStakedAmount.add(amount);
+        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount + amount;
+        totalStakedAmount = totalStakedAmount + amount;
 
         ICommunity(community).setUserDebt(
             msg.sender,
-            stakingInfo[msg.sender].amount
-                .mul(ICommunity(community).getShareAcc(address(this)))
-                .div(1e12));
+            stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+        );
 
         emit Deposited(community, msg.sender, amount);
     }
@@ -105,10 +102,8 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
         ICommunity(community).updatePools();
 
         uint256 pending = stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12)
-            .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
+            .amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+            - ICommunity(community).getUserDebt(address(this), msg.sender);
         if (pending > 0) {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
@@ -120,14 +115,13 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver {
 
         IERC1155(stakeToken).safeTransferFrom(address(this), address(msg.sender), tokenId, withdrawAmount, "0x00");
 
-        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount.sub(withdrawAmount);
-        totalStakedAmount = totalStakedAmount.sub(withdrawAmount);
+        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount - withdrawAmount;
+        totalStakedAmount = totalStakedAmount - withdrawAmount;
 
         ICommunity(community).setUserDebt(
             msg.sender,
-            stakingInfo[msg.sender].amount
-                .mul(ICommunity(community).getShareAcc(address(this)))
-                .div(1e12));
+            stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+        );
 
         emit Withdrawn(community, msg.sender, withdrawAmount);
     }

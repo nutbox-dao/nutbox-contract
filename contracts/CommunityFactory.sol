@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import './Community.sol';
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import './interfaces/ICalculator.sol';
 import './interfaces/ICommittee.sol';
 import "./interfaces/ICommunityTokenFactory.sol";
@@ -16,13 +17,16 @@ import "./community-token/MintableERC20.sol";
 contract CommunityFactory {
 
     address immutable committee;
+    address immutable communityTemplate;
     mapping (address => bool) public createdCommunity;
 
     event CommunityCreated(address indexed creator, address indexed community, address communityToken);
 
-    constructor(address _committee) {
+    constructor(address _committee, address _communityTemplate) {
         require(_committee != address(0), "Invalid committee");
+        require(_communityTemplate != address(0), "Invalid community template");
         committee = _committee;
+        communityTemplate = _communityTemplate;
     }
 
     // If communityToken == address(0), we would create a mintable token for community by token factory,
@@ -59,7 +63,9 @@ contract CommunityFactory {
             communityToken = ICommunityTokenFactory(communityTokenFactory).createCommunityToken(tokenMeta);
         }
 
-        Community community = new Community(msg.sender, committee, communityToken, rewardCalculator, isMintable);
+        address clone = Clones.clone(communityTemplate);
+        Community community = Community(payable(clone));
+        community.initialize(msg.sender, committee, communityToken, rewardCalculator, isMintable);
        
         if (needGrantRole){
             // Token deployed by walnut need to grant mint role from community factory to specify community.

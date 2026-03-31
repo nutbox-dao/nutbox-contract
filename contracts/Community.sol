@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "./interfaces/ICalculator.sol";
 import "./interfaces/ICommunity.sol";
 import "./interfaces/IPool.sol";
@@ -17,14 +17,10 @@ import "./ERC20Helper.sol";
  * Community Contract always returns an entity of this contract.
  * Support add serial staking pool into it.
  */
-contract Community is ICommunity, ERC20Helper, Ownable {
-
-    using SafeMath for uint256;
-    using SafeMath for uint16;
-
+contract Community is ICommunity, ERC20Helper, Initializable, Ownable {
     uint16 constant CONSTANTS_10000 = 10000;
 
-    address immutable public committee;
+    address public committee;
     // DAO fund ratio
     uint16 public feeRatio;
     // DAO fund address
@@ -48,9 +44,9 @@ contract Community is ICommunity, ERC20Helper, Ownable {
     // all created pools include closed pools
     address[] public createdPools;
     uint256 private lastRewardBlock;
-    address immutable communityToken;
-    bool immutable public isMintableCommunityToken;
-    address immutable public rewardCalculator;
+    address public communityToken;
+    bool public isMintableCommunityToken;
+    address public rewardCalculator;
 
     // events triggered by community admin
     event AdminSetFeeRatio(uint16 ratio);
@@ -68,8 +64,8 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         _;
     }
 
-    constructor(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) {
-        transferOwnership(_admin);
+    function initialize(address _admin, address _committee, address _communityToken, address _rewardCalculator, bool _isMintableCommunityToken) external initializer {
+        _transferOwnership(_admin);
         devFund = _admin;
         committee = _committee;
         communityToken = _communityToken;
@@ -122,7 +118,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             harvestAmount = balance < retainedRevenue ? balance : retainedRevenue;
         }
         _unlockOrMintAsset(devFund, harvestAmount);
-        retainedRevenue = retainedRevenue.sub(harvestAmount);
+        retainedRevenue = retainedRevenue - harvestAmount;
 
         emit RevenueWithdrawn(devFund, harvestAmount);
     }
@@ -211,14 +207,14 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             require(whitelists[poolAddress], "IP"); // Illegal pool
             uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(msg.sender);
 
-            uint256 pending = stakedAmount.mul(poolAcc[poolAddress]).div(1e12).sub(userDebts[poolAddress][msg.sender]);
+            uint256 pending = stakedAmount * poolAcc[poolAddress] / 1e12 - userDebts[poolAddress][msg.sender];
 
             if(pending > 0) {
-                userRewards[poolAddress][msg.sender] = userRewards[poolAddress][msg.sender].add(pending);
+                userRewards[poolAddress][msg.sender] = userRewards[poolAddress][msg.sender] + pending;
             }
             // add all pools available rewards
-            totalAvailableRewards = totalAvailableRewards.add(userRewards[poolAddress][msg.sender]);
-            userDebts[poolAddress][msg.sender] = stakedAmount.mul(poolAcc[poolAddress]).div(1e12);
+            totalAvailableRewards = totalAvailableRewards + userRewards[poolAddress][msg.sender];
+            userDebts[poolAddress][msg.sender] = stakedAmount * poolAcc[poolAddress] / 1e12;
             userRewards[poolAddress][msg.sender] = 0;
         }
 
@@ -231,21 +227,21 @@ contract Community is ICommunity, ERC20Helper, Ownable {
         // game has not started
         if (lastRewardBlock == 0) return 0;
 
-        uint256 rewardsReadyToMintedToPools = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, block.number).mul(10000 - feeRatio).div(10000);
+        uint256 rewardsReadyToMintedToPools = ICalculator(rewardCalculator).calculateReward(address(this), lastRewardBlock + 1, block.number) * (10000 - feeRatio) / 10000;
         // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
         // the right amount that delegator can award
         uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(user);
         if (stakedAmount == 0) return userRewards[poolAddress][user];
         uint256 totalStakedAmount = IPool(poolAddress).getTotalStakedAmount();
-        uint256 _shareAcc = poolAcc[poolAddress].add(rewardsReadyToMintedToPools.mul(poolRatios[poolAddress]).mul(1e8).div(totalStakedAmount));
-        uint256 pending = stakedAmount.mul(_shareAcc).div(1e12).sub(userDebts[poolAddress][user]);
-        return userRewards[poolAddress][user].add(pending);
+        uint256 _shareAcc = poolAcc[poolAddress] + (rewardsReadyToMintedToPools * poolRatios[poolAddress] * 1e8 / totalStakedAmount);
+        uint256 pending = stakedAmount * _shareAcc / 1e12 - userDebts[poolAddress][user];
+        return userRewards[poolAddress][user] + pending;
     }
 
     function getTotalPendingRewards(address user) external view returns(uint256) {
         uint256 rewards = 0;
         for (uint16 i = 0; i < createdPools.length; i++) {
-            rewards = rewards.add(getPoolPendingRewards(createdPools[i], user));
+            rewards = rewards + getPoolPendingRewards(createdPools[i], user);
         }
         return rewards;
     }
@@ -275,7 +271,7 @@ contract Community is ICommunity, ERC20Helper, Ownable {
 
     // Pool callable only
     function appendUserReward(address user, uint256 amount) external override onlyPool {
-        userRewards[msg.sender][user] = userRewards[msg.sender][user].add(amount);
+        userRewards[msg.sender][user] = userRewards[msg.sender][user] + amount;
     }
 
     // Pool callable only
@@ -311,11 +307,11 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             if (feeRatio > 0) {
                 // only send rewards belong to community, reward belong to user would send when
                 // they withdraw reward manually
-                uint256 feeAmount = rewardsReadyToMinted.mul(feeRatio).div(CONSTANTS_10000);
-                retainedRevenue = retainedRevenue.add(feeAmount);
+                uint256 feeAmount = rewardsReadyToMinted * feeRatio / CONSTANTS_10000;
+                retainedRevenue = retainedRevenue + feeAmount;
 
                 // only rewards belong to pools can used to compute shareAcc
-                rewardsReadyToMinted = rewardsReadyToMinted.mul(CONSTANTS_10000.sub(feeRatio)).div(CONSTANTS_10000);
+                rewardsReadyToMinted = rewardsReadyToMinted * (CONSTANTS_10000 - feeRatio) / CONSTANTS_10000;
                 emit PoolUpdated(msg.sender, feeAmount);
             }
         }
@@ -324,8 +320,8 @@ contract Community is ICommunity, ERC20Helper, Ownable {
             address poolAddress = activedPools[i];
             uint256 totalStakedAmount = IPool(poolAddress).getTotalStakedAmount();
             if(totalStakedAmount == 0 || poolRatios[poolAddress] == 0) continue;
-            uint256 poolRewards = rewardsReadyToMinted.mul(1e12).mul(poolRatios[poolAddress]).div(CONSTANTS_10000);
-            poolAcc[poolAddress] = poolAcc[poolAddress].add(poolRewards.div(totalStakedAmount));
+            uint256 poolRewards = rewardsReadyToMinted * 1e12 * poolRatios[poolAddress] / CONSTANTS_10000;
+            poolAcc[poolAddress] = poolAcc[poolAddress] + (poolRewards / totalStakedAmount);
         }
 
         lastRewardBlock = currentBlock;

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "../../interfaces/IPoolFactory.sol";
 import "./ERC1155Staking.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../CommunityFactory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -15,10 +16,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract ERC1155StakingFactory is IPoolFactory, Ownable {
     address public immutable communityFactory;
+    address public immutable poolTemplate;
 
-    constructor(address _communityFactory) {
+    constructor(address _communityFactory, address _poolTemplate) {
         require(_communityFactory != address(0), "Invalid address");
+        require(_poolTemplate != address(0), "Invalid template");
         communityFactory = _communityFactory;
+        poolTemplate = _poolTemplate;
     }
 
     event ERC1155StakingCreated(
@@ -31,7 +35,7 @@ contract ERC1155StakingFactory is IPoolFactory, Ownable {
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
-        require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
+        require(CommunityFactory(payable(communityFactory)).createdCommunity(community), "Invalid community");
         require(meta.length >= 52, "Invalid meta length");
 
         address stakeToken;
@@ -41,7 +45,9 @@ contract ERC1155StakingFactory is IPoolFactory, Ownable {
             id := calldataload(add(meta.offset, 20))
         }
 
-        ERC1155Staking pool = new ERC1155Staking(community, name, stakeToken, id);
+        address clone = Clones.clone(poolTemplate);
+        ERC1155Staking pool = ERC1155Staking(payable(clone));
+        pool.initialize(community, name, stakeToken, id);
         emit ERC1155StakingCreated(address(pool), community, name, stakeToken, id);
         return address(pool);
     }

@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../../interfaces/IPool.sol";
 import "../../interfaces/ICommunity.sol";
@@ -16,10 +16,10 @@ import "../../ERC20Helper.sol";
  * time-locked redeem queue. User must call redeem() after the lock period
  * to actually receive their tokens back (linearly vesting).
  */
-contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
-    using SafeMath for uint256;
+contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
 
-    uint256 immutable public lockDuration; // in seconds
+
+    uint256 public lockDuration; // in seconds
 
     struct RedeemRequest {
         uint256 erc20Amount;
@@ -41,9 +41,9 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
     // total staked (actively staked, not counting tokens in redeem queue)
     uint256 public totalStakedAmount;
     string public name;
-    address immutable factory;
-    address immutable public stakeToken;
-    address immutable community;
+    address public factory;
+    address public stakeToken;
+    address public community;
 
     mapping (address => StakingInfo) private stakingInfo;
     mapping (address => RequestQueue) private requests;
@@ -52,7 +52,7 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
     event Unlocked(address indexed who, uint256 amount);
     event Redeemed(address indexed who, uint256 amount);
 
-    constructor(address _community, string memory _name, address _stakeToken, uint256 _lockDuration) {
+    function initialize(address _community, string memory _name, address _stakeToken, uint256 _lockDuration) external initializer {
         factory = msg.sender;
         community = _community;
         name = _name;
@@ -90,10 +90,8 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
-                .amount
-                .mul(ICommunity(community).getShareAcc(address(this)))
-                .div(1e12)
-                .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
+                .amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+                - ICommunity(community).getUserDebt(address(this), msg.sender);
             if (pending > 0) {
                 ICommunity(community).appendUserReward(msg.sender, pending);
             }
@@ -101,14 +99,13 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
 
         lockERC20(stakeToken, msg.sender, address(this), amount);
 
-        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount.add(amount);
-        totalStakedAmount = totalStakedAmount.add(amount);
+        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount + amount;
+        totalStakedAmount = totalStakedAmount + amount;
 
         ICommunity(community).setUserDebt(
             msg.sender,
-            stakingInfo[msg.sender].amount
-                .mul(ICommunity(community).getShareAcc(address(this)))
-                .div(1e12));
+            stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+        );
 
         emit Locked(msg.sender, amount);
     }
@@ -122,10 +119,8 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
         ICommunity(community).updatePools();
 
         uint256 pending = stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12)
-            .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
+            .amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+            - ICommunity(community).getUserDebt(address(this), msg.sender);
         if (pending > 0) {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
@@ -136,21 +131,20 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
         else withdrawAmount = amount;
 
         // Tokens are NOT released immediately — they go into the redeem queue
-        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount.sub(withdrawAmount);
-        totalStakedAmount = totalStakedAmount.sub(withdrawAmount);
+        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount - withdrawAmount;
+        totalStakedAmount = totalStakedAmount - withdrawAmount;
 
         ICommunity(community).setUserDebt(
             msg.sender,
-            stakingInfo[msg.sender].amount
-                .mul(ICommunity(community).getShareAcc(address(this)))
-                .div(1e12));
+            stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+        );
 
         // Add to redeem request queue
         requests[msg.sender].queue.push(RedeemRequest({
             erc20Amount: withdrawAmount,
             claimed: 0,
             startTime: block.timestamp,
-            endTime: block.timestamp.add(lockDuration)
+            endTime: block.timestamp + lockDuration
         }));
 
         emit Unlocked(msg.sender, withdrawAmount);
@@ -164,13 +158,13 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
         RequestQueue storage rq = requests[msg.sender];
         for (uint256 idx = rq.index; idx < rq.queue.length; idx++) {
             uint256 claimable = _claimableAmount(rq.queue[idx]);
-            rq.queue[idx].claimed = rq.queue[idx].claimed.add(claimable);
+            rq.queue[idx].claimed = rq.queue[idx].claimed + claimable;
             // Advance index past fully claimed requests
             if (rq.queue[idx].claimed == rq.queue[idx].erc20Amount) {
                 rq.index = idx + 1;
             }
             if (claimable > 0) {
-                availableRedeem = availableRedeem.add(claimable);
+                availableRedeem = availableRedeem + claimable;
             }
         }
 
@@ -198,7 +192,7 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
     function claimableAmount(address _who) external view returns (uint256 amount) {
         RequestQueue storage rq = requests[_who];
         for (uint256 idx = rq.index; idx < rq.queue.length; idx++) {
-            amount = amount.add(_claimableAmount(rq.queue[idx]));
+            amount = amount + _claimableAmount(rq.queue[idx]);
         }
     }
 
@@ -226,12 +220,12 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard {
 
     function _claimableAmount(RedeemRequest memory _req) private view returns (uint256 amount) {
         if (block.timestamp >= _req.endTime) {
-            amount = _req.erc20Amount.sub(_req.claimed);
+            amount = _req.erc20Amount - _req.claimed;
         } else {
             amount = _req.erc20Amount
-                    .mul(block.timestamp.sub(_req.startTime))
-                    .div(_req.endTime.sub(_req.startTime))
-                    .sub(_req.claimed);
+                    * (block.timestamp - _req.startTime)
+                    / (_req.endTime - _req.startTime)
+                    - _req.claimed;
         }
     }
 

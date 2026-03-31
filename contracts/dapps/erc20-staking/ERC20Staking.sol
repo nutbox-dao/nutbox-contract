@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../../interfaces/ICommunity.sol";
 import "../../interfaces/ICommittee.sol";
@@ -16,8 +16,8 @@ import "../../ERC20Helper.sol";
  * The only place that user can deposit and withdraw their staked asset.
  * Also only user themself can withdraw their staked asset
  */
-contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
-    using SafeMath for uint256;
+contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
+
 
     struct StakingInfo {
         // First time when user staking, we need set options like userDebt to zero
@@ -25,7 +25,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         // User staked amount
         uint256 amount;
     }
-    address immutable factory;
+    address public factory;
 
     // stakingInfo used to save every user's staking information,
     // including how many they deposited and its external chain account
@@ -37,9 +37,9 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
 
     // stakeToken actually is a asset contract entity, it represents the asset user stake of this pool.
     // Basically, it should be a normal ERC20 token or a lptoken of a specific token exchange pair
-    address immutable public stakeToken;
+    address public stakeToken;
     // community that pool belongs to
-    address immutable community;
+    address public community;
 
     // Total staked amount
     uint256 public totalStakedAmount;
@@ -55,7 +55,7 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         uint256 amount
     );
 
-    constructor(address _community, string memory _name, address _stakeToken) {
+    function initialize(address _community, string memory _name, address _stakeToken) external initializer {
         factory = msg.sender;
         community = _community;
         name = _name;
@@ -97,10 +97,8 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
 
         if (stakingInfo[msg.sender].amount > 0) {
             uint256 pending = stakingInfo[msg.sender]
-                .amount
-                .mul(ICommunity(community).getShareAcc(address(this)))
-                .div(1e12)
-                .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
+                .amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+                - ICommunity(community).getUserDebt(address(this), msg.sender);
             if (pending > 0) {
                 ICommunity(community).appendUserReward(msg.sender, pending);
             }
@@ -108,18 +106,13 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
 
         lockERC20(stakeToken, msg.sender, address(this), amount);
 
-        stakingInfo[msg.sender].amount = stakingInfo[msg.sender]
-            .amount
-            .add(amount);
-        totalStakedAmount = totalStakedAmount
-            .add(amount);
+        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount + amount;
+        totalStakedAmount = totalStakedAmount + amount;
 
         ICommunity(community).setUserDebt(
             msg.sender,
-            stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12));
+            stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+        );
 
         emit Deposited(community, msg.sender, amount);
     }
@@ -136,10 +129,8 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
         ICommunity(community).updatePools();
 
         uint256 pending = stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12)
-            .sub(ICommunity(community).getUserDebt(address(this), msg.sender));
+            .amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+            - ICommunity(community).getUserDebt(address(this), msg.sender);
         if (pending > 0) {
             ICommunity(community).appendUserReward(msg.sender, pending);
         }
@@ -151,18 +142,13 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard {
 
         releaseERC20(stakeToken, address(msg.sender), withdrawAmount);
 
-        stakingInfo[msg.sender].amount = stakingInfo[msg.sender]
-            .amount
-            .sub(withdrawAmount);
-        totalStakedAmount = totalStakedAmount
-            .sub(withdrawAmount);
+        stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount - withdrawAmount;
+        totalStakedAmount = totalStakedAmount - withdrawAmount;
 
         ICommunity(community).setUserDebt(
             msg.sender,
-            stakingInfo[msg.sender]
-            .amount
-            .mul(ICommunity(community).getShareAcc(address(this)))
-            .div(1e12));
+            stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
+        );
 
         emit Withdrawn(community, msg.sender, withdrawAmount);
     }
