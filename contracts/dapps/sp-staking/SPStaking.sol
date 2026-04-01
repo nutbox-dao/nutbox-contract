@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "../../interfaces/ICommunity.sol";
@@ -50,6 +50,11 @@ contract SPStaking is IPool, Initializable {
         chainId = _chainId;
     }
 
+    /// @dev Lock the template so it cannot be initialized directly.
+    constructor() {
+        _disableInitializers();
+    }
+
     function update(
         uint8 _chainId,
         bytes32 _delegatee,
@@ -92,7 +97,12 @@ contract SPStaking is IPool, Initializable {
             }
         }
 
-        totalStakedAmount = totalStakedAmount + amount - prevAmount;
+        // H-03: use explicit branches to avoid arithmetic order issues
+        if (amount >= prevAmount) {
+            totalStakedAmount = totalStakedAmount + (amount - prevAmount);
+        } else {
+            totalStakedAmount = totalStakedAmount - (prevAmount - amount);
+        }
         stakingInfo[depositor].amount = amount;
 
         ICommunity(community).setUserDebt(

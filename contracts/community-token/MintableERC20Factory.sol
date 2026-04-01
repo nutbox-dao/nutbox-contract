@@ -3,7 +3,7 @@
 // This is a factory contract to create a new token
 // token's mint right will totally transfer to community contract and can't be changed in the future
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "./MintableERC20.sol";
 import "../interfaces/ICommunityTokenFactory.sol";
@@ -14,7 +14,8 @@ contract MintableERC20Factory is ICommunityTokenFactory {
     }
 
     function createCommunityToken(bytes calldata meta) external override returns (address) {
-        require(meta.length >= 54, "Meta too short");
+        // Minimum: 1(nameLen) + 1(name≥1) + 1(symbolLen) + 1(symbol≥1) + 32(supply) + 20(owner) = 56
+        // The exact layout check is enforced by the supplyOffset guard below.
         
         uint8 nameLength;
         assembly ("memory-safe") {

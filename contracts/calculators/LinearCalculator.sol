@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import '../interfaces/ICalculator.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * LinearCalculator is a distribution mechanism that people can set a reward on specific blocks height.
@@ -48,9 +49,61 @@ contract LinearCalculator is ICalculator {
 
     function setDistributionEra(address community, bytes calldata policy) onlyFactory external override returns(bool) {
         require(community != address(0), 'Invalid address');
+        require(distributionErasMap[community].length == 0, 'Already initialized');
         _applyDistributionEras(community, policy);
         emit DistributionEraSet(community, policy);
         return true;
+    }
+
+    /**
+     * @dev Append additional distribution eras for an existing community.
+     * Can only be called by the community's owner.
+     * Rules:
+     *   - Community must already have at least one era set.
+     *   - The first appended era's startHeight must be > current block AND > last era's stopHeight.
+     *   - Each subsequent era must start after the previous one ends.
+     * @param community  Address of the community contract.
+     * @param policy     Encoded era data: [uint8 erasLength][uint256 start, uint256 stop, uint256 amount]...
+     */
+    function appendDistributionEra(address community, bytes calldata policy) external {
+        require(community != address(0), 'Invalid address');
+        require(msg.sender == Ownable(community).owner(), 'Not community owner');
+
+        Distribution[] storage eras = distributionErasMap[community];
+        require(eras.length > 0, 'Community not initialized');
+
+        require(policy.length >= 1, 'Empty policy');
+        uint8 erasLength;
+        assembly ("memory-safe") {
+            erasLength := shr(248, calldataload(policy.offset))
+        }
+        require(erasLength >= 1, 'At least one era required');
+        require(policy.length >= 1 + uint256(erasLength) * 96, 'Policy too short');
+
+        uint256 lastStopHeight = eras[eras.length - 1].stopHeight;
+        uint256 offset = 1;
+
+        for (uint256 i = 0; i < erasLength; i++) {
+            uint256 start;
+            uint256 stopHeight;
+            uint256 amount;
+            assembly ("memory-safe") {
+                start      := calldataload(add(policy.offset, offset))
+                stopHeight := calldataload(add(policy.offset, add(offset, 32)))
+                amount     := calldataload(add(policy.offset, add(offset, 64)))
+            }
+            offset += 96;
+
+            require(amount > 0, 'Invalid reward amount');
+            require(start > block.number, 'Start must be a future block');
+            require(start > lastStopHeight, 'Start must follow last era stop');
+            require(start < stopHeight, 'Invalid stop height');
+
+            eras.push(Distribution({ startHeight: start, stopHeight: stopHeight, amount: amount }));
+            distributionCountMap[community] = distributionCountMap[community] + 1;
+            lastStopHeight = stopHeight;
+        }
+        emit DistributionEraSet(community, policy);
     }
 
     function calculateReward(address community, uint256 from, uint256 to) external view override returns(uint256) {
@@ -65,7 +118,7 @@ contract LinearCalculator is ICalculator {
             rewardedBlock = eras[0].startHeight - 1;
         }
 
-        for (uint8 i = 0; i < eras.length; i++) {
+        for (uint256 i = 0; i < eras.length; i++) {
             if (rewardedBlock > eras[i].stopHeight){
                 continue;
             }
@@ -87,7 +140,7 @@ contract LinearCalculator is ICalculator {
 
     function getCurrentDistributionEra(address community) public view returns (Distribution memory era) {
         Distribution[] memory eras = distributionErasMap[community];
-        for(uint8 i = 0; i < distributionCountMap[community]; i++) {
+        for(uint256 i = 0; i < distributionCountMap[community]; i++) {
             if (block.number >= eras[i].startHeight && block.number <= eras[i].stopHeight) {
                 era = eras[i];
                 return era;
@@ -115,7 +168,7 @@ contract LinearCalculator is ICalculator {
         require(policy.length >= 1 + uint256(erasLength) * 96, 'Policy too short');
 
         uint256 offset = 1;
-        for(uint8 i = 0; i < erasLength; i++) {
+        for(uint256 i = 0; i < erasLength; i++) {
             uint256 start;
             uint256 stopHeight;
             uint256 amount;

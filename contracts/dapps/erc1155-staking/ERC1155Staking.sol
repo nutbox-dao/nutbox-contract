@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -43,6 +43,11 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializab
         tokenId = _tokenId;
     }
 
+    /// @dev Lock the template so it cannot be initialized directly.
+    constructor() {
+        _disableInitializers();
+    }
+
     function _chargeTier3Fee() private {
         address committeeAddr = ICommunity(community).getCommittee();
         uint256 fee = ICommittee(committeeAddr).getPoolOperationFee();
@@ -80,7 +85,8 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializab
             }
         }
 
-        IERC1155(stakeToken).safeTransferFrom(msg.sender, address(this), tokenId, amount, "0x");
+        // M-04: use empty bytes for safeTransferFrom data
+        IERC1155(stakeToken).safeTransferFrom(msg.sender, address(this), tokenId, amount, "");
 
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount + amount;
         totalStakedAmount = totalStakedAmount + amount;
@@ -113,7 +119,8 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializab
             withdrawAmount = stakingInfo[msg.sender].amount;
         else withdrawAmount = amount;
 
-        IERC1155(stakeToken).safeTransferFrom(address(this), address(msg.sender), tokenId, withdrawAmount, "0x00");
+        // M-04: use empty bytes for safeTransferFrom data
+        IERC1155(stakeToken).safeTransferFrom(address(this), address(msg.sender), tokenId, withdrawAmount, "");
 
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount - withdrawAmount;
         totalStakedAmount = totalStakedAmount - withdrawAmount;

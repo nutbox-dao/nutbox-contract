@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "./interfaces/IMintable.sol";
 
 /**
     @title Helper of ERC20 assets.
@@ -55,8 +55,7 @@ contract ERC20Helper {
         address recipient,
         uint256 amount
     ) internal {
-        ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
-        erc20.mint(recipient, amount);
+        IMintable(tokenAddress).mint(recipient, amount);
     }
 
     /**

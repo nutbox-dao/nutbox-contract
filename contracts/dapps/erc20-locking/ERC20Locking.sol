@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
@@ -58,6 +58,11 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
         name = _name;
         stakeToken = _stakeToken;
         lockDuration = _lockDuration;
+    }
+
+    /// @dev Lock the template so it cannot be initialized directly.
+    constructor() {
+        _disableInitializers();
     }
 
     function _chargeTier3Fee() private {
@@ -169,8 +174,8 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
         }
 
         require(availableRedeem > 0, "Nothing to redeem");
-        require(IERC20(stakeToken).balanceOf(address(this)) >= availableRedeem, "Insufficient balance");
-        IERC20(stakeToken).transfer(msg.sender, availableRedeem);
+        // H-02: use releaseERC20 (safe transfer) instead of bare IERC20.transfer
+        releaseERC20(stakeToken, msg.sender, availableRedeem);
         emit Redeemed(msg.sender, availableRedeem);
     }
 

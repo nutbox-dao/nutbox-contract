@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -60,6 +60,11 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
         community = _community;
         name = _name;
         stakeToken = _stakeToken;
+    }
+
+    /// @dev Lock the template so it cannot be initialized directly.
+    constructor() {
+        _disableInitializers();
     }
 
     function _chargeTier3Fee() private {
