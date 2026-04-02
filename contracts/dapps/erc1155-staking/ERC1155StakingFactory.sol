@@ -6,23 +6,22 @@ import "../../interfaces/IPoolFactory.sol";
 import "./ERC1155Staking.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../CommunityFactory.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @dev Factory contract of Nutbox ERC1155 staking pool.
+ *      Deploys ERC1155Staking implementation once for EIP-1167 clones.
  *
  * meta layout: [address stakeToken (20 bytes)][uint256 tokenId (32 bytes)]
  * Total meta length: 52 bytes
  */
-contract ERC1155StakingFactory is IPoolFactory, Ownable {
+contract ERC1155StakingFactory is IPoolFactory {
     address public immutable communityFactory;
     address public immutable poolTemplate;
 
-    constructor(address _communityFactory, address _poolTemplate) {
+    constructor(address _communityFactory) {
         require(_communityFactory != address(0), "Invalid address");
-        require(_poolTemplate != address(0), "Invalid template");
         communityFactory = _communityFactory;
-        poolTemplate = _poolTemplate;
+        poolTemplate = address(new ERC1155Staking());
     }
 
     event ERC1155StakingCreated(

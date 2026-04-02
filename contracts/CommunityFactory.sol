@@ -22,11 +22,10 @@ contract CommunityFactory {
 
     event CommunityCreated(address indexed creator, address indexed community, address communityToken);
 
-    constructor(address _committee, address _communityTemplate) {
+    constructor(address _committee) {
         require(_committee != address(0), "Invalid committee");
-        require(_communityTemplate != address(0), "Invalid community template");
         committee = _committee;
-        communityTemplate = _communityTemplate;
+        communityTemplate = address(new Community());
     }
 
     // If communityToken == address(0), we would create a mintable token for community by token factory,
@@ -79,7 +78,4 @@ contract CommunityFactory {
 
         emit CommunityCreated(msg.sender, address(community), communityToken);
     }
-
-    // Allow contract to receive native BNB (for fee refunds)
-    receive() external payable {}
 }

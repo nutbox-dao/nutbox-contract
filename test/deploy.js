@@ -6,33 +6,27 @@ async function deployMintableERC20FactoryContract() {
   return contract;
 }
 
-async function deployPoolTemplate(name) {
-  const factory = await ethers.getContractFactory(name);
-  const contract = await factory.deploy();
-  return contract;
-}
-
-async function deploySPStakingFactoryContract(communityFactoryAddress, spTemplateAddress) {
+async function deploySPStakingFactoryContract(communityFactoryAddress) {
   const factory = await ethers.getContractFactory("SPStakingFactory");
-  const contract = await factory.deploy(communityFactoryAddress, spTemplateAddress);
+  const contract = await factory.deploy(communityFactoryAddress);
   return contract;
 }
 
-async function deployERC20StakingFactoryContract(communityFactoryAddress, erc20TemplateAddress) {
+async function deployERC20StakingFactoryContract(communityFactoryAddress) {
   const factory = await ethers.getContractFactory("ERC20StakingFactory");
-  const contract = await factory.deploy(communityFactoryAddress, erc20TemplateAddress);
+  const contract = await factory.deploy(communityFactoryAddress);
   return contract;
 }
 
-async function deployERC20LockingFactoryContract(communityFactoryAddress, lockingTemplateAddress) {
+async function deployERC20LockingFactoryContract(communityFactoryAddress) {
   const factory = await ethers.getContractFactory("ERC20LockingFactory");
-  const contract = await factory.deploy(communityFactoryAddress, lockingTemplateAddress);
+  const contract = await factory.deploy(communityFactoryAddress);
   return contract;
 }
 
-async function deployERC1155StakingFactoryContract(communityFactoryAddress, erc1155TemplateAddress) {
+async function deployERC1155StakingFactoryContract(communityFactoryAddress) {
   const factory = await ethers.getContractFactory("ERC1155StakingFactory");
-  const contract = await factory.deploy(communityFactoryAddress, erc1155TemplateAddress);
+  const contract = await factory.deploy(communityFactoryAddress);
   return contract;
 }
 
@@ -42,9 +36,9 @@ async function deployCommitteeContract(feeRecipient) {
   return contract;
 }
 
-async function deployCommunityFactoryContract(committee, communityTemplateAddress) {
+async function deployCommunityFactoryContract(committee) {
   const factory = await ethers.getContractFactory("CommunityFactory");
-  const contract = await factory.deploy(committee.address, communityTemplateAddress);
+  const contract = await factory.deploy(committee.address);
   return contract;
 }
 
@@ -59,18 +53,12 @@ async function deploy(owner) {
   const Committee = await deployCommitteeContract(feeRecipient);
   await Committee.adminSetFeeRecipient(feeRecipient);
 
-  const communityTemplate = await deployPoolTemplate("Community");
-  const erc20Template = await deployPoolTemplate("ERC20Staking");
-  const lockingTemplate = await deployPoolTemplate("ERC20Locking");
-  const erc1155Template = await deployPoolTemplate("ERC1155Staking");
-  const spTemplate = await deployPoolTemplate("SPStaking");
-
   const MintableERC20Factory = await deployMintableERC20FactoryContract();
-  const CommunityFactory = await deployCommunityFactoryContract(Committee, communityTemplate.address);
-  const ERC20StakingFactory = await deployERC20StakingFactoryContract(CommunityFactory.address, erc20Template.address);
-  const ERC20LockingFactory = await deployERC20LockingFactoryContract(CommunityFactory.address, lockingTemplate.address);
-  const ERC1155StakingFactory = await deployERC1155StakingFactoryContract(CommunityFactory.address, erc1155Template.address);
-  const SPStakingFactory = await deploySPStakingFactoryContract(CommunityFactory.address, spTemplate.address);
+  const CommunityFactory = await deployCommunityFactoryContract(Committee);
+  const ERC20StakingFactory = await deployERC20StakingFactoryContract(CommunityFactory.address);
+  const ERC20LockingFactory = await deployERC20LockingFactoryContract(CommunityFactory.address);
+  const ERC1155StakingFactory = await deployERC1155StakingFactoryContract(CommunityFactory.address);
+  const SPStakingFactory = await deploySPStakingFactoryContract(CommunityFactory.address);
   const LinearCalculator = await deployLinearCalculatorContract(CommunityFactory);
 
   await Committee.adminAddContract(MintableERC20Factory.address);

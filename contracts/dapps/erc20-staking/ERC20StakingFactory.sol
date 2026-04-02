@@ -6,20 +6,20 @@ import "../../interfaces/IPoolFactory.sol";
 import "./ERC20Staking.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../CommunityFactory.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @dev Factory contract of Nutbox ERC20 staking pool.
+ *      Deploys the ERC20Staking implementation once in the constructor for EIP-1167 clones.
  */
-contract ERC20StakingFactory is IPoolFactory, Ownable {
+contract ERC20StakingFactory is IPoolFactory {
     address public immutable communityFactory;
     address public immutable poolTemplate;
 
-    constructor(address _communityFactory, address _poolTemplate) {
+    constructor(address _communityFactory) {
         require(_communityFactory != address(0), "Invalid address");
-        require(_poolTemplate != address(0), "Invalid template");
         communityFactory = _communityFactory;
-        poolTemplate = _poolTemplate;
+        // Implementation is locked by ERC20Staking's constructor (_disableInitializers); clones call initialize.
+        poolTemplate = address(new ERC20Staking());
     }
 
     event ERC20StakingCreated(
@@ -31,7 +31,7 @@ contract ERC20StakingFactory is IPoolFactory, Ownable {
 
     function createPool(address community, string memory name, bytes calldata meta) override external returns(address) {
         require(community == msg.sender, 'Permission denied: caller is not community');
-        require(CommunityFactory(payable(communityFactory)).createdCommunity(community), "Invalid community");
+        require(CommunityFactory(communityFactory).createdCommunity(community), "Invalid community");
         require(meta.length >= 20, "Invalid meta length");
 
         address stakeToken;

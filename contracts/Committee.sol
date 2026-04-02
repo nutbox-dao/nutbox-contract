@@ -2,18 +2,17 @@
 
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "./interfaces/ICommittee.sol";
 
-contract Committee is ICommittee, Ownable {
-
+contract Committee is ICommittee, Ownable2Step {
     // Address that receives all protocol fees (native BNB)
-    address payable public feeRecipient;
+    address payable private feeRecipient;
 
     // Three-tier fee structure (in wei)
-    uint256 public createCommunityFee;   // Tier 1: creating a community
-    uint256 public communitySettingsFee; // Tier 2: community owner operations (addPool, closePool, setRatios, setFeeRatio)
-    uint256 public poolOperationFee;     // Tier 3: pool user operations (deposit, withdraw, withdrawRewards)
+    uint256 private createCommunityFee; // Tier 1: creating a community
+    uint256 private communitySettingsFee; // Tier 2: community owner operations (addPool, closePool, setRatios, setFeeRatio)
+    uint256 private poolOperationFee; // Tier 3: pool user operations (deposit, withdraw, withdrawRewards)
 
     // contract => isWhitelistContract (factory whitelist)
     mapping(address => bool) private whitelistContracts;
@@ -39,7 +38,9 @@ contract Committee is ICommittee, Ownable {
 
     // ──────── Admin: Fee Configuration ────────
 
-    function adminSetFeeRecipient(address payable _feeRecipient) external onlyOwner {
+    function adminSetFeeRecipient(
+        address payable _feeRecipient
+    ) external onlyOwner {
         require(_feeRecipient != address(0), "Invalid feeRecipient");
         feeRecipient = _feeRecipient;
         emit AdminSetFeeRecipient(_feeRecipient);
@@ -84,17 +85,14 @@ contract Committee is ICommittee, Ownable {
         emit AdminRemoveFeeFreeAddress(_f);
     }
 
-    // ──────── Admin: Withdraw stuck native ────────
-
-    function adminWithdrawNative(address payable recipient, uint256 amount) external onlyOwner {
-        require(recipient != address(0), "Invalid recipient");
-        (bool ok, ) = recipient.call{value: amount}("");
-        require(ok, "Transfer failed");
-    }
-
     // ──────── View Functions ────────
 
-    function getFeeRecipient() external view override returns (address payable) {
+    function getFeeRecipient()
+        external
+        view
+        override
+        returns (address payable)
+    {
         return feeRecipient;
     }
 
@@ -102,7 +100,12 @@ contract Committee is ICommittee, Ownable {
         return createCommunityFee;
     }
 
-    function getCommunitySettingsFee() external view override returns (uint256) {
+    function getCommunitySettingsFee()
+        external
+        view
+        override
+        returns (uint256)
+    {
         return communitySettingsFee;
     }
 
@@ -114,10 +117,9 @@ contract Committee is ICommittee, Ownable {
         return whitelistContracts[c];
     }
 
-    function getFeeFree(address freeAddress) external view override returns (bool) {
+    function getFeeFree(
+        address freeAddress
+    ) external view override returns (bool) {
         return feeFreeList[freeAddress];
     }
-
-    // Allow contract to receive native BNB
-    receive() external payable {}
 }

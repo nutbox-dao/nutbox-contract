@@ -85,9 +85,6 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializab
             }
         }
 
-        // M-04: use empty bytes for safeTransferFrom data
-        IERC1155(stakeToken).safeTransferFrom(msg.sender, address(this), tokenId, amount, "");
-
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount + amount;
         totalStakedAmount = totalStakedAmount + amount;
 
@@ -95,6 +92,9 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializab
             msg.sender,
             stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
         );
+
+        // M-04: use empty bytes for safeTransferFrom data
+        IERC1155(stakeToken).safeTransferFrom(msg.sender, address(this), tokenId, amount, "");
 
         emit Deposited(community, msg.sender, amount);
     }
@@ -119,9 +119,6 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializab
             withdrawAmount = stakingInfo[msg.sender].amount;
         else withdrawAmount = amount;
 
-        // M-04: use empty bytes for safeTransferFrom data
-        IERC1155(stakeToken).safeTransferFrom(address(this), address(msg.sender), tokenId, withdrawAmount, "");
-
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount - withdrawAmount;
         totalStakedAmount = totalStakedAmount - withdrawAmount;
 
@@ -129,6 +126,9 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializab
             msg.sender,
             stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
         );
+
+        // M-04: use empty bytes for safeTransferFrom data
+        IERC1155(stakeToken).safeTransferFrom(address(this), address(msg.sender), tokenId, withdrawAmount, "");
 
         emit Withdrawn(community, msg.sender, withdrawAmount);
     }
@@ -150,6 +150,4 @@ contract ERC1155Staking is IPool, ReentrancyGuard, IERC1155Receiver, Initializab
     function supportsInterface(bytes4 interfaceId) external override view returns (bool) {
         return interfaceId == type(IERC1155Receiver).interfaceId;
     }
-
-    receive() external payable {}
 }

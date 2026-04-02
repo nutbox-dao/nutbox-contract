@@ -6,23 +6,22 @@ import "../../interfaces/IPoolFactory.sol";
 import "./ERC20Locking.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../CommunityFactory.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @dev Factory contract of Nutbox ERC20 locking pool.
+ *      Deploys ERC20Locking implementation once for EIP-1167 clones.
  *
  * meta layout: [address stakeToken (20 bytes)][uint256 lockDuration (32 bytes)]
  * Total meta length: 52 bytes
  */
-contract ERC20LockingFactory is IPoolFactory, Ownable {
+contract ERC20LockingFactory is IPoolFactory {
     address public immutable communityFactory;
     address public immutable poolTemplate;
 
-    constructor(address _communityFactory, address _poolTemplate) {
+    constructor(address _communityFactory) {
         require(_communityFactory != address(0), "Invalid address");
-        require(_poolTemplate != address(0), "Invalid template");
         communityFactory = _communityFactory;
-        poolTemplate = _poolTemplate;
+        poolTemplate = address(new ERC20Locking());
     }
 
     event ERC20LockingCreated(

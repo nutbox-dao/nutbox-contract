@@ -10,6 +10,8 @@ import "../../CommunityFactory.sol";
 
 /**
  * @dev Factory contract of Nutbox SP/HP staking pool.
+ *      Deploys SPStaking implementation once for EIP-1167 clones.
+ *      Owner (deployer) may set bridge via adminSetBridge.
  *
  * meta layout: [uint8 chainId (1 byte)][bytes32 delegatee (32 bytes)]
  * Total meta length: 33 bytes
@@ -19,11 +21,10 @@ contract SPStakingFactory is IPoolFactory, Ownable {
     address public immutable communityFactory;
     address public immutable poolTemplate;
 
-    constructor(address _communityFactory, address _poolTemplate) {
+    constructor(address _communityFactory) {
         require(_communityFactory != address(0), "Invalid address");
-        require(_poolTemplate != address(0), "Invalid template");
         communityFactory = _communityFactory;
-        poolTemplate = _poolTemplate;
+        poolTemplate = address(new SPStaking());
     }
 
     event SPStakingCreated(

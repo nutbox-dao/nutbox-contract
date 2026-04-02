@@ -109,8 +109,6 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
             }
         }
 
-        lockERC20(stakeToken, msg.sender, address(this), amount);
-
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount + amount;
         totalStakedAmount = totalStakedAmount + amount;
 
@@ -118,6 +116,8 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
             msg.sender,
             stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
         );
+
+        lockERC20(stakeToken, msg.sender, address(this), amount);
 
         emit Deposited(community, msg.sender, amount);
     }
@@ -145,8 +145,6 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
             withdrawAmount = stakingInfo[msg.sender].amount;
         else withdrawAmount = amount;
 
-        releaseERC20(stakeToken, address(msg.sender), withdrawAmount);
-
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount - withdrawAmount;
         totalStakedAmount = totalStakedAmount - withdrawAmount;
 
@@ -154,6 +152,8 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
             msg.sender,
             stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
         );
+
+        releaseERC20(stakeToken, address(msg.sender), withdrawAmount);
 
         emit Withdrawn(community, msg.sender, withdrawAmount);
     }
@@ -189,7 +189,4 @@ contract ERC20Staking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
     {
         return stakingInfo[user];
     }
-
-    // Allow contract to receive native BNB (for fee refunds)
-    receive() external payable {}
 }

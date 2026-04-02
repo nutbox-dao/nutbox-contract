@@ -102,8 +102,6 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
             }
         }
 
-        lockERC20(stakeToken, msg.sender, address(this), amount);
-
         stakingInfo[msg.sender].amount = stakingInfo[msg.sender].amount + amount;
         totalStakedAmount = totalStakedAmount + amount;
 
@@ -111,6 +109,8 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
             msg.sender,
             stakingInfo[msg.sender].amount * ICommunity(community).getShareAcc(address(this)) / 1e12
         );
+
+        lockERC20(stakeToken, msg.sender, address(this), amount);
 
         emit Locked(msg.sender, amount);
     }
@@ -233,7 +233,4 @@ contract ERC20Locking is IPool, ERC20Helper, ReentrancyGuard, Initializable {
                     - _req.claimed;
         }
     }
-
-    // Allow contract to receive native BNB (for fee refunds)
-    receive() external payable {}
 }

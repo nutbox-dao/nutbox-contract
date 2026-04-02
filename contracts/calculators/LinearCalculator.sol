@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import '../interfaces/ICalculator.sol';
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 /**
  * LinearCalculator is a distribution mechanism that people can set a reward on specific blocks height.
@@ -55,56 +55,7 @@ contract LinearCalculator is ICalculator {
         return true;
     }
 
-    /**
-     * @dev Append additional distribution eras for an existing community.
-     * Can only be called by the community's owner.
-     * Rules:
-     *   - Community must already have at least one era set.
-     *   - The first appended era's startHeight must be > current block AND > last era's stopHeight.
-     *   - Each subsequent era must start after the previous one ends.
-     * @param community  Address of the community contract.
-     * @param policy     Encoded era data: [uint8 erasLength][uint256 start, uint256 stop, uint256 amount]...
-     */
-    function appendDistributionEra(address community, bytes calldata policy) external {
-        require(community != address(0), 'Invalid address');
-        require(msg.sender == Ownable(community).owner(), 'Not community owner');
 
-        Distribution[] storage eras = distributionErasMap[community];
-        require(eras.length > 0, 'Community not initialized');
-
-        require(policy.length >= 1, 'Empty policy');
-        uint8 erasLength;
-        assembly ("memory-safe") {
-            erasLength := shr(248, calldataload(policy.offset))
-        }
-        require(erasLength >= 1, 'At least one era required');
-        require(policy.length >= 1 + uint256(erasLength) * 96, 'Policy too short');
-
-        uint256 lastStopHeight = eras[eras.length - 1].stopHeight;
-        uint256 offset = 1;
-
-        for (uint256 i = 0; i < erasLength; i++) {
-            uint256 start;
-            uint256 stopHeight;
-            uint256 amount;
-            assembly ("memory-safe") {
-                start      := calldataload(add(policy.offset, offset))
-                stopHeight := calldataload(add(policy.offset, add(offset, 32)))
-                amount     := calldataload(add(policy.offset, add(offset, 64)))
-            }
-            offset += 96;
-
-            require(amount > 0, 'Invalid reward amount');
-            require(start > block.number, 'Start must be a future block');
-            require(start > lastStopHeight, 'Start must follow last era stop');
-            require(start < stopHeight, 'Invalid stop height');
-
-            eras.push(Distribution({ startHeight: start, stopHeight: stopHeight, amount: amount }));
-            distributionCountMap[community] = distributionCountMap[community] + 1;
-            lastStopHeight = stopHeight;
-        }
-        emit DistributionEraSet(community, policy);
-    }
 
     function calculateReward(address community, uint256 from, uint256 to) external view override returns(uint256) {
         uint256 rewardedBlock = from - 1;
@@ -121,6 +72,16 @@ contract LinearCalculator is ICalculator {
         for (uint256 i = 0; i < eras.length; i++) {
             if (rewardedBlock > eras[i].stopHeight){
                 continue;
+            }
+
+            // Fast-forward rewardedBlock if it's lagging behind the current era's start
+            if (rewardedBlock < eras[i].startHeight - 1) {
+                rewardedBlock = eras[i].startHeight - 1;
+            }
+            
+            // If the query ends completely inside a gap before this era starts, stop calculation
+            if (to <= rewardedBlock) {
+                return rewards;
             }
 
             if (to <= eras[i].stopHeight) {
@@ -184,6 +145,9 @@ contract LinearCalculator is ICalculator {
             // check 2)
             if (i == 0) {
                 require(start > block.number, 'Invalid start height of distribution');
+            } else {
+                // Ensure eras strictly follow sequentially to avoid overlap inconsistencies
+                require(start > distributionErasMap[community][i-1].stopHeight, 'Subsequent eras must start after previous era ends');
             }
             // check 3)
             require(start < stopHeight, 'Invalid stop height of distribution');

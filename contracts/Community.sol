@@ -470,7 +470,4 @@ contract Community is
             releaseERC20(communityToken, address(recipient), amount);
         }
     }
-
-    // Allow contract to receive native BNB (for fee refunds)
-    receive() external payable {}
 }
