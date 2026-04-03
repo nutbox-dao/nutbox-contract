@@ -12,12 +12,12 @@
         },
         {
           "internalType": "uint256",
-          "name": "from",
+          "name": "lastCursor",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "to",
+          "name": "head",
           "type": "uint256"
         }
       ],
@@ -40,7 +40,7 @@
           "type": "address"
         }
       ],
-      "name": "getCurrentRewardPerBlock",
+      "name": "getCurrentRewardRate",
       "outputs": [
         {
           "internalType": "uint256",
@@ -48,7 +48,7 @@
           "type": "uint256"
         }
       ],
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -59,7 +59,7 @@
           "type": "address"
         }
       ],
-      "name": "getStartBlock",
+      "name": "getStartCursor",
       "outputs": [
         {
           "internalType": "uint256",
@@ -67,7 +67,20 @@
           "type": "uint256"
         }
       ],
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardHead",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {

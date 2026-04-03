@@ -3,30 +3,20 @@
 pragma solidity ^0.8.20;
 
 import '../interfaces/ICalculator.sol';
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 /**
- * LinearCalculator is a distribution mechanism that people can set a reward on specific blocks height.
- *
- * Spec:
- *     length: uint8, distribution eras length
- *     eras[0]
- *     eras[1]
- *     ...
- *     eras[n]
- *     Era:
- *         uint256: startHeight,
- *         uint256: stopHeight,
- *         uint256: amount
+ * @title LinearCalculator (block clock)
+ * @dev Linear emission; policy encodes eras as `(startCursor, stopCursor, amount)` in **block height**;
+ *      `amount` is rewards per block. Same cursor domain as `rewardHead() == block.number`.
  */
 contract LinearCalculator is ICalculator {
     struct Distribution {
-        // rewards per block of this distribution.
+        /// @dev Rewards emitted for each block step in this era.
         uint256 amount;
-        // when current block height > startHeight, distribution was enabled.
-        uint256 startHeight;
-        // when curent block height > stopHeight, distribution was disabled
-        uint256 stopHeight;
+        /// @dev Inclusive era start cursor (block height).
+        uint256 startCursor;
+        /// @dev Inclusive era end cursor (block height).
+        uint256 stopCursor;
     }
 
 
@@ -47,6 +37,11 @@ contract LinearCalculator is ICalculator {
         communityFactory = _communityFactory;
     }
 
+    /// @inheritdoc ICalculator
+    function rewardHead() external view override returns (uint256) {
+        return block.number;
+    }
+
     function setDistributionEra(address community, bytes calldata policy) onlyFactory external override returns(bool) {
         require(community != address(0), 'Invalid address');
         require(distributionErasMap[community].length == 0, 'Already initialized');
@@ -57,66 +52,69 @@ contract LinearCalculator is ICalculator {
 
 
 
-    function calculateReward(address community, uint256 from, uint256 to) external view override returns(uint256) {
-        uint256 rewardedBlock = from - 1;
+    /// @inheritdoc ICalculator
+    /// @param lastCursor Last block cursor already fully settled by `Community` (0 = not started).
+    /// @param head Current block cursor upper bound (`rewardHead()` / `block.number`).
+    function calculateReward(address community, uint256 lastCursor, uint256 head) external view override returns (uint256) {
+        // Last cursor credited before the open end of (lastCursor, head]
+        uint256 rewardedCursor = lastCursor;
         uint256 rewards = 0;
         Distribution[] memory eras = distributionErasMap[community];
 
-        if (eras.length == 0 || block.number <= eras[0].startHeight) {
+        if (eras.length == 0 || block.number <= eras[0].startCursor) {
             return rewards;
         }
-        if (rewardedBlock < eras[0].startHeight){
-            rewardedBlock = eras[0].startHeight - 1;
+        if (rewardedCursor < eras[0].startCursor) {
+            rewardedCursor = eras[0].startCursor - 1;
         }
 
         for (uint256 i = 0; i < eras.length; i++) {
-            if (rewardedBlock > eras[i].stopHeight){
+            if (rewardedCursor > eras[i].stopCursor) {
                 continue;
             }
 
-            // Fast-forward rewardedBlock if it's lagging behind the current era's start
-            if (rewardedBlock < eras[i].startHeight - 1) {
-                rewardedBlock = eras[i].startHeight - 1;
+            if (rewardedCursor < eras[i].startCursor - 1) {
+                rewardedCursor = eras[i].startCursor - 1;
             }
-            
-            // If the query ends completely inside a gap before this era starts, stop calculation
-            if (to <= rewardedBlock) {
+
+            if (head <= rewardedCursor) {
                 return rewards;
             }
 
-            if (to <= eras[i].stopHeight) {
-                rewards = rewards + (to - rewardedBlock) * eras[i].amount;
+            if (head <= eras[i].stopCursor) {
+                rewards = rewards + (head - rewardedCursor) * eras[i].amount;
                 return rewards;
             } else {
-                rewards = rewards + (eras[i].stopHeight - rewardedBlock) * eras[i].amount;
-                rewardedBlock = eras[i].stopHeight;
+                rewards = rewards + (eras[i].stopCursor - rewardedCursor) * eras[i].amount;
+                rewardedCursor = eras[i].stopCursor;
             }
         }
         return rewards;
     }
-    
-    function getCurrentRewardPerBlock(address community) external view override returns (uint256) {
+
+    /// @inheritdoc ICalculator
+    function getCurrentRewardRate(address community) external view override returns (uint256) {
         return getCurrentDistributionEra(community).amount;
     }
 
     function getCurrentDistributionEra(address community) public view returns (Distribution memory era) {
         Distribution[] memory eras = distributionErasMap[community];
-        for(uint256 i = 0; i < distributionCountMap[community]; i++) {
-            if (block.number >= eras[i].startHeight && block.number <= eras[i].stopHeight) {
+        for (uint256 i = 0; i < distributionCountMap[community]; i++) {
+            if (block.number >= eras[i].startCursor && block.number <= eras[i].stopCursor) {
                 era = eras[i];
                 return era;
             }
         }
     }
-    
-    function getStartBlock(address community) external view override returns (uint256) {
-        return distributionErasMap[community][0].startHeight;
+
+    /// @inheritdoc ICalculator
+    function getStartCursor(address community) external view override returns (uint256) {
+        return distributionErasMap[community][0].startCursor;
     }
 
     /**
-     * @dev Check and set distribution policy
-     * policy layout: [uint8 erasLength][uint256 start, uint256 stop, uint256 amount]...
-     * Total: 1 + erasLength * 96 bytes
+     * @dev Policy: [uint8 erasLength][uint256 startCursor, uint256 stopCursor, uint256 amount]...
+     * Cursors are block heights; `amount` is per block. Total: 1 + erasLength * 96 bytes.
      */
     function _applyDistributionEras(address community, bytes calldata policy) private {
         require(policy.length >= 1, "Empty policy");
@@ -129,34 +127,27 @@ contract LinearCalculator is ICalculator {
         require(policy.length >= 1 + uint256(erasLength) * 96, 'Policy too short');
 
         uint256 offset = 1;
-        for(uint256 i = 0; i < erasLength; i++) {
+        for (uint256 i = 0; i < erasLength; i++) {
             uint256 start;
-            uint256 stopHeight;
+            uint256 stopCursor;
             uint256 amount;
             assembly ("memory-safe") {
                 start := calldataload(add(policy.offset, offset))
-                stopHeight := calldataload(add(policy.offset, add(offset, 32)))
+                stopCursor := calldataload(add(policy.offset, add(offset, 32)))
                 amount := calldataload(add(policy.offset, add(offset, 64)))
             }
             offset += 96;
 
-            // check 1)
-            require(amount > 0, 'Invalid reward amount of distribution, consider giving a positive integer');
-            // check 2)
+            require(amount > 0, "Invalid reward amount of distribution, consider giving a positive integer");
             if (i == 0) {
-                require(start > block.number, 'Invalid start height of distribution');
+                require(start > block.number, "Invalid start cursor of distribution");
             } else {
-                // Ensure eras strictly follow sequentially to avoid overlap inconsistencies
-                require(start > distributionErasMap[community][i-1].stopHeight, 'Subsequent eras must start after previous era ends');
+                require(start > distributionErasMap[community][i - 1].stopCursor, "Subsequent eras must start after previous era ends");
             }
-            // check 3)
-            require(start < stopHeight, 'Invalid stop height of distribution');
-            // set distribution policy
-            distributionErasMap[community].push(Distribution ({
-                startHeight: start,
-                stopHeight: stopHeight,
-                amount: amount
-            }));
+            require(start < stopCursor, "Invalid stop cursor of distribution");
+            distributionErasMap[community].push(
+                Distribution({amount: amount, startCursor: start, stopCursor: stopCursor})
+            );
             distributionCountMap[community] = distributionCountMap[community] + 1;
         }
     }

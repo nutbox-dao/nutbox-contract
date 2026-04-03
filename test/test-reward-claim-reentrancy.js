@@ -9,7 +9,7 @@ const deployCommunityHookToken = require("./create-community-hook-token");
  */
 describe("Reward claim reentrancy (hook token)", function () {
   async function minePastRewardStart(contracts, extra = 5) {
-    const start = await contracts.LinearCalculator.getStartBlock(contracts.Community.address);
+    const start = await contracts.LinearCalculator.getStartCursor(contracts.Community.address);
     let bn = await ethers.provider.getBlockNumber();
     const need = start + extra - bn;
     if (need > 0) await mine(need);

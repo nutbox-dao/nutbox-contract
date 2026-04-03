@@ -53,7 +53,8 @@ contract Community is
     address[] public activedPools;
     // all created pools include closed pools
     address[] public createdPools;
-    uint256 private lastRewardBlock;
+    /// @dev Last settled reward head (block, second, etc.) — must match the community's `rewardCalculator` clock.
+    uint256 private lastRewardCursor;
     address public communityToken;
     bool public isMintableCommunityToken;
     address public rewardCalculator;
@@ -257,14 +258,14 @@ contract Community is
         address[] memory poolAddresses
     ) external payable nonReentrant {
         // game has not started
-        if (lastRewardBlock == 0) return;
+        if (lastRewardCursor == 0) return;
         require(poolAddresses.length > 0, "MHO1"); // Must harvest at least one pool
 
         // Charge Tier 3 fee for withdrawing rewards
         _chargeTier3Fee();
 
-        // There are new blocks created after last updating, so update pools before withdraw
-        if (block.number > lastRewardBlock) {
+        // Advance accrual if the calculator's head has moved since last update
+        if (ICalculator(rewardCalculator).rewardHead() > lastRewardCursor) {
             _updatePoolsInternal();
         }
 
@@ -312,12 +313,13 @@ contract Community is
         address user
     ) public view returns (uint256) {
         // game has not started
-        if (lastRewardBlock == 0) return 0;
+        if (lastRewardCursor == 0) return 0;
 
+        uint256 head = ICalculator(rewardCalculator).rewardHead();
         uint256 rewardsReadyToMintedToPools = (ICalculator(rewardCalculator)
-            .calculateReward(address(this), lastRewardBlock + 1, block.number) *
+            .calculateReward(address(this), lastRewardCursor, head) *
             (10000 - feeRatio)) / 10000;
-        // our lastRewardBlock isn't up to date, as the result, the availableRewards isn't
+        // our lastRewardCursor isn't up to date, as the result, the availableRewards isn't
         // the right amount that delegator can award
         uint256 stakedAmount = IPool(poolAddress).getUserStakedAmount(user);
         if (stakedAmount == 0) return userRewards[poolAddress][user];
@@ -362,6 +364,11 @@ contract Community is
         return committee;
     }
 
+    /// @notice Last value of `rewardHead()` fully applied in `_updatePoolsInternal` (0 = not initialized).
+    function getLastRewardCursor() external view returns (uint256) {
+        return lastRewardCursor;
+    }
+
     function getUserDebt(
         address pool,
         address user
@@ -392,23 +399,21 @@ contract Community is
 
     function _updatePoolsInternal() private {
         uint256 rewardsReadyToMinted = 0;
-        uint256 currentBlock = block.number;
+        uint256 head = ICalculator(rewardCalculator).rewardHead();
 
-        if (lastRewardBlock == 0) {
-            lastRewardBlock = currentBlock;
+        if (lastRewardCursor == 0) {
+            lastRewardCursor = head;
+            return;
         }
 
-        // make sure one block can only be calculated one time.
-        // think about this situation that more than one deposit/withdraw/withdrawRewards transactions
-        // were exist in the same block, delegator.amount should be updated after _updateRewardInfo being
-        // invoked and it's award Rewards should be calculated next time
-        if (currentBlock <= lastRewardBlock) return;
+        // Same head (same block or same second): only the first pool/user op in that tick accrues;
+        // later calls in the same tick see head <= lastRewardCursor and return.
+        if (head <= lastRewardCursor) return;
 
-        // calculate reward Rewards under current blocks
         rewardsReadyToMinted = ICalculator(rewardCalculator).calculateReward(
             address(this),
-            lastRewardBlock + 1,
-            currentBlock
+            lastRewardCursor,
+            head
         );
 
         // save all rewards to contract temporary
@@ -442,7 +447,7 @@ contract Community is
                 (poolRewards / totalStakedAmount);
         }
 
-        lastRewardBlock = currentBlock;
+        lastRewardCursor = head;
     }
 
     function _checkRatioSum(uint16[] memory ratios) private pure {

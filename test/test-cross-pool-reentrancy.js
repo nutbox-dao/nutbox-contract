@@ -36,9 +36,9 @@ describe("Cross-Pool Reentrancy Security", function () {
     return ethers.utils.solidityPack(["address"], [tokenAddress]);
   }
 
-  /** LinearCalculator only emits rewards after the first era's startHeight. */
+  /** LinearCalculator only emits rewards after the first era's startCursor. */
   async function minePastRewardStart(contracts, extra = 5) {
-    const start = await contracts.LinearCalculator.getStartBlock(contracts.Community.address);
+    const start = await contracts.LinearCalculator.getStartCursor(contracts.Community.address);
     let bn = await ethers.provider.getBlockNumber();
     const need = start + extra - bn;
     if (need > 0) await mine(need);

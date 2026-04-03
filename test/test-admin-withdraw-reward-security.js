@@ -59,7 +59,7 @@ describe("Admin Withdraw Reward Security", function () {
 
       await pool.connect(alice).deposit(ethers.utils.parseEther("1000"), { value: 0 });
 
-      const rewardStart = await contracts.LinearCalculator.getStartBlock(contracts.Community.address);
+      const rewardStart = await contracts.LinearCalculator.getStartCursor(contracts.Community.address);
       let bn = await ethers.provider.getBlockNumber();
       if (bn <= rewardStart) await mine(rewardStart - bn + 5);
 

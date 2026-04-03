@@ -7,12 +7,12 @@ import "./interfaces/ICommittee.sol";
 
 contract Committee is ICommittee, Ownable2Step {
     // Address that receives all protocol fees (native BNB)
-    address payable private feeRecipient;
+    address payable private feeRecipient = payable(0x06Deb72b2e156Ddd383651aC3d2dAb5892d9c048);
 
     // Three-tier fee structure (in wei)
-    uint256 private createCommunityFee; // Tier 1: creating a community
-    uint256 private communitySettingsFee; // Tier 2: community owner operations (addPool, closePool, setRatios, setFeeRatio)
-    uint256 private poolOperationFee; // Tier 3: pool user operations (deposit, withdraw, withdrawRewards)
+    uint256 private createCommunityFee = 500000000000000; // Tier 1: creating a community
+    uint256 private communitySettingsFee = 500000000000000; // Tier 2: community owner operations (addPool, closePool, setRatios, setFeeRatio)
+    uint256 private poolOperationFee= 500000000000000; // Tier 3: pool user operations (deposit, withdraw, withdrawRewards)
 
     // contract => isWhitelistContract (factory whitelist)
     mapping(address => bool) private whitelistContracts;

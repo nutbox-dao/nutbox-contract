@@ -31,4 +31,9 @@ interface ICommunity {
     ) external;
 
     function updatePools() external;
+
+    /// @dev Pull this pool's accrued community-token rewards to the caller (must be a pool with stake).
+    function withdrawPoolsRewards(
+        address[] memory poolAddresses
+    ) external payable;
 }

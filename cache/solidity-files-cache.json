@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/Committee.sol": {
-      "lastModificationDate": 1775111068461,
-      "contentHash": "62daf86bff4c46a2b1e2eeda0f82fabe",
+      "lastModificationDate": 1775203562786,
+      "contentHash": "419d2b1df21a6517927c292392408550",
       "sourceName": "contracts/Committee.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -1303,8 +1303,8 @@
       ]
     },
     "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/Community.sol": {
-      "lastModificationDate": 1775113135826,
-      "contentHash": "db55675bc5b093937be20e73b9842892",
+      "lastModificationDate": 1775207256717,
+      "contentHash": "6947f85c1ccd528057c77a9e9c2f7c9e",
       "sourceName": "contracts/Community.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -1351,8 +1351,8 @@
       ]
     },
     "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/ICalculator.sol": {
-      "lastModificationDate": 1775017723737,
-      "contentHash": "2c3ef1d5596e1b94562f47f563f9e530",
+      "lastModificationDate": 1775207659398,
+      "contentHash": "80a091c56fc4fab38e46b1f5c6157b00",
       "sourceName": "contracts/interfaces/ICalculator.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -1540,8 +1540,8 @@
       ]
     },
     "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/interfaces/ICommunity.sol": {
-      "lastModificationDate": 1775017717448,
-      "contentHash": "077d8ffabe3dffa2531468882a8606e7",
+      "lastModificationDate": 1775195466092,
+      "contentHash": "39b394db81c3f0f1d8df7a29f5da8fd4",
       "sourceName": "contracts/interfaces/ICommunity.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -1616,7 +1616,7 @@
       ]
     },
     "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/dapps/sp-staking/SPStakingFactory.sol": {
-      "lastModificationDate": 1775117466082,
+      "lastModificationDate": 1775118283181,
       "contentHash": "066d8d304d64c892987bdaf5306fef67",
       "sourceName": "contracts/dapps/sp-staking/SPStakingFactory.sol",
       "solcConfig": {
@@ -1825,7 +1825,7 @@
       ]
     },
     "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/dapps/erc20-locking/ERC20Locking.sol": {
-      "lastModificationDate": 1775112616411,
+      "lastModificationDate": 1775118195951,
       "contentHash": "c978eaecc4f64e879bbd08b0c92e5b68",
       "sourceName": "contracts/dapps/erc20-locking/ERC20Locking.sol",
       "solcConfig": {
@@ -1999,8 +1999,8 @@
       ]
     },
     "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/calculators/LinearCalculator.sol": {
-      "lastModificationDate": 1775110382872,
-      "contentHash": "db3bb25b53918dbdb1dd647bd2d5aebf",
+      "lastModificationDate": 1775207677297,
+      "contentHash": "d38abca2e29f5be1d767fcf9b0cd857c",
       "sourceName": "contracts/calculators/LinearCalculator.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -2028,8 +2028,7 @@
         }
       },
       "imports": [
-        "../interfaces/ICalculator.sol",
-        "@openzeppelin/contracts/access/Ownable2Step.sol"
+        "../interfaces/ICalculator.sol"
       ],
       "versionPragmas": [
         "^0.8.20"
@@ -2352,6 +2351,329 @@
         "IERC20Minimal",
         "IPoolStake",
         "RewardReentryAttacker"
+      ]
+    },
+    "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/dapps/social-curation/SocialCurationFactory.sol": {
+      "lastModificationDate": 1775200376233,
+      "contentHash": "8b2e3f27898b582d4c563f8ecc390e4f",
+      "sourceName": "contracts/dapps/social-curation/SocialCurationFactory.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1
+          },
+          "evmVersion": "paris",
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../interfaces/IPoolFactory.sol",
+        "./SocialCuration.sol",
+        "@openzeppelin/contracts/proxy/Clones.sol",
+        "../../CommunityFactory.sol",
+        "@openzeppelin/contracts/access/Ownable2Step.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "SocialCurationFactory"
+      ]
+    },
+    "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/dapps/social-curation/SocialCuration.sol": {
+      "lastModificationDate": 1775203409846,
+      "contentHash": "283895d26421733fc7e41e2705525384",
+      "sourceName": "contracts/dapps/social-curation/SocialCuration.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1
+          },
+          "evmVersion": "paris",
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "@openzeppelin/contracts/utils/cryptography/EIP712.sol",
+        "./SocialCurationFactory.sol",
+        "../../interfaces/ICommunity.sol",
+        "../../interfaces/ICommittee.sol",
+        "../../interfaces/IPool.sol",
+        "../../ERC20Helper.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "SocialCuration"
+      ]
+    },
+    "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol": {
+      "lastModificationDate": 1774956953244,
+      "contentHash": "d822a8a9468649cab463f29f5decf5cc",
+      "sourceName": "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1
+          },
+          "evmVersion": "paris",
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Strings.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ECDSA"
+      ]
+    },
+    "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/node_modules/@openzeppelin/contracts/utils/cryptography/EIP712.sol": {
+      "lastModificationDate": 1774956953244,
+      "contentHash": "459aeb9cc3fc3c6d67d30ffefb724aba",
+      "sourceName": "@openzeppelin/contracts/utils/cryptography/EIP712.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1
+          },
+          "evmVersion": "paris",
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ECDSA.sol",
+        "../ShortStrings.sol",
+        "../../interfaces/IERC5267.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.8"
+      ],
+      "artifacts": [
+        "EIP712"
+      ]
+    },
+    "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/node_modules/@openzeppelin/contracts/utils/ShortStrings.sol": {
+      "lastModificationDate": 1774956953817,
+      "contentHash": "8dde288da49722a70f34ee369be4bfba",
+      "sourceName": "@openzeppelin/contracts/utils/ShortStrings.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1
+          },
+          "evmVersion": "paris",
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./StorageSlot.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.8"
+      ],
+      "artifacts": [
+        "ShortStrings"
+      ]
+    },
+    "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/node_modules/@openzeppelin/contracts/interfaces/IERC5267.sol": {
+      "lastModificationDate": 1774956953655,
+      "contentHash": "b1756048024350a162c3be27c04aa652",
+      "sourceName": "@openzeppelin/contracts/interfaces/IERC5267.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1
+          },
+          "evmVersion": "paris",
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC5267"
+      ]
+    },
+    "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/node_modules/@openzeppelin/contracts/utils/StorageSlot.sol": {
+      "lastModificationDate": 1774956953817,
+      "contentHash": "682f7dd1f2e1147c8390e7575deceb2d",
+      "sourceName": "@openzeppelin/contracts/utils/StorageSlot.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1
+          },
+          "evmVersion": "paris",
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "StorageSlot"
+      ]
+    },
+    "/Volumes/Extreme Pro/wangxi/work/Walnut-V2/nutbox-contract/contracts/calculators/LinearTimeCalculator.sol": {
+      "lastModificationDate": 1775207696509,
+      "contentHash": "288435aba6c42c329ded17a1ab4c2e95",
+      "sourceName": "contracts/calculators/LinearTimeCalculator.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1
+          },
+          "evmVersion": "paris",
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/ICalculator.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "LinearTimeCalculator"
       ]
     }
   }

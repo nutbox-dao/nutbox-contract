@@ -4,7 +4,9 @@
   "description": "Nutbox contract repository",
   "scripts": {
     "compile": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "deploy:protocol": "hardhat run scripts/deploy-protocol.js --network bsc",
+    "verify:protocol": "hardhat run scripts/verify-protocol.js"
   },
   "repository": {
     "type": "git",

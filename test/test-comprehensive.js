@@ -552,7 +552,7 @@ describe("Comprehensive Contract Tests", function () {
 
     it("Pending rewards are 0 before distribution starts", async () => {
       await poolContract.connect(alice).deposit(1000, { value: 0 });
-      // Distribution hasn't started yet (startHeight is block+100 from fixture)
+      // Distribution hasn't started yet (first era startCursor is block+100 from fixture)
       const pending = await contracts.Community.getPoolPendingRewards(poolAddress, alice.address);
       expect(pending).to.equal(0);
     });
@@ -563,9 +563,13 @@ describe("Comprehensive Contract Tests", function () {
       await mine(150);
       const pending = await contracts.Community.getPoolPendingRewards(poolAddress, alice.address);
 
-      const startBlock = await contracts.LinearCalculator.getStartBlock(contracts.Community.address);
-      const currentBlock = await ethers.provider.getBlockNumber();
-      const expectedTotalRewards = await contracts.LinearCalculator.calculateReward(contracts.Community.address, startBlock, currentBlock);
+      const head = await contracts.LinearCalculator.rewardHead();
+      const last = await contracts.Community.getLastRewardCursor();
+      const expectedTotalRewards = await contracts.LinearCalculator.calculateReward(
+        contracts.Community.address,
+        last,
+        head
+      );
       // Since it's the only active pool and pool ratio is 10000, pool gets 100%, and Alice gets 100% of pool.
       expect(pending).to.equal(expectedTotalRewards);
     });
@@ -587,15 +591,19 @@ describe("Comprehensive Contract Tests", function () {
       await mine(150);
 
       // Calculate exact expected rewards at this point
-      const startBlock = await contracts.LinearCalculator.getStartBlock(contracts.Community.address);
-      const currentBlock = await ethers.provider.getBlockNumber();
-      const exactExpectedRewardsBefore = await contracts.LinearCalculator.calculateReward(contracts.Community.address, startBlock, currentBlock);
+      const headBefore = await contracts.LinearCalculator.rewardHead();
+      const lastBefore = await contracts.Community.getLastRewardCursor();
+      const exactExpectedRewardsBefore = await contracts.LinearCalculator.calculateReward(
+        contracts.Community.address,
+        lastBefore,
+        headBefore
+      );
 
       const pendingBefore = await contracts.Community.getPoolPendingRewards(poolAddress, alice.address);
       expect(pendingBefore).to.equal(exactExpectedRewardsBefore);
 
       // After calling withdrawPoolsRewards, the block advances by 1, so the reward gets another block
-      const rewPerBlock = await contracts.LinearCalculator.getCurrentRewardPerBlock(contracts.Community.address);
+      const rewPerBlock = await contracts.LinearCalculator.getCurrentRewardRate(contracts.Community.address);
       const exactExpectedRewardsAfter = exactExpectedRewardsBefore.add(rewPerBlock);
 
       const balBefore = await contracts.CToken.balanceOf(alice.address);
@@ -651,6 +659,16 @@ describe("Comprehensive Contract Tests", function () {
       // Mine past distribution start
       await mine(150);
 
+      // Gross rewards that the next pool update will mint (matches _updatePoolsInternal)
+      const lastSnapshot = await contracts.Community.getLastRewardCursor();
+      const headSnapshot = await contracts.LinearCalculator.rewardHead();
+      const grossOnNextUpdate = await contracts.LinearCalculator.calculateReward(
+        contracts.Community.address,
+        lastSnapshot,
+        headSnapshot
+      );
+      const expectedFee = grossOnNextUpdate.mul(2000).div(10000);
+
       // Trigger update
       await poolContract.connect(alice).deposit(1, { value: 0 });
 
@@ -659,12 +677,6 @@ describe("Comprehensive Contract Tests", function () {
       await contracts.Community.connect(communityOwner).adminWithdrawRevenue();
       const devBalAfter = await contracts.CToken.balanceOf(communityOwner.address);
 
-      // Determine the expected fee
-      const startBlock = await contracts.LinearCalculator.getStartBlock(contracts.Community.address);
-      const currentBlock = await ethers.provider.getBlockNumber();
-      const exactTotalRewards = await contracts.LinearCalculator.calculateReward(contracts.Community.address, startBlock, currentBlock);
-      const expectedFee = exactTotalRewards.mul(2000).div(10000);
-      
       const actualFeeReceived = devBalAfter.sub(devBalBefore);
       expect(actualFeeReceived).to.be.closeTo(expectedFee, ethers.utils.parseUnits("150", 18));
     });
@@ -734,7 +746,7 @@ describe("Comprehensive Contract Tests", function () {
       // Gap (s2+1 to s3-1): Should correctly yield 0
       // Era 2 (s3 to s4): Block s3 to s3+5, duration = s3+5 - max(s3-1, s3-1) = 6 blocks * 200 = 1200
       // Total Expected = 100 + 1200 = 1300
-      const reward = await calc.calculateReward(mockCommunity, s2, s3 + 5);
+      const reward = await calc.calculateReward(mockCommunity, s2 - 1, s3 + 5);
       expect(reward).to.equal(ethers.utils.parseUnits("1300", 18));
     });
 
@@ -767,12 +779,12 @@ describe("Comprehensive Contract Tests", function () {
     });
 
     it("calculateReward returns 0 before any era starts", async () => {
-      const reward = await contracts.LinearCalculator.calculateReward(contracts.Community.address, 1, 2);
+      const reward = await contracts.LinearCalculator.calculateReward(contracts.Community.address, 0, 2);
       expect(reward).to.equal(0);
     });
 
-    it("getCurrentRewardPerBlock returns 0 outside all eras", async () => {
-      const rpb = await contracts.LinearCalculator.getCurrentRewardPerBlock(contracts.Community.address);
+    it("getCurrentRewardRate returns 0 outside all eras", async () => {
+      const rpb = await contracts.LinearCalculator.getCurrentRewardRate(contracts.Community.address);
       // Likely outside distribution range in the test, would be 0
       // (depends on current block vs eras)
     });

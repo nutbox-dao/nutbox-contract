@@ -48,10 +48,20 @@ async function deployLinearCalculatorContract(communityFactory) {
   return contract;
 }
 
+async function deployLinearTimeCalculatorContract(communityFactory) {
+  const factory = await ethers.getContractFactory("LinearTimeCalculator");
+  const contract = await factory.deploy(communityFactory.address);
+  return contract;
+}
+
 async function deploy(owner) {
   const feeRecipient = owner.address;
   const Committee = await deployCommitteeContract(feeRecipient);
   await Committee.adminSetFeeRecipient(feeRecipient);
+  // Tests use { value: 0 } on createCommunity / pool ops; zero fees for local harness only.
+  await Committee.adminSetCreateCommunityFee(0);
+  await Committee.adminSetCommunitySettingsFee(0);
+  await Committee.adminSetPoolOperationFee(0);
 
   const MintableERC20Factory = await deployMintableERC20FactoryContract();
   const CommunityFactory = await deployCommunityFactoryContract(Committee);
@@ -60,9 +70,11 @@ async function deploy(owner) {
   const ERC1155StakingFactory = await deployERC1155StakingFactoryContract(CommunityFactory.address);
   const SPStakingFactory = await deploySPStakingFactoryContract(CommunityFactory.address);
   const LinearCalculator = await deployLinearCalculatorContract(CommunityFactory);
+  const LinearTimeCalculator = await deployLinearTimeCalculatorContract(CommunityFactory);
 
   await Committee.adminAddContract(MintableERC20Factory.address);
   await Committee.adminAddContract(LinearCalculator.address);
+  await Committee.adminAddContract(LinearTimeCalculator.address);
   await Committee.adminAddContract(ERC20StakingFactory.address);
   await Committee.adminAddContract(ERC20LockingFactory.address);
   await Committee.adminAddContract(ERC1155StakingFactory.address);
@@ -77,6 +89,7 @@ async function deploy(owner) {
     ERC1155StakingFactory,
     SPStakingFactory,
     LinearCalculator,
+    LinearTimeCalculator,
   };
 }
 
