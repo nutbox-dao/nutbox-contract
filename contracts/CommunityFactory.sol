@@ -37,7 +37,7 @@ contract CommunityFactory {
         bytes calldata tokenMeta,
         address rewardCalculator,
         bytes calldata distributionPolicy
-    ) external payable {
+    ) external payable returns (address) {
         // Charge Tier 1 fee: create community
         uint256 fee = ICommittee(committee).getCreateCommunityFee();
         if (fee > 0) {
@@ -77,5 +77,7 @@ contract CommunityFactory {
         createdCommunity[address(community)] = true;
 
         emit CommunityCreated(msg.sender, address(community), communityToken);
+
+        return address(community);
     }
 }

@@ -2,6 +2,8 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const deployCommunity = require("./create-community");
+const { findEvent } = require("./receipt-events");
+const { u256Hex, amountHex } = require("./distribution-meta");
 
 describe("Create community", async () => {
   let contracts;
@@ -17,7 +19,7 @@ describe("Create community", async () => {
   });
 
   function erc20PoolMeta(tokenAddress) {
-    return ethers.utils.solidityPack(["address"], [tokenAddress]);
+    return ethers.solidityPacked(["address"], [tokenAddress]);
   }
 
   describe("Create", () => {
@@ -27,46 +29,70 @@ describe("Create community", async () => {
 
     it("Committee sets and charges Tier 1 fees on community creation", async () => {
       const { Committee, CommunityFactory, MintableERC20Factory, LinearCalculator } = contracts;
-      const fee = ethers.utils.parseEther("0.1");
+      const fee = ethers.parseEther("0.1");
       await Committee.adminSetCreateCommunityFee(fee);
-      
-      const meta = "0x" + ethers.utils.hexZeroPad(ethers.utils.hexlify("Test Token".length), 1).substring(2) + Buffer.from("Test Token").toString("hex") + ethers.utils.hexZeroPad(ethers.utils.hexlify("TEST".length), 1).substring(2) + Buffer.from("TEST").toString("hex") + ethers.utils.hexZeroPad(ethers.utils.parseUnits("1000", 18), 32).substring(2) + alice.address.substring(2);
+
+      const meta =
+        "0x" +
+        ethers.zeroPadValue(ethers.toBeHex("Test Token".length), 1).substring(2) +
+        Buffer.from("Test Token").toString("hex") +
+        ethers.zeroPadValue(ethers.toBeHex("TEST".length), 1).substring(2) +
+        Buffer.from("TEST").toString("hex") +
+        ethers.zeroPadValue(ethers.toBeHex(ethers.parseUnits("1000", 18)), 32).substring(2) +
+        alice.address.substring(2);
 
       const blockNumber = await ethers.provider.getBlockNumber();
-      const distribution = "0x01" + ethers.utils.hexZeroPad(ethers.utils.hexlify(blockNumber + 10), 32).substring(2) + ethers.utils.hexZeroPad(ethers.utils.hexlify(blockNumber + 100), 32).substring(2) + ethers.utils.hexZeroPad(ethers.utils.parseUnits("100", 18), 32).substring(2);
+      const distribution =
+        "0x01" +
+        u256Hex(blockNumber + 10) +
+        u256Hex(blockNumber + 100) +
+        amountHex(ethers.parseUnits("100", 18));
 
-      // Should revert if no fee sent
       await expect(
-        CommunityFactory.connect(alice).createCommunity(true, ethers.constants.AddressZero, MintableERC20Factory.address, meta, LinearCalculator.address, distribution, { value: 0 })
+        CommunityFactory.connect(alice).createCommunity(
+          true,
+          ethers.ZeroAddress,
+          MintableERC20Factory.target,
+          meta,
+          LinearCalculator.target,
+          distribution,
+          { value: 0 }
+        )
       ).to.be.revertedWith("Insufficient fee");
 
-      // Should succeed if exact fee sent
-      await CommunityFactory.connect(alice).createCommunity(true, ethers.constants.AddressZero, MintableERC20Factory.address, meta, LinearCalculator.address, distribution, { value: fee });
+      await CommunityFactory.connect(alice).createCommunity(
+        true,
+        ethers.ZeroAddress,
+        MintableERC20Factory.target,
+        meta,
+        LinearCalculator.target,
+        distribution,
+        { value: fee }
+      );
 
-      // Clean up for other tests
       await Committee.adminSetCreateCommunityFee(0);
     });
   });
 
   describe("Create pools", () => {
     it("Community owner can add ERC20 pool", async () => {
-      const meta = erc20PoolMeta(contracts.CToken.address);
+      const meta = erc20PoolMeta(contracts.CToken.target);
       await contracts.Community.connect(communityOwner).adminAddPool(
         "Stake ERC20",
         [10000],
-        contracts.ERC20StakingFactory.address,
+        contracts.ERC20StakingFactory.target,
         meta,
         { value: 0 }
       );
     });
 
     it("Non-owner cannot add pool", async () => {
-      const meta = erc20PoolMeta(contracts.CToken.address);
+      const meta = erc20PoolMeta(contracts.CToken.target);
       await expect(
         contracts.Community.adminAddPool(
           "Stake ERC20",
           [10000],
-          contracts.ERC20StakingFactory.address,
+          contracts.ERC20StakingFactory.target,
           meta,
           { value: 0 }
         )
@@ -74,151 +100,154 @@ describe("Create community", async () => {
     });
 
     it("User can deposit into ERC20 staking pool", async () => {
-      const meta = erc20PoolMeta(contracts.CToken.address);
+      const meta = erc20PoolMeta(contracts.CToken.target);
       const tx = await contracts.Community.connect(communityOwner).adminAddPool(
         "Stake ERC20",
         [10000],
-        contracts.ERC20StakingFactory.address,
+        contracts.ERC20StakingFactory.target,
         meta,
         { value: 0 }
       );
       const receipt = await tx.wait();
-      const event = receipt.events.find((e) => e.event === "AdminSetPoolRatio");
+      const event = findEvent(
+        receipt,
+        contracts.Community.interface,
+        "AdminSetPoolRatio"
+      );
       const poolAddress = event.args.pools[0];
 
       await contracts.CToken.connect(communityOwner).transfer(alice.address, 1000);
       await contracts.CToken.connect(alice).approve(poolAddress, 100000);
-      
-      const fee = ethers.utils.parseEther("0.01");
+
+      const fee = ethers.parseEther("0.01");
       await contracts.Committee.adminSetPoolOperationFee(fee);
 
       const poolContract = await ethers.getContractAt("ERC20Staking", poolAddress);
-      
-      // Should revert if no fee sent
-      await expect(poolContract.connect(alice).deposit(1000, { value: 0 })).to.be.revertedWith("Insufficient fee");
-      
-      // Deposit with Tier 3 fee
-      await poolContract.connect(alice).deposit(1000, { value: fee });
-      expect(await poolContract.getUserStakedAmount(alice.address)).to.equal(1000);
 
-      // Clean up
+      await expect(
+        poolContract.connect(alice).deposit(1000, { value: 0 })
+      ).to.be.revertedWith("Insufficient fee");
+
+      await poolContract.connect(alice).deposit(1000, { value: fee });
+      expect(await poolContract.getUserStakedAmount(alice.address)).to.equal(1000n);
+
       await contracts.Committee.adminSetPoolOperationFee(0);
     });
 
     it("User can lock and redeem ERC20 in locking pool", async () => {
-      // Create ERC20Locking pool with 1 week lock (604800s)
       const lockDur = 604800;
-      const meta = ethers.utils.solidityPack(["address", "uint256"], [contracts.CToken.address, lockDur]);
-      
+      const meta = ethers.solidityPacked(
+        ["address", "uint256"],
+        [contracts.CToken.target, lockDur]
+      );
+
       const tx = await contracts.Community.connect(communityOwner).adminAddPool(
         "Lock ERC20",
         [10000],
-        contracts.ERC20LockingFactory.address,
+        contracts.ERC20LockingFactory.target,
         meta,
         { value: 0 }
       );
-      
+
       const receipt = await tx.wait();
-      const event = receipt.events.find((e) => e.event === "AdminSetPoolRatio");
-      const poolAddress = event.args.pools[0]; // Active pool length index would be different, but in isolation it's [0] or [1].
-      
-      // Let's actually use the activePools method to get the latest pool
-      const activedPools = await contracts.Community.activedPools(0);
-      const targetPool = activedPools; // If only one created. Wait, previous tests aren't isolated perfectly, so let's get the right one from array length.
-      
+      const event = findEvent(
+        receipt,
+        contracts.Community.interface,
+        "AdminSetPoolRatio"
+      );
+      const poolAddress = event.args.pools[0];
+
       const lockingPool = await ethers.getContractAt("ERC20Locking", poolAddress);
 
       await contracts.CToken.connect(communityOwner).transfer(alice.address, 1000);
-      await contracts.CToken.connect(alice).approve(lockingPool.address, 1000);
+      await contracts.CToken.connect(alice).approve(lockingPool.target, 1000);
 
-      // Deposit
       await lockingPool.connect(alice).deposit(1000, { value: 0 });
-      expect(await lockingPool.getUserStakedAmount(alice.address)).to.equal(1000);
+      expect(await lockingPool.getUserStakedAmount(alice.address)).to.equal(1000n);
 
-      // Withdraw - moves to queue
       await lockingPool.connect(alice).withdraw(1000, { value: 0 });
-      expect(await lockingPool.getUserStakedAmount(alice.address)).to.equal(0);
-      
-      const count = await lockingPool.redeemRequestCount(alice.address);
-      expect(count).to.equal(1);
+      expect(await lockingPool.getUserStakedAmount(alice.address)).to.equal(0n);
 
-      // Fast forward time
+      const count = await lockingPool.redeemRequestCount(alice.address);
+      expect(count).to.equal(1n);
+
       await ethers.provider.send("evm_increaseTime", [lockDur]);
       await ethers.provider.send("evm_mine");
 
-      // Claim
       const b0 = await contracts.CToken.balanceOf(alice.address);
       await lockingPool.connect(alice).redeem();
       const b1 = await contracts.CToken.balanceOf(alice.address);
-      
-      expect(b1.sub(b0)).to.equal(1000);
+
+      expect(b1 - b0).to.equal(1000n);
     });
   });
 
   describe("BNB Protocol Fees (Tier 1, 2, 3)", () => {
     it("Should charge Tier 2 fee for community settings and refund excess", async () => {
-      const fee = ethers.utils.parseEther("0.05");
+      const fee = ethers.parseEther("0.05");
       await contracts.Committee.adminSetCommunitySettingsFee(fee);
 
-      // We will call adminSetFeeRatio which requires Tier 2 fee
-      // Excess sending: send 0.15 ether, expect 0.1 ether refund
-      const sendingAmount = ethers.utils.parseEther("0.15");
+      const sendingAmount = ethers.parseEther("0.15");
 
       const balanceBefore = await ethers.provider.getBalance(communityOwner.address);
-      const recipientBalanceBefore = await ethers.provider.getBalance(owner.address); // owner is feeRecipient from deploy.js
+      const recipientBalanceBefore = await ethers.provider.getBalance(owner.address);
 
-      const tx = await contracts.Community.connect(communityOwner).adminSetFeeRatio(2000, { value: sendingAmount });
+      const tx = await contracts.Community.connect(communityOwner).adminSetFeeRatio(
+        2000,
+        { value: sendingAmount }
+      );
       const receipt = await tx.wait();
-      
-      const gasUsed = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+
+      const gasWei =
+        receipt.gasUsed *
+        (receipt.gasPrice ?? receipt.effectiveGasPrice ?? 0n);
 
       const balanceAfter = await ethers.provider.getBalance(communityOwner.address);
       const recipientBalanceAfter = await ethers.provider.getBalance(owner.address);
 
-      // Recipient gets exact fee
-      expect(recipientBalanceAfter.sub(recipientBalanceBefore)).to.equal(fee);
+      expect(recipientBalanceAfter - recipientBalanceBefore).to.equal(fee);
 
-      // Sender spent exactly gas + fee (refund occurred)
-      expect(balanceBefore.sub(balanceAfter)).to.equal(fee.add(gasUsed));
+      expect(balanceBefore - balanceAfter).to.equal(fee + gasWei);
 
-      // Clean up
       await contracts.Committee.adminSetCommunitySettingsFee(0);
     });
 
     it("Should charge Tier 3 fee and skip if user is in FeeFreeList", async () => {
-      const meta = erc20PoolMeta(contracts.CToken.address);
+      const meta = erc20PoolMeta(contracts.CToken.target);
       const tx = await contracts.Community.connect(communityOwner).adminAddPool(
         "Stake ERC20",
         [10000],
-        contracts.ERC20StakingFactory.address,
+        contracts.ERC20StakingFactory.target,
         meta,
-        { value: 0 } // Tier 2 fee is 0 here
+        { value: 0 }
       );
       const receipt = await tx.wait();
-      const event = receipt.events.find((e) => e.event === "AdminSetPoolRatio");
+      const event = findEvent(
+        receipt,
+        contracts.Community.interface,
+        "AdminSetPoolRatio"
+      );
       const poolAddress = event.args.pools[0];
 
       const poolContract = await ethers.getContractAt("ERC20Staking", poolAddress);
-      
+
       await contracts.CToken.connect(communityOwner).transfer(alice.address, 1000);
       await contracts.CToken.connect(alice).approve(poolAddress, 100000);
 
-      const fee = ethers.utils.parseEther("0.02");
+      const fee = ethers.parseEther("0.02");
       await contracts.Committee.adminSetPoolOperationFee(fee);
 
-      // 1. Fails without fee
-      await expect(poolContract.connect(alice).deposit(100, { value: 0 })).to.be.revertedWith("Insufficient fee");
+      await expect(
+        poolContract.connect(alice).deposit(100, { value: 0 })
+      ).to.be.revertedWith("Insufficient fee");
 
-      // 2. Succeeds with fee
       await poolContract.connect(alice).deposit(100, { value: fee });
 
-      // 3. User added to feeFreeList bypasses fee
       await contracts.Committee.adminAddFeeFreeAddress(alice.address);
-      await poolContract.connect(alice).deposit(100, { value: 0 }); // No fee sent!
-      
-      expect(await poolContract.getUserStakedAmount(alice.address)).to.equal(200);
+      await poolContract.connect(alice).deposit(100, { value: 0 });
 
-      // Clean up
+      expect(await poolContract.getUserStakedAmount(alice.address)).to.equal(200n);
+
       await contracts.Committee.adminSetPoolOperationFee(0);
       await contracts.Committee.adminRemoveFeeFreeAddress(alice.address);
     });

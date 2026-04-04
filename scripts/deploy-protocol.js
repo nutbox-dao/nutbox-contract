@@ -1,5 +1,5 @@
 /**
- * 协议全量部署（Hardhat）
+ * 协议全量部署（Hardhat 脚本，与 Ignition 行为对齐）
  *
  * 用法:
  *   npx hardhat run scripts/deploy-protocol.js --network localhost
@@ -11,8 +11,8 @@
  *
  * 输出: deployments/<network>.json
  *
- * 部署后验证源码: 配置 BSCSCAN_API_KEY / ARB_KEY 后执行
- *   npx hardhat run scripts/verify-protocol.js --network <同上网络>
+ * 推荐主网使用 Ignition（带 --verify）:
+ *   npm run deploy:bsc
  */
 const fs = require("fs");
 const path = require("path");
@@ -26,10 +26,10 @@ async function main() {
   const claimSignerAddr =
     process.env.SOCIAL_CURATION_CLAIM_SIGNER || deployer.address;
 
-  if (!ethers.utils.isAddress(feeRecipient)) {
+  if (!ethers.isAddress(feeRecipient)) {
     throw new Error("Invalid FEE_RECIPIENT");
   }
-  if (!ethers.utils.isAddress(claimSignerAddr)) {
+  if (!ethers.isAddress(claimSignerAddr)) {
     throw new Error("Invalid SOCIAL_CURATION_CLAIM_SIGNER");
   }
 
@@ -40,93 +40,100 @@ async function main() {
 
   const Committee = await ethers.getContractFactory("Committee");
   const committee = await Committee.deploy(feeRecipient);
-  await committee.deployed();
-  console.log("Committee:", committee.address);
-
-  // await (await committee.adminSetFeeRecipient(feeRecipient)).wait();
+  await committee.waitForDeployment();
+  console.log("Committee:", await committee.getAddress());
 
   const MintableERC20Factory = await ethers.getContractFactory(
     "MintableERC20Factory"
   );
   const mintableERC20Factory = await MintableERC20Factory.deploy();
-  await mintableERC20Factory.deployed();
-  console.log("MintableERC20Factory:", mintableERC20Factory.address);
+  await mintableERC20Factory.waitForDeployment();
+  console.log(
+    "MintableERC20Factory:",
+    await mintableERC20Factory.getAddress()
+  );
 
   const CommunityFactory = await ethers.getContractFactory("CommunityFactory");
-  const communityFactory = await CommunityFactory.deploy(committee.address);
-  await communityFactory.deployed();
-  console.log("CommunityFactory:", communityFactory.address);
+  const communityFactory = await CommunityFactory.deploy(
+    await committee.getAddress()
+  );
+  await communityFactory.waitForDeployment();
+  console.log("CommunityFactory:", await communityFactory.getAddress());
+
+  const cf = await communityFactory.getAddress();
 
   const ERC20StakingFactory = await ethers.getContractFactory(
     "ERC20StakingFactory"
   );
-  const erc20StakingFactory = await ERC20StakingFactory.deploy(
-    communityFactory.address
+  const erc20StakingFactory = await ERC20StakingFactory.deploy(cf);
+  await erc20StakingFactory.waitForDeployment();
+  console.log(
+    "ERC20StakingFactory:",
+    await erc20StakingFactory.getAddress()
   );
-  await erc20StakingFactory.deployed();
-  console.log("ERC20StakingFactory:", erc20StakingFactory.address);
 
   const ERC20LockingFactory = await ethers.getContractFactory(
     "ERC20LockingFactory"
   );
-  const erc20LockingFactory = await ERC20LockingFactory.deploy(
-    communityFactory.address
+  const erc20LockingFactory = await ERC20LockingFactory.deploy(cf);
+  await erc20LockingFactory.waitForDeployment();
+  console.log(
+    "ERC20LockingFactory:",
+    await erc20LockingFactory.getAddress()
   );
-  await erc20LockingFactory.deployed();
-  console.log("ERC20LockingFactory:", erc20LockingFactory.address);
 
   const ERC1155StakingFactory = await ethers.getContractFactory(
     "ERC1155StakingFactory"
   );
-  const erc1155StakingFactory = await ERC1155StakingFactory.deploy(
-    communityFactory.address
+  const erc1155StakingFactory = await ERC1155StakingFactory.deploy(cf);
+  await erc1155StakingFactory.waitForDeployment();
+  console.log(
+    "ERC1155StakingFactory:",
+    await erc1155StakingFactory.getAddress()
   );
-  await erc1155StakingFactory.deployed();
-  console.log("ERC1155StakingFactory:", erc1155StakingFactory.address);
 
   const SPStakingFactory = await ethers.getContractFactory("SPStakingFactory");
-  const spStakingFactory = await SPStakingFactory.deploy(
-    communityFactory.address
-  );
-  await spStakingFactory.deployed();
-  console.log("SPStakingFactory:", spStakingFactory.address);
+  const spStakingFactory = await SPStakingFactory.deploy(cf);
+  await spStakingFactory.waitForDeployment();
+  console.log("SPStakingFactory:", await spStakingFactory.getAddress());
 
   const SocialCurationFactory = await ethers.getContractFactory(
     "SocialCurationFactory"
   );
   const socialCurationFactory = await SocialCurationFactory.deploy(
-    communityFactory.address,
+    cf,
     claimSignerAddr
   );
-  await socialCurationFactory.deployed();
-  console.log("SocialCurationFactory:", socialCurationFactory.address);
+  await socialCurationFactory.waitForDeployment();
+  console.log(
+    "SocialCurationFactory:",
+    await socialCurationFactory.getAddress()
+  );
 
   const LinearCalculator = await ethers.getContractFactory("LinearCalculator");
-  const linearCalculator = await LinearCalculator.deploy(
-    communityFactory.address
-  );
-  await linearCalculator.deployed();
-  console.log("LinearCalculator:", linearCalculator.address);
+  const linearCalculator = await LinearCalculator.deploy(cf);
+  await linearCalculator.waitForDeployment();
+  console.log("LinearCalculator:", await linearCalculator.getAddress());
 
   const LinearTimeCalculator = await ethers.getContractFactory(
     "LinearTimeCalculator"
   );
-  const linearTimeCalculator = await LinearTimeCalculator.deploy(
-    communityFactory.address
+  const linearTimeCalculator = await LinearTimeCalculator.deploy(cf);
+  await linearTimeCalculator.waitForDeployment();
+  console.log(
+    "LinearTimeCalculator:",
+    await linearTimeCalculator.getAddress()
   );
-  await linearTimeCalculator.deployed();
-  console.log("LinearTimeCalculator:", linearTimeCalculator.address);
 
-  // Committee 白名单：创建社区 / 加池 会校验
   const whitelistTxs = [
-    committee.adminAddContract(mintableERC20Factory.address),
-    committee.adminAddContract(linearCalculator.address),
-    committee.adminAddContract(linearTimeCalculator.address),
-    committee.adminAddContract(erc20StakingFactory.address),
-    committee.adminAddContract(erc20LockingFactory.address),
-    committee.adminAddContract(erc1155StakingFactory.address),
-    committee.adminAddContract(spStakingFactory.address),
-    committee.adminAddContract(socialCurationFactory.address),
+    committee.adminAddContract(await mintableERC20Factory.getAddress()),
+    committee.adminAddContract(await linearCalculator.getAddress()),
+    committee.adminAddContract(await linearTimeCalculator.getAddress()),
+    committee.adminAddContract(await erc20StakingFactory.getAddress()),
+    committee.adminAddContract(await erc20LockingFactory.getAddress()),
+    committee.adminAddContract(await erc1155StakingFactory.getAddress()),
+    committee.adminAddContract(await spStakingFactory.getAddress()),
+    committee.adminAddContract(await socialCurationFactory.getAddress()),
   ];
   for (const tx of whitelistTxs) {
     await (await tx).wait();
@@ -147,16 +154,16 @@ async function main() {
     deployer: deployer.address,
     feeRecipient,
     socialCurationClaimSigner: claimSignerAddr,
-    Committee: committee.address,
-    MintableERC20Factory: mintableERC20Factory.address,
-    CommunityFactory: communityFactory.address,
-    ERC20StakingFactory: erc20StakingFactory.address,
-    ERC20LockingFactory: erc20LockingFactory.address,
-    ERC1155StakingFactory: erc1155StakingFactory.address,
-    SPStakingFactory: spStakingFactory.address,
-    SocialCurationFactory: socialCurationFactory.address,
-    LinearCalculator: linearCalculator.address,
-    LinearTimeCalculator: linearTimeCalculator.address,
+    Committee: await committee.getAddress(),
+    MintableERC20Factory: await mintableERC20Factory.getAddress(),
+    CommunityFactory: await communityFactory.getAddress(),
+    ERC20StakingFactory: await erc20StakingFactory.getAddress(),
+    ERC20LockingFactory: await erc20LockingFactory.getAddress(),
+    ERC1155StakingFactory: await erc1155StakingFactory.getAddress(),
+    SPStakingFactory: await spStakingFactory.getAddress(),
+    SocialCurationFactory: await socialCurationFactory.getAddress(),
+    LinearCalculator: await linearCalculator.getAddress(),
+    LinearTimeCalculator: await linearTimeCalculator.getAddress(),
   };
 
   const dir = path.join(__dirname, "..", "deployments");

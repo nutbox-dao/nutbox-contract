@@ -2,31 +2,33 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { loadFixture, mine } = require("@nomicfoundation/hardhat-network-helpers");
 const deployCommunity = require("./create-community");
+const { findEvent } = require("./receipt-events");
+const { u256Hex, amountHex } = require("./distribution-meta");
 
 /**
  * Helper: build ERC20 pool meta from token address
  */
 function erc20PoolMeta(tokenAddress) {
-  return ethers.utils.solidityPack(["address"], [tokenAddress]);
+  return ethers.solidityPacked(["address"], [tokenAddress]);
 }
 
 /**
  * Helper: build ERC20Locking pool meta
  */
 function erc20LockingMeta(tokenAddress, lockDuration) {
-  return ethers.utils.solidityPack(["address", "uint256"], [tokenAddress, lockDuration]);
+  return ethers.solidityPacked(["address", "uint256"], [tokenAddress, lockDuration]);
 }
 
 /**
  * Helper: create a pool and return its address
  */
 async function createERC20Pool(contracts, communityOwner, ratios) {
-  const meta = erc20PoolMeta(contracts.CToken.address);
+  const meta = erc20PoolMeta(contracts.CToken.target);
   const tx = await contracts.Community.connect(communityOwner).adminAddPool(
-    "Stake ERC20", ratios, contracts.ERC20StakingFactory.address, meta, { value: 0 }
+    "Stake ERC20", ratios, contracts.ERC20StakingFactory.target, meta, { value: 0 }
   );
   const receipt = await tx.wait();
-  const event = receipt.events.find((e) => e.event === "AdminSetPoolRatio");
+  const event = findEvent(receipt, contracts.Community.interface, "AdminSetPoolRatio");
   return event.args.pools[event.args.pools.length - 1];
 }
 
@@ -94,14 +96,14 @@ describe("Comprehensive Contract Tests", function () {
     describe("Fee Configuration", () => {
       it("Fee recipient cannot be zero address", async () => {
         await expect(
-          contracts.Committee.adminSetFeeRecipient(ethers.constants.AddressZero)
+          contracts.Committee.adminSetFeeRecipient(ethers.ZeroAddress)
         ).to.be.revertedWith("Invalid feeRecipient");
       });
 
       it("All fee tiers can be set and read correctly", async () => {
-        const fee1 = ethers.utils.parseEther("0.1");
-        const fee2 = ethers.utils.parseEther("0.05");
-        const fee3 = ethers.utils.parseEther("0.01");
+        const fee1 = ethers.parseEther("0.1");
+        const fee2 = ethers.parseEther("0.05");
+        const fee3 = ethers.parseEther("0.01");
 
         await contracts.Committee.adminSetCreateCommunityFee(fee1);
         await contracts.Committee.adminSetCommunitySettingsFee(fee2);
@@ -144,22 +146,22 @@ describe("Comprehensive Contract Tests", function () {
   describe("CommunityFactory", () => {
     it("Rejects unsupported calculator", async () => {
       const meta = "0x" +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(4), 1).substring(2) +
+        ethers.zeroPadValue(ethers.toBeHex(4), 1).substring(2) +
         Buffer.from("Test").toString("hex") +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substring(2) +
+        ethers.zeroPadValue(ethers.toBeHex(2), 1).substring(2) +
         Buffer.from("TT").toString("hex") +
-        ethers.utils.hexZeroPad(ethers.utils.parseUnits("1000", 18), 32).substring(2) +
+        amountHex(ethers.parseUnits("1000", 18)) +
         alice.address.substring(2);
 
       const blockNumber = await ethers.provider.getBlockNumber();
       const distribution = "0x01" +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(blockNumber + 10), 32).substring(2) +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(blockNumber + 100), 32).substring(2) +
-        ethers.utils.hexZeroPad(ethers.utils.parseUnits("100", 18), 32).substring(2);
+        ethers.zeroPadValue(ethers.toBeHex(blockNumber + 10), 32).substring(2) +
+        ethers.zeroPadValue(ethers.toBeHex(blockNumber + 100), 32).substring(2) +
+        amountHex(ethers.parseUnits("100", 18));
 
       await expect(
         contracts.CommunityFactory.connect(alice).createCommunity(
-          true, ethers.constants.AddressZero, contracts.MintableERC20Factory.address,
+          true, ethers.ZeroAddress, contracts.MintableERC20Factory.target,
           meta, alice.address, distribution, { value: 0 }
         )
       ).to.be.revertedWith("UC");
@@ -167,30 +169,30 @@ describe("Comprehensive Contract Tests", function () {
 
     it("Rejects unsupported token factory", async () => {
       const meta = "0x" +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(4), 1).substring(2) +
+        ethers.zeroPadValue(ethers.toBeHex(4), 1).substring(2) +
         Buffer.from("Test").toString("hex") +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(2), 1).substring(2) +
+        ethers.zeroPadValue(ethers.toBeHex(2), 1).substring(2) +
         Buffer.from("TT").toString("hex") +
-        ethers.utils.hexZeroPad(ethers.utils.parseUnits("1000", 18), 32).substring(2) +
+        amountHex(ethers.parseUnits("1000", 18)) +
         alice.address.substring(2);
 
       const blockNumber = await ethers.provider.getBlockNumber();
       const distribution = "0x01" +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(blockNumber + 10), 32).substring(2) +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(blockNumber + 100), 32).substring(2) +
-        ethers.utils.hexZeroPad(ethers.utils.parseUnits("100", 18), 32).substring(2);
+        ethers.zeroPadValue(ethers.toBeHex(blockNumber + 10), 32).substring(2) +
+        ethers.zeroPadValue(ethers.toBeHex(blockNumber + 100), 32).substring(2) +
+        amountHex(ethers.parseUnits("100", 18));
 
       // Use a non-whitelisted token factory
       await expect(
         contracts.CommunityFactory.connect(alice).createCommunity(
-          true, ethers.constants.AddressZero, alice.address,
-          meta, contracts.LinearCalculator.address, distribution, { value: 0 }
+          true, ethers.ZeroAddress, alice.address,
+          meta, contracts.LinearCalculator.target, distribution, { value: 0 }
         )
       ).to.be.revertedWith("UTC");
     });
 
     it("Tracks created communities correctly", async () => {
-      expect(await contracts.CommunityFactory.createdCommunity(contracts.Community.address)).to.equal(true);
+      expect(await contracts.CommunityFactory.createdCommunity(contracts.Community.target)).to.equal(true);
       expect(await contracts.CommunityFactory.createdCommunity(alice.address)).to.equal(false);
     });
   });
@@ -212,7 +214,7 @@ describe("Comprehensive Contract Tests", function () {
 
       it("Cannot set zero address as dev", async () => {
         await expect(
-          contracts.Community.connect(communityOwner).adminSetDev(ethers.constants.AddressZero)
+          contracts.Community.connect(communityOwner).adminSetDev(ethers.ZeroAddress)
         ).to.be.revertedWith("IA");
       });
     });
@@ -238,25 +240,25 @@ describe("Comprehensive Contract Tests", function () {
 
     describe("adminAddPool", () => {
       it("Ratio count must match activePools + 1", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
+        const meta = erc20PoolMeta(contracts.CToken.target);
         await expect(
           contracts.Community.connect(communityOwner).adminAddPool(
-            "Bad", [5000, 5000], contracts.ERC20StakingFactory.address, meta, { value: 0 }
+            "Bad", [5000, 5000], contracts.ERC20StakingFactory.target, meta, { value: 0 }
           )
         ).to.be.revertedWith("WPC");
       });
 
       it("Ratio sum must equal 10000 or 0", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
+        const meta = erc20PoolMeta(contracts.CToken.target);
         await expect(
           contracts.Community.connect(communityOwner).adminAddPool(
-            "Bad", [5000], contracts.ERC20StakingFactory.address, meta, { value: 0 }
+            "Bad", [5000], contracts.ERC20StakingFactory.target, meta, { value: 0 }
           )
         ).to.be.revertedWith("RS!=1w");
       });
 
       it("Rejects non-whitelisted pool factory", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
+        const meta = erc20PoolMeta(contracts.CToken.target);
         await expect(
           contracts.Community.connect(communityOwner).adminAddPool(
             "Bad", [10000], alice.address, meta, { value: 0 }
@@ -265,18 +267,18 @@ describe("Comprehensive Contract Tests", function () {
       });
 
       it("Can add multiple pools with correct ratios", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
+        const meta = erc20PoolMeta(contracts.CToken.target);
         await contracts.Community.connect(communityOwner).adminAddPool(
-          "Pool A", [10000], contracts.ERC20StakingFactory.address, meta, { value: 0 }
+          "Pool A", [10000], contracts.ERC20StakingFactory.target, meta, { value: 0 }
         );
         await contracts.Community.connect(communityOwner).adminAddPool(
-          "Pool B", [5000, 5000], contracts.ERC20StakingFactory.address, meta, { value: 0 }
+          "Pool B", [5000, 5000], contracts.ERC20StakingFactory.target, meta, { value: 0 }
         );
         // Verify two active pools
         const pool0 = await contracts.Community.activedPools(0);
         const pool1 = await contracts.Community.activedPools(1);
-        expect(pool0).to.not.equal(ethers.constants.AddressZero);
-        expect(pool1).to.not.equal(ethers.constants.AddressZero);
+        expect(pool0).to.not.equal(ethers.ZeroAddress);
+        expect(pool1).to.not.equal(ethers.ZeroAddress);
         expect(pool0).to.not.equal(pool1);
 
         // Explicit SET -> GET assertions
@@ -285,20 +287,20 @@ describe("Comprehensive Contract Tests", function () {
       });
 
       it("Can add pool with all-zero ratios", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
+        const meta = erc20PoolMeta(contracts.CToken.target);
         await contracts.Community.connect(communityOwner).adminAddPool(
-          "Pool Zero", [0], contracts.ERC20StakingFactory.address, meta, { value: 0 }
+          "Pool Zero", [0], contracts.ERC20StakingFactory.target, meta, { value: 0 }
         );
       });
     });
 
     describe("adminClosePool", () => {
       it("Can close a pool by index and preserves order", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
+        const meta = erc20PoolMeta(contracts.CToken.target);
         // Add 3 pools: A, B, C
-        await contracts.Community.connect(communityOwner).adminAddPool("A", [10000], contracts.ERC20StakingFactory.address, meta, { value: 0 });
-        await contracts.Community.connect(communityOwner).adminAddPool("B", [5000, 5000], contracts.ERC20StakingFactory.address, meta, { value: 0 });
-        await contracts.Community.connect(communityOwner).adminAddPool("C", [3333, 3333, 3334], contracts.ERC20StakingFactory.address, meta, { value: 0 });
+        await contracts.Community.connect(communityOwner).adminAddPool("A", [10000], contracts.ERC20StakingFactory.target, meta, { value: 0 });
+        await contracts.Community.connect(communityOwner).adminAddPool("B", [5000, 5000], contracts.ERC20StakingFactory.target, meta, { value: 0 });
+        await contracts.Community.connect(communityOwner).adminAddPool("C", [3333, 3333, 3334], contracts.ERC20StakingFactory.target, meta, { value: 0 });
 
         const poolA = await contracts.Community.activedPools(0);
         const poolB = await contracts.Community.activedPools(1);
@@ -319,8 +321,8 @@ describe("Comprehensive Contract Tests", function () {
       });
 
       it("Non-owner cannot close pool", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
-        await contracts.Community.connect(communityOwner).adminAddPool("A", [10000], contracts.ERC20StakingFactory.address, meta, { value: 0 });
+        const meta = erc20PoolMeta(contracts.CToken.target);
+        await contracts.Community.connect(communityOwner).adminAddPool("A", [10000], contracts.ERC20StakingFactory.target, meta, { value: 0 });
         await expect(
           contracts.Community.connect(alice).adminClosePool(0, [], { value: 0 })
         ).to.be.revertedWith("Ownable: caller is not the owner");
@@ -329,29 +331,22 @@ describe("Comprehensive Contract Tests", function () {
 
     describe("adminSetPoolRatios", () => {
       it("Can update ratios for existing pools", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
-        await contracts.Community.connect(communityOwner).adminAddPool("A", [10000], contracts.ERC20StakingFactory.address, meta, { value: 0 });
-        await contracts.Community.connect(communityOwner).adminAddPool("B", [5000, 5000], contracts.ERC20StakingFactory.address, meta, { value: 0 });
+        const meta = erc20PoolMeta(contracts.CToken.target);
+        await contracts.Community.connect(communityOwner).adminAddPool("A", [10000], contracts.ERC20StakingFactory.target, meta, { value: 0 });
+        await contracts.Community.connect(communityOwner).adminAddPool("B", [5000, 5000], contracts.ERC20StakingFactory.target, meta, { value: 0 });
         // Change ratios to 70/30
         await contracts.Community.connect(communityOwner).adminSetPoolRatios([7000, 3000], { value: 0 });
       });
 
       it("Reverts if ratio count doesn't match pool count", async () => {
-        const meta = erc20PoolMeta(contracts.CToken.address);
-        await contracts.Community.connect(communityOwner).adminAddPool("A", [10000], contracts.ERC20StakingFactory.address, meta, { value: 0 });
+        const meta = erc20PoolMeta(contracts.CToken.target);
+        await contracts.Community.connect(communityOwner).adminAddPool("A", [10000], contracts.ERC20StakingFactory.target, meta, { value: 0 });
         await expect(
           contracts.Community.connect(communityOwner).adminSetPoolRatios([5000, 5000], { value: 0 })
         ).to.be.revertedWith("WL");
       });
     });
 
-    describe("adminWithdrawReward", () => {
-      it("Non-owner cannot withdraw reward", async () => {
-        await expect(
-          contracts.Community.connect(alice).adminWithdrawReward(100)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
-      });
-    });
   });
 
   // ═══════════════════════════════════════════════════════════════
@@ -363,10 +358,10 @@ describe("Comprehensive Contract Tests", function () {
     beforeEach(async () => {
       poolAddress = await createERC20Pool(contracts, communityOwner, [10000]);
       poolContract = await ethers.getContractAt("ERC20Staking", poolAddress);
-      await contracts.CToken.connect(communityOwner).transfer(alice.address, ethers.utils.parseUnits("5000", 18));
-      await contracts.CToken.connect(communityOwner).transfer(bob.address, ethers.utils.parseUnits("5000", 18));
-      await contracts.CToken.connect(alice).approve(poolAddress, ethers.constants.MaxUint256);
-      await contracts.CToken.connect(bob).approve(poolAddress, ethers.constants.MaxUint256);
+      await contracts.CToken.connect(communityOwner).transfer(alice.address, ethers.parseUnits("5000", 18));
+      await contracts.CToken.connect(communityOwner).transfer(bob.address, ethers.parseUnits("5000", 18));
+      await contracts.CToken.connect(alice).approve(poolAddress, ethers.MaxUint256);
+      await contracts.CToken.connect(bob).approve(poolAddress, ethers.MaxUint256);
     });
 
     it("Cannot deposit to a closed pool", async () => {
@@ -392,7 +387,7 @@ describe("Comprehensive Contract Tests", function () {
       const balBefore = await contracts.CToken.balanceOf(alice.address);
       await poolContract.connect(alice).withdraw(99999999, { value: 0 });
       const balAfter = await contracts.CToken.balanceOf(alice.address);
-      expect(balAfter.sub(balBefore)).to.equal(1000);
+      expect(balAfter - balBefore).to.equal(1000n);
       expect(await poolContract.getUserStakedAmount(alice.address)).to.equal(0);
     });
 
@@ -413,8 +408,8 @@ describe("Comprehensive Contract Tests", function () {
     });
 
     it("getFactory and getCommunity return correct addresses", async () => {
-      expect(await poolContract.getCommunity()).to.equal(contracts.Community.address);
-      expect(await poolContract.getFactory()).to.equal(contracts.ERC20StakingFactory.address);
+      expect(await poolContract.getCommunity()).to.equal(contracts.Community.target);
+      expect(await poolContract.getFactory()).to.equal(contracts.ERC20StakingFactory.target);
     });
 
     it("Withdraw with no prior deposit does nothing", async () => {
@@ -424,7 +419,7 @@ describe("Comprehensive Contract Tests", function () {
 
     it("Compound flow: close pool -> user reads pendingRewards -> user withdraws principal", async () => {
       // 1. User deposits
-      await poolContract.connect(alice).deposit(ethers.utils.parseUnits("1000", 18), { value: 0 });
+      await poolContract.connect(alice).deposit(ethers.parseUnits("1000", 18), { value: 0 });
 
       // 2. Time passes
       await mine(150);
@@ -441,10 +436,10 @@ describe("Comprehensive Contract Tests", function () {
 
       // 5. User withdraws principal
       const balBefore = await contracts.CToken.balanceOf(alice.address);
-      await poolContract.connect(alice).withdraw(ethers.utils.parseUnits("1000", 18), { value: 0 });
+      await poolContract.connect(alice).withdraw(ethers.parseUnits("1000", 18), { value: 0 });
       const balAfter = await contracts.CToken.balanceOf(alice.address);
 
-      expect(balAfter.sub(balBefore)).to.equal(ethers.utils.parseUnits("1000", 18));
+      expect(balAfter - balBefore).to.equal(ethers.parseUnits("1000", 18));
       expect(await poolContract.getUserStakedAmount(alice.address)).to.equal(0);
     });
   });
@@ -457,17 +452,17 @@ describe("Comprehensive Contract Tests", function () {
     const lockDur = 604800; // 1 week
 
     beforeEach(async () => {
-      const meta = erc20LockingMeta(contracts.CToken.address, lockDur);
+      const meta = erc20LockingMeta(contracts.CToken.target, lockDur);
       const tx = await contracts.Community.connect(communityOwner).adminAddPool(
-        "Lock ERC20", [10000], contracts.ERC20LockingFactory.address, meta, { value: 0 }
+        "Lock ERC20", [10000], contracts.ERC20LockingFactory.target, meta, { value: 0 }
       );
       const receipt = await tx.wait();
-      const event = receipt.events.find((e) => e.event === "AdminSetPoolRatio");
+      const event = findEvent(receipt, contracts.Community.interface, "AdminSetPoolRatio");
       const poolAddress = event.args.pools[event.args.pools.length - 1];
       lockingPool = await ethers.getContractAt("ERC20Locking", poolAddress);
 
-      await contracts.CToken.connect(communityOwner).transfer(alice.address, ethers.utils.parseUnits("5000", 18));
-      await contracts.CToken.connect(alice).approve(lockingPool.address, ethers.constants.MaxUint256);
+      await contracts.CToken.connect(communityOwner).transfer(alice.address, ethers.parseUnits("5000", 18));
+      await contracts.CToken.connect(alice).approve(lockingPool.target, ethers.MaxUint256);
     });
 
     it("Cannot redeem before lock period", async () => {
@@ -493,7 +488,7 @@ describe("Comprehensive Contract Tests", function () {
       const balAfter = await contracts.CToken.balanceOf(alice.address);
 
       // Should get approximately half (500 ± rounding)
-      const redeemed = balAfter.sub(balBefore);
+      const redeemed = balAfter - balBefore;
       expect(redeemed).to.be.gte(490);
       expect(redeemed).to.be.lte(510);
     });
@@ -508,7 +503,7 @@ describe("Comprehensive Contract Tests", function () {
       const balBefore = await contracts.CToken.balanceOf(alice.address);
       await lockingPool.connect(alice).redeem();
       const balAfter = await contracts.CToken.balanceOf(alice.address);
-      expect(balAfter.sub(balBefore)).to.equal(1000);
+      expect(balAfter - balBefore).to.equal(1000n);
     });
 
     it("Multiple redeem requests work independently", async () => {
@@ -524,7 +519,7 @@ describe("Comprehensive Contract Tests", function () {
       const balBefore = await contracts.CToken.balanceOf(alice.address);
       await lockingPool.connect(alice).redeem();
       const balAfter = await contracts.CToken.balanceOf(alice.address);
-      expect(balAfter.sub(balBefore)).to.equal(1000);
+      expect(balAfter - balBefore).to.equal(1000n);
     });
 
     it("Cannot deposit to closed locking pool", async () => {
@@ -544,10 +539,10 @@ describe("Comprehensive Contract Tests", function () {
     beforeEach(async () => {
       poolAddress = await createERC20Pool(contracts, communityOwner, [10000]);
       poolContract = await ethers.getContractAt("ERC20Staking", poolAddress);
-      await contracts.CToken.connect(communityOwner).transfer(alice.address, ethers.utils.parseUnits("5000", 18));
-      await contracts.CToken.connect(communityOwner).transfer(bob.address, ethers.utils.parseUnits("5000", 18));
-      await contracts.CToken.connect(alice).approve(poolAddress, ethers.constants.MaxUint256);
-      await contracts.CToken.connect(bob).approve(poolAddress, ethers.constants.MaxUint256);
+      await contracts.CToken.connect(communityOwner).transfer(alice.address, ethers.parseUnits("5000", 18));
+      await contracts.CToken.connect(communityOwner).transfer(bob.address, ethers.parseUnits("5000", 18));
+      await contracts.CToken.connect(alice).approve(poolAddress, ethers.MaxUint256);
+      await contracts.CToken.connect(bob).approve(poolAddress, ethers.MaxUint256);
     });
 
     it("Pending rewards are 0 before distribution starts", async () => {
@@ -566,7 +561,7 @@ describe("Comprehensive Contract Tests", function () {
       const head = await contracts.LinearCalculator.rewardHead();
       const last = await contracts.Community.getLastRewardCursor();
       const expectedTotalRewards = await contracts.LinearCalculator.calculateReward(
-        contracts.Community.address,
+        contracts.Community.target,
         last,
         head
       );
@@ -575,26 +570,26 @@ describe("Comprehensive Contract Tests", function () {
     });
 
     it("Two users share rewards proportionally", async () => {
-      await poolContract.connect(alice).deposit(ethers.utils.parseUnits("1000", 18), { value: 0 });
-      await poolContract.connect(bob).deposit(ethers.utils.parseUnits("3000", 18), { value: 0 });
+      await poolContract.connect(alice).deposit(ethers.parseUnits("1000", 18), { value: 0 });
+      await poolContract.connect(bob).deposit(ethers.parseUnits("3000", 18), { value: 0 });
       // Mine past distribution start
       await mine(150);
       const pendingAlice = await contracts.Community.getPoolPendingRewards(poolAddress, alice.address);
       const pendingBob = await contracts.Community.getPoolPendingRewards(poolAddress, bob.address);
       
       // Bob has 3000, Alice has 1000 => Bob should have 3x Alice's rewards exactly
-      expect(pendingBob).to.be.closeTo(pendingAlice.mul(3), ethers.utils.parseUnits("0.001", 18));
+      expect(pendingBob).to.be.closeTo(pendingAlice * 3n, ethers.parseUnits("0.001", 18));
     });
 
     it("withdrawPoolsRewards sends correct tokens", async () => {
-      await poolContract.connect(alice).deposit(ethers.utils.parseUnits("1000", 18), { value: 0 });
+      await poolContract.connect(alice).deposit(ethers.parseUnits("1000", 18), { value: 0 });
       await mine(150);
 
       // Calculate exact expected rewards at this point
       const headBefore = await contracts.LinearCalculator.rewardHead();
       const lastBefore = await contracts.Community.getLastRewardCursor();
       const exactExpectedRewardsBefore = await contracts.LinearCalculator.calculateReward(
-        contracts.Community.address,
+        contracts.Community.target,
         lastBefore,
         headBefore
       );
@@ -603,14 +598,14 @@ describe("Comprehensive Contract Tests", function () {
       expect(pendingBefore).to.equal(exactExpectedRewardsBefore);
 
       // After calling withdrawPoolsRewards, the block advances by 1, so the reward gets another block
-      const rewPerBlock = await contracts.LinearCalculator.getCurrentRewardRate(contracts.Community.address);
-      const exactExpectedRewardsAfter = exactExpectedRewardsBefore.add(rewPerBlock);
+      const rewPerBlock = await contracts.LinearCalculator.getCurrentRewardRate(contracts.Community.target);
+      const exactExpectedRewardsAfter = exactExpectedRewardsBefore + rewPerBlock;
 
       const balBefore = await contracts.CToken.balanceOf(alice.address);
       await contracts.Community.connect(alice).withdrawPoolsRewards([poolAddress], { value: 0 });
       const balAfter = await contracts.CToken.balanceOf(alice.address);
       
-      const received = balAfter.sub(balBefore);
+      const received = balAfter - balBefore;
       expect(received).to.equal(exactExpectedRewardsAfter);
     });
 
@@ -630,7 +625,7 @@ describe("Comprehensive Contract Tests", function () {
     });
 
     it("getTotalPendingRewards returns sum across all pools", async () => {
-      await poolContract.connect(alice).deposit(ethers.utils.parseUnits("1000", 18), { value: 0 });
+      await poolContract.connect(alice).deposit(ethers.parseUnits("1000", 18), { value: 0 });
       await mine(150);
       const total = await contracts.Community.getTotalPendingRewards(alice.address);
       const pool = await contracts.Community.getPoolPendingRewards(poolAddress, alice.address);
@@ -647,14 +642,14 @@ describe("Comprehensive Contract Tests", function () {
     beforeEach(async () => {
       poolAddress = await createERC20Pool(contracts, communityOwner, [10000]);
       poolContract = await ethers.getContractAt("ERC20Staking", poolAddress);
-      await contracts.CToken.connect(communityOwner).transfer(alice.address, ethers.utils.parseUnits("5000", 18));
-      await contracts.CToken.connect(alice).approve(poolAddress, ethers.constants.MaxUint256);
+      await contracts.CToken.connect(communityOwner).transfer(alice.address, ethers.parseUnits("5000", 18));
+      await contracts.CToken.connect(alice).approve(poolAddress, ethers.MaxUint256);
     });
 
     it("Setting fee ratio splits rewards between dev and users", async () => {
       // Set 20% fee ratio
       await contracts.Community.connect(communityOwner).adminSetFeeRatio(2000, { value: 0 });
-      await poolContract.connect(alice).deposit(ethers.utils.parseUnits("1000", 18), { value: 0 });
+      await poolContract.connect(alice).deposit(ethers.parseUnits("1000", 18), { value: 0 });
 
       // Mine past distribution start
       await mine(150);
@@ -663,27 +658,27 @@ describe("Comprehensive Contract Tests", function () {
       const lastSnapshot = await contracts.Community.getLastRewardCursor();
       const headSnapshot = await contracts.LinearCalculator.rewardHead();
       const grossOnNextUpdate = await contracts.LinearCalculator.calculateReward(
-        contracts.Community.address,
+        contracts.Community.target,
         lastSnapshot,
         headSnapshot
       );
-      const expectedFee = grossOnNextUpdate.mul(2000).div(10000);
+      const expectedFee = (grossOnNextUpdate * 2000n) / 10000n;
 
       // Trigger update
       await poolContract.connect(alice).deposit(1, { value: 0 });
 
-      // adminWithdrawRevenue should work now
+      // adminWithdrawRevenue is public; any address can trigger payout to devFund
       const devBalBefore = await contracts.CToken.balanceOf(communityOwner.address);
-      await contracts.Community.connect(communityOwner).adminWithdrawRevenue();
+      await contracts.Community.connect(alice).adminWithdrawRevenue();
       const devBalAfter = await contracts.CToken.balanceOf(communityOwner.address);
 
-      const actualFeeReceived = devBalAfter.sub(devBalBefore);
-      expect(actualFeeReceived).to.be.closeTo(expectedFee, ethers.utils.parseUnits("150", 18));
+      const actualFeeReceived = devBalAfter - devBalBefore;
+      expect(actualFeeReceived).to.be.closeTo(expectedFee, ethers.parseUnits("150", 18));
     });
 
     it("adminWithdrawRevenue reverts when no revenue", async () => {
       await expect(
-        contracts.Community.connect(communityOwner).adminWithdrawRevenue()
+        contracts.Community.connect(alice).adminWithdrawRevenue()
       ).to.be.reverted;
     });
   });
@@ -701,21 +696,22 @@ describe("Comprehensive Contract Tests", function () {
     it("Cannot re-initialize distribution for same community", async () => {
       const blockNumber = await ethers.provider.getBlockNumber();
       const distribution = "0x01" +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(blockNumber + 10), 32).substring(2) +
-        ethers.utils.hexZeroPad(ethers.utils.hexlify(blockNumber + 100), 32).substring(2) +
-        ethers.utils.hexZeroPad(ethers.utils.parseUnits("100", 18), 32).substring(2);
+        ethers.zeroPadValue(ethers.toBeHex(blockNumber + 10), 32).substring(2) +
+        ethers.zeroPadValue(ethers.toBeHex(blockNumber + 100), 32).substring(2) +
+        amountHex(ethers.parseUnits("100", 18));
 
       // Community already initialized via deployCommunity fixture
       // Attempting to call setDistributionEra again from factory would fail since it checks length == 0
       // This is verified indirectly: the community already has eras set during deploy
-      const block0 = await contracts.LinearCalculator.distributionErasMap(contracts.Community.address, 0);
-      expect(block0.amount).to.equal(ethers.utils.parseUnits("100", 18));
+      const block0 = await contracts.LinearCalculator.distributionErasMap(contracts.Community.target, 0);
+      expect(block0.amount).to.equal(ethers.parseUnits("100", 18));
     });
 
     it("calculateReward correctly skips gaps between distribution eras", async () => {
       const factory = await ethers.getContractFactory("LinearCalculator");
       // Use owner as mock factory
       const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
       const mockCommunity = alice.address;
       
       const currentBlock = await ethers.provider.getBlockNumber();
@@ -725,15 +721,15 @@ describe("Comprehensive Contract Tests", function () {
       const s4 = s3 + 10; // 40
       
       const eras = [
-        { startHeight: s1, stopHeight: s2, amount: ethers.utils.parseUnits("100", 18) },
-        { startHeight: s3, stopHeight: s4, amount: ethers.utils.parseUnits("200", 18) }
+        { startHeight: s1, stopHeight: s2, amount: ethers.parseUnits("100", 18) },
+        { startHeight: s3, stopHeight: s4, amount: ethers.parseUnits("200", 18) }
       ];
       
       let policy = "0x02";
       for (let e of eras) {
-        policy += ethers.utils.hexZeroPad(ethers.BigNumber.from(e.startHeight).toHexString(), 32).substring(2);
-        policy += ethers.utils.hexZeroPad(ethers.BigNumber.from(e.stopHeight).toHexString(), 32).substring(2);
-        policy += ethers.utils.hexZeroPad(e.amount.toHexString(), 32).substring(2);
+        policy += u256Hex(e.startHeight);
+        policy += u256Hex(e.stopHeight);
+        policy += amountHex(e.amount);
       }
       
       await calc.setDistributionEra(mockCommunity, policy);
@@ -747,12 +743,13 @@ describe("Comprehensive Contract Tests", function () {
       // Era 2 (s3 to s4): Block s3 to s3+5, duration = s3+5 - max(s3-1, s3-1) = 6 blocks * 200 = 1200
       // Total Expected = 100 + 1200 = 1300
       const reward = await calc.calculateReward(mockCommunity, s2 - 1, s3 + 5);
-      expect(reward).to.equal(ethers.utils.parseUnits("1300", 18));
+      expect(reward).to.equal(ethers.parseUnits("1300", 18));
     });
 
     it("Rejects initialization if distribution eras overlap", async () => {
       const factory = await ethers.getContractFactory("LinearCalculator");
       const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
       const mockCommunity = alice.address;
       
       const currentBlock = await ethers.provider.getBlockNumber();
@@ -763,15 +760,15 @@ describe("Comprehensive Contract Tests", function () {
       const s4 = s3 + 20; // 45
       
       const eras = [
-        { startHeight: s1, stopHeight: s2, amount: ethers.utils.parseUnits("100", 18) },
-        { startHeight: s3, stopHeight: s4, amount: ethers.utils.parseUnits("200", 18) }
+        { startHeight: s1, stopHeight: s2, amount: ethers.parseUnits("100", 18) },
+        { startHeight: s3, stopHeight: s4, amount: ethers.parseUnits("200", 18) }
       ];
       
       let policy = "0x02";
       for (let e of eras) {
-        policy += ethers.utils.hexZeroPad(ethers.BigNumber.from(e.startHeight).toHexString(), 32).substring(2);
-        policy += ethers.utils.hexZeroPad(ethers.BigNumber.from(e.stopHeight).toHexString(), 32).substring(2);
-        policy += ethers.utils.hexZeroPad(e.amount.toHexString(), 32).substring(2);
+        policy += u256Hex(e.startHeight);
+        policy += u256Hex(e.stopHeight);
+        policy += amountHex(e.amount);
       }
       
       await expect(calc.setDistributionEra(mockCommunity, policy))
@@ -779,14 +776,308 @@ describe("Comprehensive Contract Tests", function () {
     });
 
     it("calculateReward returns 0 before any era starts", async () => {
-      const reward = await contracts.LinearCalculator.calculateReward(contracts.Community.address, 0, 2);
+      const reward = await contracts.LinearCalculator.calculateReward(contracts.Community.target, 0, 2);
       expect(reward).to.equal(0);
     });
 
     it("getCurrentRewardRate returns 0 outside all eras", async () => {
-      const rpb = await contracts.LinearCalculator.getCurrentRewardRate(contracts.Community.address);
+      const rpb = await contracts.LinearCalculator.getCurrentRewardRate(contracts.Community.target);
       // Likely outside distribution range in the test, would be 0
       // (depends on current block vs eras)
+    });
+
+    // ── 补充测试：边界值、正向验证、policy 格式校验 ──
+
+    it("getCurrentRewardRate returns correct amount inside an active era", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 2;
+      const stop = start + 100;
+      const amount = ethers.parseUnits("50", 18);
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(amount);
+
+      await calc.setDistributionEra(mockCommunity, policy);
+
+      // Mine into the era so block.number >= start
+      await mine(5);
+
+      const rate = await calc.getCurrentRewardRate(mockCommunity);
+      expect(rate).to.equal(amount);
+    });
+
+    it("getCurrentRewardRate returns 0 after all eras end", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 2;
+      const stop = start + 3;
+      const amount = ethers.parseUnits("50", 18);
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(amount);
+
+      await calc.setDistributionEra(mockCommunity, policy);
+      // Mine past stop
+      await mine(20);
+
+      const rate = await calc.getCurrentRewardRate(mockCommunity);
+      expect(rate).to.equal(0);
+    });
+
+    it("getStartCursor returns the first era's startCursor", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 10;
+      const stop = start + 100;
+      const amount = ethers.parseUnits("10", 18);
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(amount);
+
+      await calc.setDistributionEra(mockCommunity, policy);
+      expect(await calc.getStartCursor(mockCommunity)).to.equal(start);
+    });
+
+    it("calculateReward: head == stopCursor counts last block (inclusive boundary)", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 5;
+      const stop = start + 9; // 10 blocks total
+      const amount = ethers.parseUnits("1", 18);
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(amount);
+
+      await calc.setDistributionEra(mockCommunity, policy);
+      await mine(30);
+
+      // calculateReward(lastCursor=start-1, head=stop) should yield (stop - (start-1)) * amount = 10 * amount
+      const reward = await calc.calculateReward(mockCommunity, start - 1, stop);
+      expect(reward).to.equal(amount * 10n);
+    });
+
+    it("calculateReward: head == startCursor counts exactly 1 block", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 5;
+      const stop = start + 50;
+      const amount = ethers.parseUnits("1", 18);
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(amount);
+
+      await calc.setDistributionEra(mockCommunity, policy);
+      await mine(30);
+
+      // lastCursor = start-1, head = start → should yield 1 block * amount
+      const reward = await calc.calculateReward(mockCommunity, start - 1, start);
+      expect(reward).to.equal(amount * 1n);
+    });
+
+    it("calculateReward: lastCursor inside an era computes only remaining blocks", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 5;
+      const stop = start + 19; // 20 blocks
+      const amount = ethers.parseUnits("2", 18);
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(amount);
+
+      await calc.setDistributionEra(mockCommunity, policy);
+      await mine(40);
+
+      // lastCursor = start+9 (10 blocks already accounted), head = stop → 10 more blocks
+      const mid = start + 9;
+      const reward = await calc.calculateReward(mockCommunity, mid, stop);
+      expect(reward).to.equal(amount * 10n);
+    });
+
+    it("calculateReward: 3-era policy accumulates correctly across all eras", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      // Era1: [+5, +14], Era2: [+20, +29], Era3: [+35, +44]
+      const s1 = currentBlock + 5,  e1 = s1 + 9;
+      const s2 = currentBlock + 20, e2 = s2 + 9;
+      const s3 = currentBlock + 35, e3 = s3 + 9;
+      const a1 = ethers.parseUnits("10", 18);
+      const a2 = ethers.parseUnits("20", 18);
+      const a3 = ethers.parseUnits("30", 18);
+
+      let policy = "0x03";
+      for (const [s, e, a] of [[s1, e1, a1], [s2, e2, a2], [s3, e3, a3]]) {
+        policy += u256Hex(s);
+        policy += u256Hex(e);
+        policy += amountHex(a);
+      }
+
+      await calc.setDistributionEra(mockCommunity, policy);
+      await mine(60);
+
+      // Full coverage from before Era1 to after Era3
+      // Expected: 10*10 + 20*10 + 30*10 = 100+200+300 = 600 tokens
+      const reward = await calc.calculateReward(mockCommunity, s1 - 1, e3);
+      expect(reward).to.equal(a1 * 10n + a2 * 10n + a3 * 10n);
+    });
+
+    it("calculateReward: head before era start returns 0", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 100;
+      const stop = start + 50;
+      const amount = ethers.parseUnits("1", 18);
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(amount);
+
+      await calc.setDistributionEra(mockCommunity, policy);
+      // Do NOT mine - block.number < start, so early return kicks in
+      const reward = await calc.calculateReward(mockCommunity, 0, start - 1);
+      expect(reward).to.equal(0);
+    });
+
+    it("Rejects policy with erasLength = 0", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      // erasLength byte = 0x00, followed by nothing
+      const policy = "0x00";
+      await expect(
+        calc.setDistributionEra(alice.address, policy)
+      ).to.be.revertedWith("At least one distribution era is needed");
+    });
+
+    it("Rejects policy that is too short for declared era count", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      // Declares 1 era (0x01) but provides only 64 bytes of data instead of 96
+      const policy = "0x01" + "00".repeat(64);
+      await expect(
+        calc.setDistributionEra(alice.address, policy)
+      ).to.be.revertedWith("Policy too short");
+    });
+
+    it("Rejects policy with amount = 0", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 10;
+      const stop = start + 50;
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += u256Hex(0); // amount = 0
+
+      await expect(
+        calc.setDistributionEra(alice.address, policy)
+      ).to.be.revertedWith("Invalid reward amount of distribution, consider giving a positive integer");
+    });
+
+    it("Rejects policy where start >= stop (invalid era range)", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 20;
+      const stop = start; // stop == start, not strictly greater
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(ethers.parseUnits("1", 18));
+
+      await expect(
+        calc.setDistributionEra(alice.address, policy)
+      ).to.be.revertedWith("Invalid stop cursor of distribution");
+    });
+
+    it("Rejects policy where first era start <= current block", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock; // == current block, not strictly greater
+      const stop = start + 50;
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(ethers.parseUnits("1", 18));
+
+      await expect(
+        calc.setDistributionEra(alice.address, policy)
+      ).to.be.revertedWith("Invalid start cursor of distribution");
+    });
+
+    it("DistributionEraSet event is emitted on setDistributionEra", async () => {
+      const factory = await ethers.getContractFactory("LinearCalculator");
+      const calc = await factory.deploy(owner.address);
+      await calc.waitForDeployment();
+      const mockCommunity = alice.address;
+
+      const currentBlock = await ethers.provider.getBlockNumber();
+      const start = currentBlock + 10;
+      const stop = start + 50;
+      const amount = ethers.parseUnits("1", 18);
+
+      let policy = "0x01";
+      policy += u256Hex(start);
+      policy += u256Hex(stop);
+      policy += amountHex(amount);
+
+      await expect(calc.setDistributionEra(mockCommunity, policy))
+        .to.emit(calc, "DistributionEraSet")
+        .withArgs(mockCommunity, policy);
     });
   });
 
@@ -797,24 +1088,27 @@ describe("Comprehensive Contract Tests", function () {
     it("Community template cannot be initialized directly", async () => {
       const templateFactory = await ethers.getContractFactory("Community");
       const template = await templateFactory.deploy();
+      await template.waitForDeployment();
       await expect(
-        template.initialize(owner.address, contracts.Committee.address, contracts.CToken.address, contracts.LinearCalculator.address, true)
+        template.initialize(owner.address, contracts.Committee.target, contracts.CToken.target, contracts.LinearCalculator.target, true)
       ).to.be.revertedWith("Initializable: contract is already initialized");
     });
 
     it("ERC20Staking template cannot be initialized directly", async () => {
       const templateFactory = await ethers.getContractFactory("ERC20Staking");
       const template = await templateFactory.deploy();
+      await template.waitForDeployment();
       await expect(
-        template.initialize(contracts.Community.address, "Test", contracts.CToken.address)
+        template.initialize(contracts.Community.target, "Test", contracts.CToken.target)
       ).to.be.revertedWith("Initializable: contract is already initialized");
     });
 
     it("ERC20Locking template cannot be initialized directly", async () => {
       const templateFactory = await ethers.getContractFactory("ERC20Locking");
       const template = await templateFactory.deploy();
+      await template.waitForDeployment();
       await expect(
-        template.initialize(contracts.Community.address, "Test", contracts.CToken.address, 100)
+        template.initialize(contracts.Community.target, "Test", contracts.CToken.target, 100)
       ).to.be.revertedWith("Initializable: contract is already initialized");
     });
 
@@ -833,7 +1127,7 @@ describe("Comprehensive Contract Tests", function () {
     });
 
     it("Pool factory rejects calls from non-community address", async () => {
-      const meta = erc20PoolMeta(contracts.CToken.address);
+      const meta = erc20PoolMeta(contracts.CToken.target);
       await expect(
         contracts.ERC20StakingFactory.connect(alice).createPool(alice.address, "Test", meta)
       ).to.be.revertedWith("Invalid community");
@@ -842,14 +1136,14 @@ describe("Comprehensive Contract Tests", function () {
     it("Community rejects plain native transfers (no receive/fallback)", async () => {
       await expect(
         owner.sendTransaction({
-          to: contracts.Community.address,
-          value: ethers.utils.parseEther("1"),
+          to: contracts.Community.target,
+          value: ethers.parseEther("1"),
         })
       ).to.be.reverted;
     });
 
     it("View functions return correct defaults for non-existent users", async () => {
-      const meta = erc20PoolMeta(contracts.CToken.address);
+      const meta = erc20PoolMeta(contracts.CToken.target);
       const poolAddr = await createERC20Pool(contracts, communityOwner, [10000]);
       expect(await contracts.Community.getShareAcc(poolAddr)).to.equal(0);
       expect(await contracts.Community.getUserDebt(poolAddr, alice.address)).to.equal(0);
@@ -860,36 +1154,37 @@ describe("Comprehensive Contract Tests", function () {
       // Deploy EvilERC20 mock
       const ReentrantERC20 = await ethers.getContractFactory("ReentrantERC20");
       const evilToken = await ReentrantERC20.deploy();
+      await evilToken.waitForDeployment();
 
       // Ensure evilToken is ready
-      await evilToken.transfer(alice.address, ethers.utils.parseEther("1000"));
+      await evilToken.transfer(alice.address, ethers.parseEther("1000"));
 
       // Add pool with evilToken as the asset
-      const meta = erc20PoolMeta(evilToken.address);
+      const meta = erc20PoolMeta(evilToken.target);
       await contracts.Community.connect(communityOwner).adminAddPool(
-        "Evil Pool", [10000], contracts.ERC20StakingFactory.address, meta, { value: 0 }
+        "Evil Pool", [10000], contracts.ERC20StakingFactory.target, meta, { value: 0 }
       );
       
       // Get the last added pool
       const poolAddrEvent = await contracts.Community.activedPools(0);
       const evilPoolContract = await ethers.getContractAt("ERC20Staking", poolAddrEvent);
 
-      await evilToken.connect(alice).approve(evilPoolContract.address, ethers.constants.MaxUint256);
+      await evilToken.connect(alice).approve(evilPoolContract.target, ethers.MaxUint256);
       
       // Setup attack
-      await evilToken.setAttackTarget(evilPoolContract.address);
+      await evilToken.setAttackTarget(evilPoolContract.target);
       await evilToken.arm();
 
       // Alice deposits. EvilERC20's transferFrom will attempt to re-enter evilPoolContract.withdraw
       // Because of nonReentrant in `deposit`, the withdraw should revert internally,
       // and reentryAttempted should be true.
-      await evilPoolContract.connect(alice).deposit(ethers.utils.parseEther("100"), { value: 0 });
+      await evilPoolContract.connect(alice).deposit(ethers.parseEther("100"), { value: 0 });
 
       // Verify the re-entry was attempted and failed
       expect(await evilToken.reentryAttempted()).to.equal(true);
       // Wait, since withdraw reverted inside transferFrom, the deposit itself still goes through!
       // This is because we caught the internal exception. The deposit continues.
-      expect(await evilPoolContract.getUserStakedAmount(alice.address)).to.equal(ethers.utils.parseEther("100"));
+      expect(await evilPoolContract.getUserStakedAmount(alice.address)).to.equal(ethers.parseEther("100"));
     });
   });
 
@@ -923,7 +1218,7 @@ describe("Comprehensive Contract Tests", function () {
       await contracts.CToken.connect(alice).approve(poolAddr, 1000);
       await expect(
         pool.connect(alice).deposit(1000, { value: 0 })
-      ).to.emit(pool, "Deposited").withArgs(contracts.Community.address, alice.address, 1000);
+      ).to.emit(pool, "Deposited").withArgs(contracts.Community.target, alice.address, 1000);
     });
 
     it("Emits Withdrawn on ERC20Staking withdraw", async () => {
@@ -934,11 +1229,11 @@ describe("Comprehensive Contract Tests", function () {
       await pool.connect(alice).deposit(1000, { value: 0 });
       await expect(
         pool.connect(alice).withdraw(500, { value: 0 })
-      ).to.emit(pool, "Withdrawn").withArgs(contracts.Community.address, alice.address, 500);
+      ).to.emit(pool, "Withdrawn").withArgs(contracts.Community.target, alice.address, 500);
     });
 
     it("Committee emits events on fee configuration", async () => {
-      const fee = ethers.utils.parseEther("0.1");
+      const fee = ethers.parseEther("0.1");
       await expect(contracts.Committee.adminSetCreateCommunityFee(fee))
         .to.emit(contracts.Committee, "AdminSetCreateCommunityFee").withArgs(fee);
       await expect(contracts.Committee.adminSetCommunitySettingsFee(fee))

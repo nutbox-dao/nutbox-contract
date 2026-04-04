@@ -1,5 +1,7 @@
 const { ethers } = require("hardhat");
 const deploy = require("./deploy");
+const { findEvent } = require("./receipt-events");
+const { encodeLinearDistribution } = require("./distribution-meta");
 
 function utf8ToHex(str) {
   return Array.from(str)
@@ -26,39 +28,38 @@ async function deployCommunity() {
     { startHeight: blockNumber + 2001, stopHeight: blockNumber + 5000, amount: 20 },
     { startHeight: blockNumber + 5001, stopHeight: blockNumber + 10000, amount: 10 },
   ];
-  let distributionStr =
-    "0x" + ethers.utils.hexZeroPad(ethers.utils.hexlify(distribution.length), 1).substring(2);
-  for (let dis of distribution) {
-    distributionStr +=
-      ethers.utils.hexZeroPad(ethers.BigNumber.from(dis.startHeight).toHexString(), 32).substring(2) +
-      ethers.utils.hexZeroPad(ethers.BigNumber.from(dis.stopHeight).toHexString(), 32).substring(2) +
-      ethers.utils
-        .hexZeroPad(ethers.utils.parseUnits(dis.amount.toString(), 18).toHexString(), 32)
-        .substring(2);
-  }
+  const distributionStr = encodeLinearDistribution(distribution);
+
   const meta =
     "0x" +
-    ethers.utils.hexZeroPad(ethers.utils.hexlify("meme FERC".length), 1).substring(2) +
+    ethers.zeroPadValue(ethers.toBeHex("meme FERC".length), 1).substring(2) +
     utf8ToHex("meme FERC") +
-    ethers.utils.hexZeroPad(ethers.utils.hexlify("MFERC".length), 1).substring(2) +
+    ethers.zeroPadValue(ethers.toBeHex("MFERC".length), 1).substring(2) +
     utf8ToHex("MFERC") +
-    ethers.utils.hexZeroPad(ethers.utils.parseUnits("10000", 18), 32).substring(2) +
+    ethers.zeroPadValue(ethers.toBeHex(ethers.parseUnits("10000", 18)), 32).substring(2) +
     communityOwner.address.substring(2);
 
   const tx = await contracts.CommunityFactory.connect(communityOwner).createCommunity(
     true,
-    ethers.constants.AddressZero,
-    contracts.MintableERC20Factory.address,
+    ethers.ZeroAddress,
+    contracts.MintableERC20Factory.target,
     meta,
-    contracts.LinearCalculator.address,
+    contracts.LinearCalculator.target,
     distributionStr,
     { value: 0 }
   );
 
   const receipt = await tx.wait();
-  const event = receipt.events.find((e) => e.event === "CommunityCreated");
+  const event = findEvent(
+    receipt,
+    contracts.CommunityFactory.interface,
+    "CommunityCreated"
+  );
   contracts.Community = await ethers.getContractAt("Community", event.args.community);
-  contracts.CToken = await ethers.getContractAt("MintableERC20", event.args.communityToken);
+  contracts.CToken = await ethers.getContractAt(
+    "MintableERC20",
+    event.args.communityToken
+  );
   return contracts;
 }
 

@@ -1,75 +1,57 @@
 # Nutbox Contract
 
+This is a new version of Nutbox contract. Added new Social Curation feature. Upgrade distribution calculator.
+
 ## Local Development
 
 ### Prerequirements
 
-with ```node```/```truffle```/```ganache``` installed.
+with ```node```/```hardhat``` installed.
 
 ### Install Dependencies
 
-`yarn`
+`yarn` or `npm install`
 
 ### Compile Contracts
 
-`truffle compile`
+`npx hardhat compile`
 
 ### Deploy contract
 
-Run script ```scripts/deploy.js```:
+使用 Hardhat Ignition 部署到 BSC：
 
 ```sh
-ENDPOINT=http://localhost:8545 KEY=<private key> GASLIMIT=10000000 GASPRICE=50000000000 node deploy.js
+npm run deploy:bsc:no-verify
+# 或带链上验证：npm run deploy:bsc
 ```
 
-You should see the output like below:
+### Deployed contracts on BSC (mainnet, chainId 56)
 
-```sh
- ===============================================================
-        Url:            https://bsc-dataseed.binance.org
-        Deployer:       0x281c93162FB45F06e9d8C1688075640E86bf01ec
-        Depoly Cost:    0.069551005
-        Depoly block number: 15414978
+```json
+{
+  "Committee": "0xe10F967DD356504EDB731612789D0D0f0ba2929f",
+  "MintableERC20Factory": "0x9979989709cE98715f2cA831C4FDb73b22d0408c",
+  "CommunityFactory": "0x5597e814399906095ecaA5769A40394F58E5E0Cf",
+  "ERC1155StakingFactory": "0x398eA6Db014595F23d0C9Cb1390a10472cdD43BA",
+  "ERC20LockingFactory": "0x8189a03Cfa3d8919a2eb8f08E4f88c21Cf78cA01",
+  "ERC20StakingFactory": "0xDc3f940ac6Da516d5C9cc59c8AFE0F85A576E2A4",
+  "LinearCalculator": "0x5114966657Bd6209B47aa16eaa4EAfbbC9595ec0",
+  "LinearTimeCalculator": "0xc76e00e150e13EC95514E9a52Ab0314c7faE8207",
+  "SPStakingFactory": "0x47738e3420Be8ceD8a9476cf4dAf84c549835D44",
+  "SocialCurationFactory": "0xc4674D3fBbD201Ea401a8B7e7285F956178593D8",
+  // templates
+  "communityTokenTemplate": "0xE3249CcD0555AD47aF63F7D9Caa4cD38011ECC71",
+  "communityTemplate": "0xA16a34B8996737489b014be951352B9542A466dB",
+  "erc1155StakingTemplate": "0x9ef60E4d0FE0c54a4F7CA4eC6c90A9fE52E91a3C",
+  "erc20LockingTemplate": "0x4d17B8d34FB52Aef2de3cb48563b2D35F52B2bFF",
+  "erc20StakingTemplate": "0x29beeE04fAE28BB9901A7C1c63e9a868F70a035f",
+  "spStakingTemplate": "0xC57522bC1d6b584B13aF2031eA631C3f9e76EDAf",
+  "socialCurationTemplate": "0x80F604a65fc475062ae782F43ab3fe9424B66B55 ",
+}
+```
+### Deployed contracts on BSC (testnet, chainId 97)
 
-        Contract Addresses:
-        ===============================================================
-        Committee:              0xd10e4C1e301A13A9B874bd1757c135Eda075769D
-        ---------------------------------------------------------------
-        MintableERC20Factory: 0xa183D96a7e84BF77Fb7825026fA8b9BF6894cfa8
-        ---------------------------------------------------------------
-        CommunityFactory:       0x1A4EeE210Bc54a75D25989546F648474EdF1C0A3
-        ---------------------------------------------------------------
-        LinearCalculator:       0x6ab448C1C6e1870602d3FB867F167029bbFb3181
-        ---------------------------------------------------------------
-        SPStakingFactory:       0xF7Fa41BF814eDC767691DDB1864a334D83f4acf7
-        ---------------------------------------------------------------
-        ERC20StakingFactory:     0xf870724476912057C807056b29c1161f5Fe0199a
-        ---------------------------------------------------------------
-        ERC1155StakingFactory:  0x76303Be21ef601e68639B541B035ca33d247b5FE
-        ===============================================================
-```
-### Deployed Contract On BSC
-```
-  "Committee": "0xd10e4C1e301A13A9B874bd1757c135Eda075769D",
-  "MintableERC20Factory": "0xa183D96a7e84BF77Fb7825026fA8b9BF6894cfa8",
-  "NutPower": "0x5De2a9993eCcbFab4d83a5dCc0911c0e80A08AbA",
-  "CommunityFactory": "0x1A4EeE210Bc54a75D25989546F648474EdF1C0A3",
-  "LinearCalculator": "0x6ab448C1C6e1870602d3FB867F167029bbFb3181",
-  "SPStakingFactory": "0xF7Fa41BF814eDC767691DDB1864a334D83f4acf7",
-  "ERC20StakingFactory": "0xf870724476912057C807056b29c1161f5Fe0199a",
-  "CosmosStakingFactory": "0xAD6a0c0017559d051264e1657d627107d6b12f0d",
-  "Gauge": "0x6F2686B34D23dCbf79a33A2EEA5e92d84b942d91",
-  "ERC1155StakingFactory":  "0x76303Be21ef601e68639B541B035ca33d247b5FE"
-```
-### Register chains
 
-- 1: steem(sp delegation)
-- 2: hive
-- 3: atom
-- 4: osmosis
-- 5: juno
-- 6: steem(sp witness proxy)
-- 7: curation gauge
 
 #### Test
 

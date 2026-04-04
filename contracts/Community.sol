@@ -58,8 +58,7 @@ contract Community is
     address public communityToken;
     bool public isMintableCommunityToken;
     address public rewardCalculator;
-    // Total rewards distributed to users but not yet withdrawn.
-    // Used to protect user funds from adminWithdrawReward (conservative upper bound).
+    // Total rewards distributed to users but not yet withdrawn (conservative upper bound for safety).
     uint256 private totalUserPendingRewards;
 
     // events triggered by community admin
@@ -139,7 +138,8 @@ contract Community is
         devFund = _dev;
     }
 
-    function adminWithdrawRevenue() external onlyOwner nonReentrant {
+    /// @notice Anyone may call; proceeds always go to `devFund` (set by owner). No arbitrary recipient.
+    function adminWithdrawRevenue() public nonReentrant {
         require(retainedRevenue > 0);
         uint256 harvestAmount = retainedRevenue;
         if (!isMintableCommunityToken) {
@@ -161,22 +161,6 @@ contract Community is
 
         feeRatio = _ratio;
         emit AdminSetFeeRatio(_ratio);
-    }
-
-    /**
-     * @dev Emergency withdrawal of community token surplus by owner.
-     * For non-mintable tokens, withdrawal is blocked if it would leave the contract
-     * with insufficient balance to cover all accrued user pending rewards.
-     */
-    function adminWithdrawReward(uint256 amount) external onlyOwner {
-        if (!isMintableCommunityToken) {
-            uint256 balance = IERC20(communityToken).balanceOf(address(this));
-            require(
-                balance >= totalUserPendingRewards + amount,
-                "Would drain user rewards"
-            );
-        }
-        releaseERC20(communityToken, msg.sender, amount);
     }
 
     function adminAddPool(

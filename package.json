@@ -6,7 +6,10 @@
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy:protocol": "hardhat run scripts/deploy-protocol.js --network bsc",
-    "verify:protocol": "hardhat run scripts/verify-protocol.js"
+    "deploy:bsc": "hardhat ignition deploy ignition/modules/NutboxProtocol.js --network bsc --verify --parameters ignition/parameters/bsc.json",
+    "deploy:bsc:no-verify": "hardhat ignition deploy ignition/modules/NutboxProtocol.js --network bsc --parameters ignition/parameters/bsc.json",
+    "verify:protocol": "echo 'Ignition: use npm run deploy:bsc (includes --verify). Legacy JSON addresses: hardhat verify --network <net> <addr> <args>'",
+    "script:mintable-community": "hardhat run scripts/mintable-then-create-community.js --network bsc"
   },
   "repository": {
     "type": "git",
@@ -23,19 +26,22 @@
   },
   "homepage": "https://github.com/nutbox-dao/nutbox-contract#readme",
   "devDependencies": {
-    "@nomicfoundation/hardhat-verify": "^1.0.4",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-ignition": "^0.15.0",
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
     "chai": "^4.3.4",
     "dotenv": "^10.0.0",
-    "hardhat": "^2.6.8",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.22.4",
+    "hardhat-contract-sizer": "^2.10.0",
     "mocha": "^8.3.2"
   },
   "dependencies": {
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@nomiclabs/hardhat-waffle": "^2.0.6",
     "@openzeppelin/contracts": "^4.4.1",
-    "commander": "^7.2.0",
-    "ethers": "^5.3.1",
-    "hardhat-contract-sizer": "^2.10.0"
+    "commander": "^7.2.0"
   }
 }
