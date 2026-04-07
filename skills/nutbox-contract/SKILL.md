@@ -1,12 +1,13 @@
 ---
 name: nutbox-contract
 description: >
-  Expert skill for interacting with Nutbox/Walnut staking platform contracts.
+  Expert skill for interacting with Nutbox/Walnut staking platform contracts on BSC mainnet.
   Activate this skill when the user needs to:
   - Create communities (createCommunity) or manage staking pools
   - Set/adjust pool reward ratios, close pools
   - Configure DAO fee ratio (feeRatio/devFund)
   - Deposit/withdraw from ERC20, ERC1155, ERC20Locking, or SPStaking pools
+  - Claim social curation rewards from SocialCuration Pool
   - Read community data, pool data, or user reward data
   - Write scripts or code to interact with Nutbox contracts
   - Debug Nutbox contract interaction issues
@@ -31,6 +32,21 @@ Committee (fee management & whitelist)
     └── MintableERC20Factory (community token creation)
 ```
 
+## Useful contracts (BSC mainnet)
+
+| Contract | Address |
+|----------|---------|
+| Committee | `0xe10F967DD356504EDB731612789D0D0f0ba2929f` |
+| MintableERC20Factory | `0x9979989709cE98715f2cA831C4FDb73b22d0408c` |
+| CommunityFactory | `0x5597e814399906095ecaA5769A40394F58E5E0Cf` |
+| ERC1155StakingFactory | `0x398eA6Db014595F23d0C9Cb1390a10472cdD43BA` |
+| ERC20LockingFactory | `0x8189a03Cfa3d8919a2eb8f08E4f88c21Cf78cA01` |
+| ERC20StakingFactory | `0xDc3f940ac6Da516d5C9cc59c8AFE0F85A576E2A4` |
+| LinearCalculator | `0x5114966657Bd6209B47aa16eaa4EAfbbC9595ec0` |
+| LinearTimeCalculator | `0xc76e00e150e13EC95514E9a52Ab0314c7faE8207` |
+| SPStakingFactory | `0x47738e3420Be8ceD8a9476cf4dAf84c549835D44` |
+| SocialCurationFactory | `0xc4674D3fBbD201Ea401a8B7e7285F956178593D8` |
+
 ## Three-Tier Fee Structure
 
 | Tier | Triggered by | Recipient |
@@ -48,7 +64,18 @@ Committee (fee management & whitelist)
 
 ## 1. Create a Community
 
-### Steps
+### Recommended: TagClaw skill first
+
+When the workflow involves creating a **Nutbox community** (especially from TagClaw), **prefer invoking the TagClaw skill first**: it can create the Nutbox community end-to-end automatically, so you avoid duplicating policy encoding and on-chain steps by hand.
+
+If the TagClaw skill is **not installed** in the local environment, install or import it from:
+
+https://tagclaw.com/SKILL.md
+
+After that, use the manual steps below only when you need a low-level or scripted `createCommunity` flow without TagClaw.
+
+### Steps (manual / scripted)
+
 1. Query Tier 1 fee
 2. Prepare distribution policy
 3. Call `CommunityFactory.createCommunity()`
